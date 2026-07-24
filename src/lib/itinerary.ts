@@ -28,7 +28,30 @@ export function orderByRegion(selected: Place[]): Place[] {
   return REGIONS.flatMap((r) => byRegion.get(r) ?? []);
 }
 
-export function buildItinerary(selected: Place[], start: Date, end: Date): Day[] {
+export type ItineraryOptions = {
+  startCity?: string;
+  endCity?: string;
+};
+
+/**
+ * Orders selected places for the itinerary. Places in `startCity` are pulled to the
+ * front and places in `endCity` are pushed to the back; everything else keeps the
+ * existing region-grouped order in between.
+ */
+export function orderPlaces(selected: Place[], options: ItineraryOptions = {}): Place[] {
+  const { startCity, endCity } = options;
+  const startGroup = startCity ? selected.filter((p) => p.city === startCity) : [];
+  const endGroup = endCity ? selected.filter((p) => p.city === endCity && p.city !== startCity) : [];
+  const middle = selected.filter((p) => p.city !== startCity && p.city !== endCity);
+  return [...startGroup, ...orderByRegion(middle), ...endGroup];
+}
+
+export function buildItinerary(
+  selected: Place[],
+  start: Date,
+  end: Date,
+  options: ItineraryOptions = {}
+): Day[] {
   const count = tripDays(start, end);
   const s = atMidnight(start);
   const days: Day[] = Array.from({ length: count }, (_, i) => ({
@@ -37,7 +60,7 @@ export function buildItinerary(selected: Place[], start: Date, end: Date): Day[]
     places: [],
   }));
 
-  const ordered = orderByRegion(selected);
+  const ordered = orderPlaces(selected, options);
   if (days.length === 0 || ordered.length === 0) return days;
 
   // Fill each day up to MAX_PER_DAY, keeping the region-grouped order. When we run

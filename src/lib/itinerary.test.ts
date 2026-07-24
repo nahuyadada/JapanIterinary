@@ -2,15 +2,16 @@ import { describe, it, expect } from "vitest";
 import { buildItinerary, tripDays } from "./itinerary";
 import type { Place } from "@/data/places";
 
-const p = (id: string, region: Place["region"]): Place => ({
+const p = (id: string, region: Place["region"], city: string = ""): Place => ({
   id,
   name: id,
-  city: "",
+  city,
   region,
   category: "landmark",
   description: "",
   lat: 0,
   lng: 0,
+  activities: [],
 });
 
 describe("tripDays", () => {
@@ -52,5 +53,18 @@ describe("buildItinerary", () => {
     const places = [p("t1", "Tokyo"), p("k1", "Kyoto"), p("o1", "Osaka")];
     const days = buildItinerary(places, new Date("2026-04-01"), new Date("2026-04-03"));
     expect(days.flatMap((d) => d.places)).toHaveLength(3);
+  });
+
+  it("pulls the startCity's places to the front", () => {
+    const places = [p("t1", "Tokyo", "Tokyo"), p("k1", "Kyoto", "Kyoto"), p("o1", "Osaka", "Osaka")];
+    const days = buildItinerary(places, new Date("2026-04-01"), new Date("2026-04-03"), { startCity: "Osaka" });
+    expect(days.flatMap((d) => d.places).map((x) => x.id)[0]).toBe("o1");
+  });
+
+  it("pushes the endCity's places to the back", () => {
+    const places = [p("t1", "Tokyo", "Tokyo"), p("k1", "Kyoto", "Kyoto"), p("o1", "Osaka", "Osaka")];
+    const days = buildItinerary(places, new Date("2026-04-01"), new Date("2026-04-03"), { endCity: "Tokyo" });
+    const ids = days.flatMap((d) => d.places).map((x) => x.id);
+    expect(ids[ids.length - 1]).toBe("t1");
   });
 });

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { PLACES, REGIONS } from "@/data/places";
+import { PLACES, REGIONS, CATEGORY_LABELS } from "@/data/places";
 import type { Region, Category } from "@/data/places";
 import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
 import PlaceCard from "@/components/PlaceCard";
@@ -20,6 +20,8 @@ type PersistedState = {
   start: string;
   end: string;
   manualMoves: Record<string, number>;
+  startCity: string;
+  endCity: string;
 };
 
 const STEPS: { key: Step; label: string }[] = [
@@ -33,9 +35,12 @@ export default function Wizard() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
+  const [startCity, setStartCity] = useState("");
+  const [endCity, setEndCity] = useState("");
   const [manualMoves, setManualMoves] = useState<Record<string, number>>({});
   const [regionFilter, setRegionFilter] = useState<Region | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [hydrated, setHydrated] = useState(false);
 
   // Restore persisted trip state after mount. We deliberately read localStorage in an
@@ -52,6 +57,8 @@ export default function Wizard() {
         if (Array.isArray(s.selectedIds)) setSelectedIds(s.selectedIds);
         if (typeof s.start === "string") setStart(s.start);
         if (typeof s.end === "string") setEnd(s.end);
+        if (typeof s.startCity === "string") setStartCity(s.startCity);
+        if (typeof s.endCity === "string") setEndCity(s.endCity);
         if (s.manualMoves && typeof s.manualMoves === "object") setManualMoves(s.manualMoves);
       }
     } catch {
@@ -64,13 +71,13 @@ export default function Wizard() {
   // Persist whenever state changes (after initial hydration).
   useEffect(() => {
     if (!hydrated) return;
-    const payload: PersistedState = { step, selectedIds, start, end, manualMoves };
+    const payload: PersistedState = { step, selectedIds, start, end, manualMoves, startCity, endCity };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch {
       // ignore quota/availability errors
     }
-  }, [hydrated, step, selectedIds, start, end, manualMoves]);
+  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity]);
 
   const selectedPlaces = useMemo(
     () => PLACES.filter((p) => selectedIds.includes(p.id)),
@@ -79,9 +86,17 @@ export default function Wizard() {
 
   const datesValid = start !== "" && end !== "" && end >= start;
 
+  const availableCities = useMemo(
+    () => [...new Set(selectedPlaces.map((p) => p.city))].sort(),
+    [selectedPlaces]
+  );
+
   const days: Day[] = useMemo(() => {
     if (!datesValid) return [];
-    const base = buildItinerary(selectedPlaces, new Date(start), new Date(end));
+    const base = buildItinerary(selectedPlaces, new Date(start), new Date(end), {
+      startCity: startCity || undefined,
+      endCity: endCity || undefined,
+    });
     if (Object.keys(manualMoves).length === 0) return base;
 
     // Apply manual moves: pull moved places out of their computed day, then append
@@ -99,7 +114,7 @@ export default function Wizard() {
       cleaned[target].places.push(place);
     }
     return cleaned;
-  }, [datesValid, selectedPlaces, start, end, manualMoves]);
+  }, [datesValid, selectedPlaces, start, end, startCity, endCity, manualMoves]);
 
   function togglePlace(id: string) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -122,9 +137,12 @@ export default function Wizard() {
     setSelectedIds([]);
     setStart("");
     setEnd("");
+    setStartCity("");
+    setEndCity("");
     setManualMoves({});
     setRegionFilter("all");
     setCategoryFilter("all");
+    setSearchQuery("");
     setStep("select");
     try {
       localStorage.removeItem(STORAGE_KEY);
@@ -133,11 +151,18 @@ export default function Wizard() {
     }
   }
 
-  const visiblePlaces = PLACES.filter(
-    (p) =>
-      (regionFilter === "all" || p.region === regionFilter) &&
-      (categoryFilter === "all" || p.category === categoryFilter)
-  );
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const visiblePlaces = PLACES.filter((p) => {
+    if (regionFilter !== "all" && p.region !== regionFilter) return false;
+    if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
+    if (normalizedQuery) {
+      const haystack = [p.name, p.city, p.region, CATEGORY_LABELS[p.category], p.description, ...p.activities]
+        .join(" ")
+        .toLowerCase();
+      if (!haystack.includes(normalizedQuery)) return false;
+    }
+    return true;
+  });
   const visibleByRegion = REGIONS.map((region) => ({
     region,
     places: visiblePlaces.filter((p) => p.region === region),
@@ -178,10 +203,12 @@ export default function Wizard() {
           <CatalogFilters
             region={regionFilter}
             category={categoryFilter}
+            query={searchQuery}
             onRegion={setRegionFilter}
             onCategory={setCategoryFilter}
+            onQuery={setSearchQuery}
           />
-          {visibleByRegion.length === 0 && <p className="text-gray-500 dark:text-gray-400">No places match those filters.</p>}
+          {visibleByRegion.length === 0 && <p className="text-gray-500 dark:text-gray-400">No places match your search or filters.</p>}
           {visibleByRegion.map(({ region, places }) => (
             <section key={region} className="grid gap-3">
               <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{region}</h2>
@@ -220,6 +247,40 @@ export default function Wizard() {
             {selectedIds.length === 1 ? "" : "s"} across the trip.
           </p>
           <DateRangePicker start={start} end={end} onStart={setStart} onEnd={setEnd} />
+          {availableCities.length > 0 && (
+            <div className="flex flex-wrap gap-4">
+              <label className="flex flex-col text-sm text-gray-600 dark:text-gray-400 gap-1">
+                Starting city
+                <select
+                  value={startCity}
+                  onChange={(e) => setStartCity(e.target.value)}
+                  className="border border-gray-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-neutral-900"
+                >
+                  <option value="">No preference</option>
+                  {availableCities.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col text-sm text-gray-600 dark:text-gray-400 gap-1">
+                Ending city
+                <select
+                  value={endCity}
+                  onChange={(e) => setEndCity(e.target.value)}
+                  className="border border-gray-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-neutral-900"
+                >
+                  <option value="">No preference</option>
+                  {availableCities.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <button
               type="button"

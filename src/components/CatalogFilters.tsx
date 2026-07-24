@@ -5,16 +5,31 @@ import type { Region, Category } from "@/data/places";
 export default function CatalogFilters({
   region,
   category,
+  query,
   onRegion,
   onCategory,
+  onQuery,
 }: {
   region: Region | "all";
   category: Category | "all";
+  query: string;
   onRegion: (r: Region | "all") => void;
   onCategory: (c: Category | "all") => void;
+  onQuery: (q: string) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="grid gap-3">
+      <label className="flex flex-col text-xs text-gray-500 dark:text-gray-400 gap-1">
+        Search
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => onQuery(e.target.value)}
+          placeholder="Search places, activities, food, shopping..."
+          className="border border-gray-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-neutral-900"
+        />
+      </label>
+      <div className="flex flex-wrap gap-3">
       <label className="flex flex-col text-xs text-gray-500 dark:text-gray-400 gap-1">
         Region
         <select
@@ -45,6 +60,7 @@ export default function CatalogFilters({
           ))}
         </select>
       </label>
+      </div>
     </div>
   );
 }
