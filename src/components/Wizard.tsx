@@ -22,6 +22,7 @@ type PersistedState = {
   manualMoves: Record<string, number>;
   startCity: string;
   endCity: string;
+  dayAllocations: Record<string, number>;
 };
 
 const STEPS: { key: Step; label: string }[] = [
@@ -29,6 +30,9 @@ const STEPS: { key: Step; label: string }[] = [
   { key: "dates", label: "Pick dates" },
   { key: "itinerary", label: "Your itinerary" },
 ];
+
+const selectClasses =
+  "border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400";
 
 export default function Wizard() {
   const [step, setStep] = useState<Step>("select");
@@ -38,6 +42,7 @@ export default function Wizard() {
   const [startCity, setStartCity] = useState("");
   const [endCity, setEndCity] = useState("");
   const [manualMoves, setManualMoves] = useState<Record<string, number>>({});
+  const [dayAllocations, setDayAllocations] = useState<Record<string, number>>({});
   const [regionFilter, setRegionFilter] = useState<Region | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,6 +65,7 @@ export default function Wizard() {
         if (typeof s.startCity === "string") setStartCity(s.startCity);
         if (typeof s.endCity === "string") setEndCity(s.endCity);
         if (s.manualMoves && typeof s.manualMoves === "object") setManualMoves(s.manualMoves);
+        if (s.dayAllocations && typeof s.dayAllocations === "object") setDayAllocations(s.dayAllocations);
       }
     } catch {
       // ignore malformed storage
@@ -71,13 +77,22 @@ export default function Wizard() {
   // Persist whenever state changes (after initial hydration).
   useEffect(() => {
     if (!hydrated) return;
-    const payload: PersistedState = { step, selectedIds, start, end, manualMoves, startCity, endCity };
+    const payload: PersistedState = {
+      step,
+      selectedIds,
+      start,
+      end,
+      manualMoves,
+      startCity,
+      endCity,
+      dayAllocations,
+    };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch {
       // ignore quota/availability errors
     }
-  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity]);
+  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations]);
 
   const selectedPlaces = useMemo(
     () => PLACES.filter((p) => selectedIds.includes(p.id)),
@@ -91,11 +106,18 @@ export default function Wizard() {
     [selectedPlaces]
   );
 
+  // Places big enough to warrant more than one day (e.g. Universal Studios Japan).
+  const multiDayPlaces = useMemo(
+    () => selectedPlaces.filter((p) => (p.maxDays ?? 1) > 1),
+    [selectedPlaces]
+  );
+
   const days: Day[] = useMemo(() => {
     if (!datesValid) return [];
     const base = buildItinerary(selectedPlaces, new Date(start), new Date(end), {
       startCity: startCity || undefined,
       endCity: endCity || undefined,
+      dayAllocations,
     });
     if (Object.keys(manualMoves).length === 0) return base;
 
@@ -114,7 +136,7 @@ export default function Wizard() {
       cleaned[target].places.push(place);
     }
     return cleaned;
-  }, [datesValid, selectedPlaces, start, end, startCity, endCity, manualMoves]);
+  }, [datesValid, selectedPlaces, start, end, startCity, endCity, manualMoves, dayAllocations]);
 
   function togglePlace(id: string) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -127,10 +149,19 @@ export default function Wizard() {
       delete next[id];
       return next;
     });
+    setDayAllocations((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   }
 
   function movePlace(id: string, toDayIndex: number) {
     setManualMoves((prev) => ({ ...prev, [id]: toDayIndex }));
+  }
+
+  function setDays(id: string, count: number) {
+    setDayAllocations((prev) => ({ ...prev, [id]: count }));
   }
 
   function startOver() {
@@ -140,6 +171,7 @@ export default function Wizard() {
     setStartCity("");
     setEndCity("");
     setManualMoves({});
+    setDayAllocations({});
     setRegionFilter("all");
     setCategoryFilter("all");
     setSearchQuery("");
@@ -171,32 +203,37 @@ export default function Wizard() {
   const activeIndex = STEPS.findIndex((x) => x.key === step);
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6 grid gap-6">
-      <header className="grid gap-3">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Japan Itinerary Maker</h1>
-        <ol className="flex flex-wrap gap-2">
-          {STEPS.map((s, i) => {
-            const state = i === activeIndex ? "active" : i < activeIndex ? "done" : "todo";
-            return (
-              <li
-                key={s.key}
-                className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-full border ${
+    <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-5 sm:p-8 grid gap-6">
+      <ol className="flex flex-wrap gap-2">
+        {STEPS.map((s, i) => {
+          const state = i === activeIndex ? "active" : i < activeIndex ? "done" : "todo";
+          return (
+            <li
+              key={s.key}
+              className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-full border ${
+                state === "active"
+                  ? "border-red-500 bg-red-50 text-red-700 font-semibold"
+                  : state === "done"
+                  ? "border-green-300 bg-green-50 text-green-700"
+                  : "border-gray-200 text-gray-400"
+              }`}
+            >
+              <span
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
                   state === "active"
-                    ? "border-rose-500 dark:border-rose-400 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-semibold"
+                    ? "bg-red-500 text-white"
                     : state === "done"
-                    ? "border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400"
-                    : "border-gray-200 dark:border-neutral-700 text-gray-400 dark:text-gray-500"
+                    ? "bg-green-500 text-white"
+                    : "bg-white border border-gray-300 text-gray-500"
                 }`}
               >
-                <span className="w-5 h-5 rounded-full bg-white dark:bg-neutral-800 border dark:border-neutral-600 flex items-center justify-center text-xs">
-                  {i + 1}
-                </span>
-                {s.label}
-              </li>
-            );
-          })}
-        </ol>
-      </header>
+                {i + 1}
+              </span>
+              {s.label}
+            </li>
+          );
+        })}
+      </ol>
 
       {step === "select" && (
         <div className="grid gap-4">
@@ -208,31 +245,32 @@ export default function Wizard() {
             onCategory={setCategoryFilter}
             onQuery={setSearchQuery}
           />
-          {visibleByRegion.length === 0 && <p className="text-gray-500 dark:text-gray-400">No places match your search or filters.</p>}
+          {visibleByRegion.length === 0 && <p className="text-gray-500">No places match your search or filters.</p>}
           {visibleByRegion.map(({ region, places }) => (
             <section key={region} className="grid gap-3">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{region}</h2>
+              <h3 className="text-lg font-semibold text-gray-800">{region}</h3>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {places.map((place) => (
+                {places.map((place, i) => (
                   <PlaceCard
                     key={place.id}
                     place={place}
                     selected={selectedIds.includes(place.id)}
                     onToggle={togglePlace}
+                    lastInRow={i % 3 === 2}
                   />
                 ))}
               </div>
             </section>
           ))}
-          <div className="sticky bottom-0 bg-gray-50/90 dark:bg-neutral-950/90 backdrop-blur border-t border-gray-200 dark:border-neutral-800 py-3 flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="sticky bottom-0 -mx-5 sm:-mx-8 px-5 sm:px-8 bg-white/90 backdrop-blur border-t border-gray-200 py-3 flex items-center justify-between rounded-b-2xl">
+            <span className="text-sm text-gray-600">
               {selectedIds.length} place{selectedIds.length === 1 ? "" : "s"} selected
             </span>
             <button
               type="button"
               disabled={selectedIds.length === 0}
               onClick={() => setStep("dates")}
-              className="px-5 py-2 rounded-lg bg-rose-600 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-rose-700"
+              className="px-6 py-2.5 rounded-full bg-red-500 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-600 transition-colors"
             >
               Next: pick dates
             </button>
@@ -242,20 +280,16 @@ export default function Wizard() {
 
       {step === "dates" && (
         <div className="grid gap-6">
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600">
             When are you travelling? We&apos;ll spread your {selectedIds.length} selected place
             {selectedIds.length === 1 ? "" : "s"} across the trip.
           </p>
           <DateRangePicker start={start} end={end} onStart={setStart} onEnd={setEnd} />
           {availableCities.length > 0 && (
             <div className="flex flex-wrap gap-4">
-              <label className="flex flex-col text-sm text-gray-600 dark:text-gray-400 gap-1">
+              <label className="flex flex-col text-sm text-gray-600 gap-1">
                 Starting city
-                <select
-                  value={startCity}
-                  onChange={(e) => setStartCity(e.target.value)}
-                  className="border border-gray-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-neutral-900"
-                >
+                <select value={startCity} onChange={(e) => setStartCity(e.target.value)} className={selectClasses}>
                   <option value="">No preference</option>
                   {availableCities.map((c) => (
                     <option key={c} value={c}>
@@ -264,13 +298,9 @@ export default function Wizard() {
                   ))}
                 </select>
               </label>
-              <label className="flex flex-col text-sm text-gray-600 dark:text-gray-400 gap-1">
+              <label className="flex flex-col text-sm text-gray-600 gap-1">
                 Ending city
-                <select
-                  value={endCity}
-                  onChange={(e) => setEndCity(e.target.value)}
-                  className="border border-gray-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-neutral-900"
-                >
+                <select value={endCity} onChange={(e) => setEndCity(e.target.value)} className={selectClasses}>
                   <option value="">No preference</option>
                   {availableCities.map((c) => (
                     <option key={c} value={c}>
@@ -281,11 +311,36 @@ export default function Wizard() {
               </label>
             </div>
           )}
+          {multiDayPlaces.length > 0 && (
+            <div className="grid gap-3 rounded-xl bg-red-50 border border-red-100 p-4">
+              <p className="text-sm font-medium text-gray-800">
+                Some places are worth more than a day — choose how long to spend:
+              </p>
+              <div className="flex flex-wrap gap-4">
+                {multiDayPlaces.map((p) => (
+                  <label key={p.id} className="flex flex-col text-sm text-gray-600 gap-1">
+                    {p.name}
+                    <select
+                      value={dayAllocations[p.id] ?? 1}
+                      onChange={(e) => setDays(p.id, Number(e.target.value))}
+                      className={selectClasses}
+                    >
+                      {Array.from({ length: p.maxDays ?? 1 }, (_, i) => i + 1).map((n) => (
+                        <option key={n} value={n}>
+                          {n} {n === 1 ? "day" : "days"}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <button
               type="button"
               onClick={() => setStep("select")}
-              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
+              className="px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
             >
               Back
             </button>
@@ -293,7 +348,7 @@ export default function Wizard() {
               type="button"
               disabled={!datesValid}
               onClick={() => setStep("itinerary")}
-              className="px-5 py-2 rounded-lg bg-rose-600 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-rose-700"
+              className="px-6 py-2.5 rounded-full bg-red-500 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-600 transition-colors"
             >
               Build itinerary
             </button>
@@ -304,21 +359,21 @@ export default function Wizard() {
       {step === "itinerary" && (
         <div className="grid gap-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600">
               {tripDays(new Date(start), new Date(end))}-day trip with {selectedPlaces.length} places
             </p>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setStep("dates")}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                className="px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={startOver}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                className="px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
               >
                 Start over
               </button>

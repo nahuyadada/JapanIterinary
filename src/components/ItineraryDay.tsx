@@ -49,11 +49,11 @@ export default function ItineraryDay({
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <label className="sr-only" htmlFor={`move-${place.id}`}>
+                <label className="sr-only" htmlFor={`move-${day.dayIndex}-${place.id}`}>
                   Move {place.name} to another day
                 </label>
                 <select
-                  id={`move-${place.id}`}
+                  id={`move-${day.dayIndex}-${place.id}`}
                   value={day.dayIndex}
                   onChange={(e) => onMove(place.id, Number(e.target.value))}
                   className="border border-gray-300 dark:border-neutral-600 rounded-lg px-2 py-1 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900"

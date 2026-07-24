@@ -30,10 +30,13 @@ export default function ItineraryMap({ days }: { days: Day[] }) {
 
   return (
     <MapContainer center={center} zoom={markers.length ? 6 : 5} className="h-72 sm:h-96 w-full rounded-xl z-0">
-      <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" />
+      <TileLayer
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      />
       {markers.map(({ place, dayIndex }) => (
         <Marker
-          key={place.id}
+          key={`${place.id}-${dayIndex}`}
           position={[place.lat, place.lng]}
           icon={numberIcon(dayIndex + 1, DAY_COLORS[dayIndex % DAY_COLORS.length])}
         >
