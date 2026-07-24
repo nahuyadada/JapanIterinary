@@ -4,10 +4,12 @@ import dynamic from "next/dynamic";
 import { PLACES, REGIONS, CATEGORY_LABELS } from "@/data/places";
 import type { Region, Category } from "@/data/places";
 import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
+import { recommendStays } from "@/lib/lodging";
 import PlaceCard from "@/components/PlaceCard";
 import CatalogFilters from "@/components/CatalogFilters";
 import DateRangePicker from "@/components/DateRangePicker";
 import ItineraryDay from "@/components/ItineraryDay";
+import WhereToStay from "@/components/WhereToStay";
 
 const ItineraryMap = dynamic(() => import("@/components/ItineraryMap"), { ssr: false });
 
@@ -23,6 +25,7 @@ type PersistedState = {
   startCity: string;
   endCity: string;
   dayAllocations: Record<string, number>;
+  adults: number;
 };
 
 const STEPS: { key: Step; label: string }[] = [
@@ -43,6 +46,7 @@ export default function Wizard() {
   const [endCity, setEndCity] = useState("");
   const [manualMoves, setManualMoves] = useState<Record<string, number>>({});
   const [dayAllocations, setDayAllocations] = useState<Record<string, number>>({});
+  const [adults, setAdults] = useState(2);
   const [regionFilter, setRegionFilter] = useState<Region | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,6 +70,7 @@ export default function Wizard() {
         if (typeof s.endCity === "string") setEndCity(s.endCity);
         if (s.manualMoves && typeof s.manualMoves === "object") setManualMoves(s.manualMoves);
         if (s.dayAllocations && typeof s.dayAllocations === "object") setDayAllocations(s.dayAllocations);
+        if (typeof s.adults === "number" && s.adults >= 1) setAdults(s.adults);
       }
     } catch {
       // ignore malformed storage
@@ -86,13 +91,14 @@ export default function Wizard() {
       startCity,
       endCity,
       dayAllocations,
+      adults,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch {
       // ignore quota/availability errors
     }
-  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations]);
+  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, adults]);
 
   const selectedPlaces = useMemo(
     () => PLACES.filter((p) => selectedIds.includes(p.id)),
@@ -138,6 +144,8 @@ export default function Wizard() {
     return cleaned;
   }, [datesValid, selectedPlaces, start, end, startCity, endCity, manualMoves, dayAllocations]);
 
+  const stayRecommendations = useMemo(() => recommendStays(days, 3), [days]);
+
   function togglePlace(id: string) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
@@ -172,6 +180,7 @@ export default function Wizard() {
     setEndCity("");
     setManualMoves({});
     setDayAllocations({});
+    setAdults(2);
     setRegionFilter("all");
     setCategoryFilter("all");
     setSearchQuery("");
@@ -285,6 +294,17 @@ export default function Wizard() {
             {selectedIds.length === 1 ? "" : "s"} across the trip.
           </p>
           <DateRangePicker start={start} end={end} onStart={setStart} onEnd={setEnd} />
+          <label className="flex flex-col text-sm text-gray-600 gap-1 max-w-[10rem]">
+            Travelers (adults)
+            <input
+              type="number"
+              min={1}
+              max={8}
+              value={adults}
+              onChange={(e) => setAdults(Math.min(8, Math.max(1, Number(e.target.value) || 1)))}
+              className={selectClasses}
+            />
+          </label>
           {availableCities.length > 0 && (
             <div className="flex flex-wrap gap-4">
               <label className="flex flex-col text-sm text-gray-600 gap-1">
@@ -379,7 +399,8 @@ export default function Wizard() {
               </button>
             </div>
           </div>
-          <ItineraryMap days={days} />
+          <ItineraryMap days={days} stayRecommendations={stayRecommendations} />
+          <WhereToStay recommendations={stayRecommendations} adults={adults} />
           <div className="grid gap-4">
             {days.map((day) => (
               <ItineraryDay

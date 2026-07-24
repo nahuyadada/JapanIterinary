@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Day } from "@/lib/itinerary";
+import type { StayRecommendation } from "@/lib/lodging";
 
 const DAY_COLORS = ["#e11d48", "#2563eb", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#65a30d"];
 
@@ -14,12 +15,34 @@ const numberIcon = (n: number, color: string) =>
     iconAnchor: [14, 14],
   });
 
-export default function ItineraryMap({ days }: { days: Day[] }) {
+const lodgingIcon = (color: string) =>
+  L.divIcon({
+    className: "",
+    html: `<div style="background:#fff;color:${color};border-radius:8px 8px 8px 0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:15px;border:2px solid ${color};box-shadow:0 1px 4px rgba(0,0,0,.4);transform:rotate(-45deg)"><span style="transform:rotate(45deg)">🛏️</span></div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 26],
+  });
+
+export default function ItineraryMap({
+  days,
+  stayRecommendations = [],
+}: {
+  days: Day[];
+  stayRecommendations?: StayRecommendation[];
+}) {
   const markers = days.flatMap((day) =>
     day.places
       .filter((p) => p.lat != null && p.lng != null)
       .map((p) => ({ place: p, dayIndex: day.dayIndex }))
   );
+
+  const lodgingMarkers = stayRecommendations
+    .filter((r) => r.areas.length > 0)
+    .map((r) => ({
+      area: r.areas[0],
+      dayIndex: r.stay.dayIndexes[0],
+      region: r.stay.region,
+    }));
 
   const center: [number, number] = markers.length
     ? [
@@ -44,6 +67,19 @@ export default function ItineraryMap({ days }: { days: Day[] }) {
             <span className="font-semibold">{place.name}</span>
             <br />
             Day {dayIndex + 1}
+          </Popup>
+        </Marker>
+      ))}
+      {lodgingMarkers.map(({ area, dayIndex, region }) => (
+        <Marker
+          key={`lodging-${area.id}-${dayIndex}`}
+          position={[area.lat, area.lng]}
+          icon={lodgingIcon(DAY_COLORS[dayIndex % DAY_COLORS.length])}
+        >
+          <Popup>
+            <span className="font-semibold">Stay: {area.name}</span>
+            <br />
+            {region}
           </Popup>
         </Marker>
       ))}
