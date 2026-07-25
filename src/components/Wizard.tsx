@@ -587,7 +587,30 @@ export default function Wizard() {
                     </>
                   )}
                 </button>
+                {typeof navigator !== "undefined" && Boolean(navigator.share) && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await navigator.share({
+                          title: "Trip to Japan Itinerary",
+                          text: "Check out my Japan trip itinerary!",
+                          url: share.url,
+                        });
+                      } catch {
+                        // User dismissed share dialog
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg bg-green-700 text-white hover:bg-green-800 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 107.032-2.128 3 3 0 00-7.032 2.128zm0 8a3 3 0 107.032 2.128 3 3 0 00-7.032-2.128z" />
+                    </svg>
+                    <span>Share via app</span>
+                  </button>
+                )}
               </div>
+
               <p className="text-xs text-green-700">
                 Anyone with this link can see the trip, so only send it to people you want to
                 share it with.

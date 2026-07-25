@@ -90,6 +90,34 @@ export default function TripGuide({ code, guideDays }: { code: string; guideDays
     if (day) setProgress((prev) => completeLeg(prev, day));
   }, [day]);
 
+  const [copied, setCopied] = useState(false);
+
+  const handleSharePlan = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (!url) return;
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: `${guideDays.length}-day trip to Japan`,
+          text: `Check out this ${guideDays.length}-day Japan travel itinerary!`,
+          url,
+        });
+        return;
+      } catch {
+        // Fallback to clipboard if share modal is cancelled or unsupported
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // ignore
+    }
+  };
+
   if (guideDays.length === 0 || !day) {
     return <p className="text-gray-600 dark:text-gray-300">This trip has no days planned.</p>;
   }
@@ -99,24 +127,50 @@ export default function TripGuide({ code, guideDays }: { code: string; guideDays
 
   return (
     <div className="grid gap-5">
-      <header className="grid gap-1">
-        <p className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
-          Trip code {code}
-        </p>
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-          {guideDays.length}-day trip to Japan
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {fmtDate(guideDays[0].date)} → {fmtDate(guideDays[guideDays.length - 1].date)}
-        </p>
-        {hydrated && position.phase === "before" && (
-          <p className="text-sm text-red-600 dark:text-red-400">
-            {position.daysUntilStart === 1
-              ? "Your trip starts tomorrow."
-              : `Your trip starts in ${position.daysUntilStart} days.`}
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-200 dark:border-neutral-800 pb-4">
+        <div className="grid gap-1">
+          {code && code !== "LINK" && (
+            <p className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
+              Trip code {code}
+            </p>
+          )}
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            {guideDays.length}-day trip to Japan
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {fmtDate(guideDays[0].date)} → {fmtDate(guideDays[guideDays.length - 1].date)}
           </p>
-        )}
+          {hydrated && position.phase === "before" && (
+            <p className="text-sm text-red-600 dark:text-red-400">
+              {position.daysUntilStart === 1
+                ? "Your trip starts tomorrow."
+                : `Your trip starts in ${position.daysUntilStart} days.`}
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={handleSharePlan}
+          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-full bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors"
+        >
+          {copied ? (
+            <>
+              <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Link copied!</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 107.032-2.128 3 3 0 00-7.032 2.128zm0 8a3 3 0 107.032 2.128 3 3 0 00-7.032-2.128z" />
+              </svg>
+              <span>Share plan</span>
+            </>
+          )}
+        </button>
       </header>
+
 
       {!progress.started ? (
         <>
