@@ -106,7 +106,8 @@ export function buildDaySchedule(
       to: to.name,
       mode,
       km,
-      url: directionsUrl(fromPoint, to, mode),
+      url: directionsUrl(null, to, mode),
+
     });
     t += travel;
     const vm = visitMinutes(p);

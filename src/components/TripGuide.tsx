@@ -16,7 +16,8 @@ import {
   type GuideDay,
   type GuideProgress,
 } from "@/lib/guide";
-import { hasCoords } from "@/lib/navigation";
+import { directionsUrl, hasCoords } from "@/lib/navigation";
+
 
 function fmtDate(d: Date): string {
   return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
@@ -222,7 +223,7 @@ export default function TripGuide({ code, guideDays }: { code: string; guideDays
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300">From {current.from.name}</p>
               <a
-                href={current.directionsUrl}
+                href={directionsUrl(null, current.to)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={primaryButton}
@@ -230,8 +231,9 @@ export default function TripGuide({ code, guideDays }: { code: string; guideDays
                 Get directions ↗
               </a>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Google Maps has the live route and travel time.
+                Google Maps opens with live directions starting from your current location.
               </p>
+
               <button
                 type="button"
                 onClick={advance}

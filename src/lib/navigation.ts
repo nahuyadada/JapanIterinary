@@ -37,18 +37,27 @@ function mapsQuery(point: NavOrigin): string {
 
 /**
  * Google Maps directions deep link. Opening it shows the real route, travel time,
+/**
+ * Google Maps directions deep link. Opening it shows the real route, travel time,
  * and fare on Google's side — this app does not compute or fabricate those.
  *
- * `from` may be a typed hotel with no coordinates; Google resolves the text.
+ * `from` may be a typed hotel with no coordinates. If `from` is null or undefined,
+ * Google Maps defaults the origin to the user's current location ("Your location").
  */
-export function directionsUrl(from: NavOrigin, to: NavPoint, mode: TransportMode): string {
+export function directionsUrl(
+  from: NavOrigin | null | undefined,
+  to: NavPoint,
+  mode: TransportMode = "transit"
+): string {
+  const originPart = from ? `&origin=${encodeURIComponent(mapsQuery(from))}` : "";
   return (
     "https://www.google.com/maps/dir/?api=1" +
-    `&origin=${encodeURIComponent(mapsQuery(from))}` +
+    originPart +
     `&destination=${encodeURIComponent(mapsQuery(to))}` +
     `&travelmode=${mode}`
   );
 }
+
 
 /**
  * Build a per-day travel route. Because the traveler returns to the same base each
