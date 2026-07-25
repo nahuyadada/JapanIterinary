@@ -8,6 +8,8 @@ import ItineraryDay from "@/components/ItineraryDay";
 import DaySchedule from "@/components/DaySchedule";
 import AddAttraction from "@/components/AddAttraction";
 
+import type { Place } from "@/data/places";
+
 function fmt(d: Date): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
@@ -24,6 +26,7 @@ export default function CityPlan({
   onRemove,
   onMove,
   onAdd,
+  onAddCustom,
 }: {
   rec: StayRecommendation;
   days: Day[];
@@ -37,7 +40,9 @@ export default function CityPlan({
   onRemove: (placeId: string) => void;
   onMove: (placeId: string, toDayIndex: number) => void;
   onAdd: (placeId: string) => void;
+  onAddCustom?: (place: Place) => void;
 }) {
+
   const { stay, areas } = rec;
   const top = areas[0];
   const origin: NavPoint | null = top ? { name: top.name, lat: top.lat, lng: top.lng } : null;
@@ -122,7 +127,8 @@ export default function CityPlan({
         </div>
       ))}
 
-      <AddAttraction group={suggestion} onAdd={onAdd} />
+      <AddAttraction group={suggestion} region={stay.region} onAdd={onAdd} onAddCustom={onAddCustom} />
+
     </section>
   );
 }

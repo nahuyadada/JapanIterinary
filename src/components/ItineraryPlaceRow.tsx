@@ -6,13 +6,12 @@ import { resolveBooking } from "@/lib/reservations";
 import BookingBadge from "@/components/BookingBadge";
 import BookingCard from "@/components/BookingCard";
 
+import { directionsUrl } from "@/lib/navigation";
+
 /**
  * One place within a day: its details and day/remove controls, plus a disclosure for
  * its booking requirements. The badge is always visible so the day stays scannable;
  * the full card opens on demand.
- *
- * The disclosure is a native <details> — no state to manage, keyboard-accessible by
- * default, and it still works before hydration.
  */
 export default function ItineraryPlaceRow({
   place,
@@ -30,9 +29,10 @@ export default function ItineraryPlaceRow({
   onMove: (placeId: string, toDayIndex: number) => void;
 }) {
   const booking = resolveBooking(place, visitDate);
+  const targetNavPoint = { name: `${place.name}, ${place.city}`, lat: place.lat, lng: place.lng };
 
   return (
-    <li className="px-4 py-3 grid gap-2">
+    <li className="px-4 py-3 grid gap-2 border-b border-gray-100 dark:border-neutral-800 last:border-0">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -40,12 +40,33 @@ export default function ItineraryPlaceRow({
             <BookingBadge status={booking.status} />
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            {place.city} - {CATEGORY_LABELS[place.category]}
+            {place.city} · {CATEGORY_LABELS[place.category] ?? place.category}
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500">
             Est. visit {formatRange(durationRangeFor(place))}
           </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1.5">
+            {place.customTime && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900">
+                ⏰ {place.customTime}
+              </span>
+            )}
+            {place.isCustom && (
+              <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+                Custom Spot
+              </span>
+            )}
+            <a
+              href={directionsUrl(null, targetNavPoint)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs px-2.5 py-1 rounded-full border border-red-200 dark:border-red-900 bg-red-50/60 dark:bg-red-950/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors inline-flex items-center gap-1 font-medium"
+            >
+              Directions ↗
+            </a>
+          </div>
         </div>
+
         <div className="flex items-center gap-2 shrink-0">
           <label className="sr-only" htmlFor={`move-${dayIndex}-${place.id}`}>
             Move {place.name} to another day

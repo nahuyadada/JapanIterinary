@@ -54,7 +54,12 @@ export type Place = {
   /** For places big enough to fill multiple days (e.g. USJ): max whole days a visitor can allocate. */
   maxDays?: number;
   activities: string[];
+  /** Optional custom user-specified time for the visit, e.g. "14:30" */
+  customTime?: string;
+  /** Whether this is a user-added custom spot */
+  isCustom?: boolean;
 };
+
 
 export const PLACES: Place[] = [
   // Tokyo

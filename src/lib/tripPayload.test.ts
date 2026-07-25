@@ -291,6 +291,43 @@ describe("payloadToItinerary", () => {
       b.map((d) => d.places.map((x) => x.id))
     );
   });
+  it("carries customPlaces through parsePayload and payloadPlaces", () => {
+    const customPlace = {
+      id: "custom-123",
+      name: "Ichiran Ramen",
+      city: "Asakusa, Tokyo",
+      region: "Tokyo" as const,
+      category: "food" as const,
+      description: "Ramen shop",
+      lat: NaN,
+      lng: NaN,
+      durationHours: 1,
+      customTime: "13:30",
+      isCustom: true,
+      activities: [],
+    };
+    const p = buildPayload({
+      selectedIds: [SENSOJI, "custom-123"],
+      start: "2026-04-01",
+      end: "2026-04-02",
+      manualMoves: {},
+      dayAllocations: {},
+      adults: 2,
+      transportMode: "transit",
+      stayOrigins: {},
+      customPlaces: [customPlace],
+    });
+    const parsed = parsePayload(p);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.customPlaces).toHaveLength(1);
+    expect(parsed?.customPlaces?.[0].name).toBe("Ichiran Ramen");
+
+    if (parsed) {
+      const places = payloadPlaces(parsed);
+      expect(places).toHaveLength(2);
+      expect(places.map((x) => x.name)).toContain("Ichiran Ramen");
+    }
+  });
 });
 
 describe("encodePayload & decodePayload", () => {
@@ -298,13 +335,12 @@ describe("encodePayload & decodePayload", () => {
     const original = payload({ startCity: "Tokyo", endCity: "Kyoto", manualMoves: { [SENSOJI]: 1 } });
     const encoded = encodePayload(original);
     expect(typeof encoded).toBe("string");
-    expect(encoded.length).toBeGreaterThan(0);
-    expect(decodePayload(encoded)).toEqual(original);
+    const decoded = decodePayload(encoded);
+    expect(decoded).toEqual(original);
   });
 
   it("returns null for malformed or un-decodable strings", () => {
-    expect(decodePayload("not-valid-base64!!!")).toBeNull();
     expect(decodePayload("")).toBeNull();
+    expect(decodePayload("garbage_string")).toBeNull();
   });
 });
-

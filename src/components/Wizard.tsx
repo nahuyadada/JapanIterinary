@@ -2,7 +2,8 @@
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { PLACES, REGIONS, CATEGORY_LABELS } from "@/data/places";
-import type { Region, Category } from "@/data/places";
+import type { Region, Category, Place } from "@/data/places";
+
 import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
 import { recommendStays } from "@/lib/lodging";
 import { suggestForItinerary } from "@/lib/suggestions";
@@ -35,6 +36,7 @@ type PersistedState = {
   transportMode: TransportMode;
   /** Typed hotel per stay, keyed by stayKey(region, firstDayIndex). */
   stayOrigins: Record<string, string>;
+  customPlaces?: Place[];
 };
 
 const STEPS: { key: Step; label: string }[] = [
@@ -65,6 +67,7 @@ export default function Wizard() {
   const [adults, setAdults] = useState(2);
   const [transportMode, setTransportMode] = useState<TransportMode>("transit");
   const [stayOrigins, setStayOrigins] = useState<Record<string, string>>({});
+  const [customPlaces, setCustomPlaces] = useState<Place[]>([]);
   const [share, setShare] = useState<ShareState>({ status: "idle" });
   const [copied, setCopied] = useState(false);
   const [regionFilter, setRegionFilter] = useState<Region | "all">("all");
@@ -73,10 +76,7 @@ export default function Wizard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hydrated, setHydrated] = useState(false);
 
-  // Restore persisted trip state after mount. We deliberately read localStorage in an
-  // effect (rather than a lazy useState initializer) so the server-rendered HTML matches
-  // the client's first render and there is no hydration mismatch. setState-in-effect is
-  // the correct pattern here, so the lint rule is scoped off for this block.
+  // Restore persisted trip state after mount.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     try {
@@ -96,6 +96,7 @@ export default function Wizard() {
           setTransportMode(s.transportMode);
         }
         if (s.stayOrigins && typeof s.stayOrigins === "object") setStayOrigins(s.stayOrigins);
+        if (Array.isArray(s.customPlaces)) setCustomPlaces(s.customPlaces);
       }
     } catch {
       // ignore malformed storage
@@ -119,26 +120,40 @@ export default function Wizard() {
       adults,
       transportMode,
       stayOrigins,
+      customPlaces,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch {
       // ignore quota/availability errors
     }
-  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, adults, transportMode, stayOrigins]);
+  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, adults, transportMode, stayOrigins, customPlaces]);
 
-  // A share link is a snapshot. As soon as the trip changes it no longer describes what
-  // is on screen, so drop it rather than hand out a link to something stale.
+  // A share link is a snapshot.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setShare({ status: "idle" });
-  }, [selectedIds, start, end, startCity, endCity, manualMoves, dayAllocations, adults, transportMode, stayOrigins]);
+  }, [selectedIds, start, end, startCity, endCity, manualMoves, dayAllocations, adults, transportMode, stayOrigins, customPlaces]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
+  const allPlacesMap = useMemo(() => {
+    const map = new Map<string, Place>(PLACES.map((p) => [p.id, p]));
+    for (const cp of customPlaces) {
+      map.set(cp.id, cp);
+    }
+    return map;
+  }, [customPlaces]);
+
   const selectedPlaces = useMemo(
-    () => PLACES.filter((p) => selectedIds.includes(p.id)),
-    [selectedIds]
+    () => selectedIds.map((id) => allPlacesMap.get(id)).filter((p): p is Place => p != null),
+    [selectedIds, allPlacesMap]
   );
+
+  const handleAddCustomPlace = (newPlace: Place) => {
+    setCustomPlaces((prev) => [...prev, newPlace]);
+    setSelectedIds((prev) => [...prev, newPlace.id]);
+  };
+
 
   const datesValid = start !== "" && end !== "" && end >= start;
 
@@ -244,7 +259,9 @@ export default function Wizard() {
       adults,
       transportMode,
       stayOrigins,
+      customPlaces,
     });
+
 
     try {
       const response = await fetch("/api/itinerary", {
@@ -644,7 +661,9 @@ export default function Wizard() {
               onRemove={removePlace}
               onMove={movePlace}
               onAdd={togglePlace}
+              onAddCustom={handleAddCustomPlace}
             />
+
           ))}
 
           {leftoverDays.length > 0 && (

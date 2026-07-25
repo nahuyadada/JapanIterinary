@@ -23,6 +23,8 @@ export type TripPayload = {
   transportMode: TransportMode;
   /** Where the traveler is staying, keyed by stay key (`${region}-${firstDayIndex}`). */
   stayOrigins: Record<string, string>;
+  /** Custom user-added locations */
+  customPlaces?: Place[];
 };
 
 const TRANSPORT_MODES: TransportMode[] = ["transit", "walking", "driving"];
@@ -53,6 +55,30 @@ function stringMap(v: unknown): Record<string, string> {
   return out;
 }
 
+function parseCustomPlaces(raw: unknown): Place[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const valid: Place[] = [];
+  for (const item of raw) {
+    if (isRecord(item) && typeof item.id === "string" && typeof item.name === "string" && typeof item.region === "string") {
+      valid.push({
+        id: item.id.slice(0, 64),
+        name: item.name.slice(0, 100),
+        city: typeof item.city === "string" ? item.city.slice(0, 100) : item.region,
+        region: item.region as any,
+        category: typeof item.category === "string" ? (item.category as any) : "food",
+        description: typeof item.description === "string" ? item.description.slice(0, 300) : "",
+        lat: typeof item.lat === "number" && Number.isFinite(item.lat) ? item.lat : NaN,
+        lng: typeof item.lng === "number" && Number.isFinite(item.lng) ? item.lng : NaN,
+        durationHours: typeof item.durationHours === "number" && Number.isFinite(item.durationHours) ? item.durationHours : 1,
+        customTime: typeof item.customTime === "string" ? item.customTime.slice(0, 20) : undefined,
+        isCustom: true,
+        activities: Array.isArray(item.activities) ? item.activities.filter((a): a is string => typeof a === "string").slice(0, 5) : [],
+      });
+    }
+  }
+  return valid.length > 0 ? valid : undefined;
+}
+
 /** Build the payload for sharing from the wizard's current state. */
 export function buildPayload(input: {
   selectedIds: string[];
@@ -65,6 +91,7 @@ export function buildPayload(input: {
   adults: number;
   transportMode: TransportMode;
   stayOrigins: Record<string, string>;
+  customPlaces?: Place[];
 }): TripPayload {
   return {
     v: 1,
@@ -78,16 +105,12 @@ export function buildPayload(input: {
     adults: input.adults,
     transportMode: input.transportMode,
     stayOrigins: input.stayOrigins,
+    ...(input.customPlaces && input.customPlaces.length > 0 ? { customPlaces: input.customPlaces } : {}),
   };
 }
 
 /**
  * Validate untrusted JSON into a TripPayload, or null when it isn't usable.
- *
- * This is the trust boundary: the input comes from the database, which was written by
- * an unauthenticated request. Anything unrecognised is dropped rather than believed —
- * notably place ids, which are checked against the catalog so a stale or forged id
- * can't reach the itinerary builder.
  */
 export function parsePayload(raw: unknown): TripPayload | null {
   if (!isRecord(raw)) return null;
@@ -98,7 +121,12 @@ export function parsePayload(raw: unknown): TripPayload | null {
   if (typeof end !== "string" || !ISO_DATE.test(end)) return null;
   if (end < start) return null;
 
-  const known = new Set(PLACES.map((p) => p.id));
+  const customPlaces = parseCustomPlaces(raw.customPlaces);
+  const known = new Set([
+    ...PLACES.map((p) => p.id),
+    ...(customPlaces ? customPlaces.map((p) => p.id) : []),
+  ]);
+
   const selectedIds = Array.isArray(raw.selectedIds)
     ? [
         ...new Set(
@@ -126,13 +154,18 @@ export function parsePayload(raw: unknown): TripPayload | null {
     adults,
     transportMode: mode,
     stayOrigins: stringMap(raw.stayOrigins),
+    ...(customPlaces ? { customPlaces } : {}),
   };
 }
 
-/** The trip's selected places, in catalog order. */
+/** The trip's selected places, in catalog order followed by custom places. */
 export function payloadPlaces(payload: TripPayload): Place[] {
-  return PLACES.filter((p) => payload.selectedIds.includes(p.id));
+  const catalogPlaces = PLACES.filter((p) => payload.selectedIds.includes(p.id));
+  const customPlaces = (payload.customPlaces ?? []).filter((p) => payload.selectedIds.includes(p.id));
+  return [...catalogPlaces, ...customPlaces];
 }
+
+
 
 /**
  * Rebuild the itinerary days from a payload, applying manual day moves exactly as the
