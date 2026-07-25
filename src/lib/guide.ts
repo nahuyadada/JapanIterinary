@@ -9,6 +9,7 @@ import {
   type TransportMode,
 } from "@/lib/navigation";
 import { normalizeShareCode } from "@/lib/shareCode";
+import type { StayLodging } from "@/lib/tripPayload";
 
 const MS_PER_DAY = 86_400_000;
 
@@ -41,6 +42,13 @@ export type GuideDay = {
   date: Date;
   /** Where the day starts: the stay's lodging, or the first attraction. */
   origin: NavOrigin | null;
+  /**
+   * The accommodation the traveler told us about for this day's stay, or null when they
+   * did not. Present so the day can show an overnight row; it is deliberately *not* one of
+   * `legs`, because a synthetic stop would corrupt leg distances, stop numbering, and the
+   * "X of Y stops done" counter.
+   */
+  lodging: StayLodging | null;
   legs: GuideLeg[];
 };
 
@@ -66,31 +74,52 @@ function cityProper(city: string | undefined): string | undefined {
   return last || undefined;
 }
 
+/** Where a day starts, and the accommodation behind it when there is one. */
+export type DayBase = {
+  origin: NavOrigin;
+  /** The traveler's own accommodation, or null when the origin is a recommended area. */
+  lodging: StayLodging | null;
+};
+
 /**
- * Decide where each day starts. A hotel the traveler typed for that stay wins, because
- * it's where they actually are; otherwise the day starts from the stay's top
- * recommended lodging area. Days belonging to no stay get no origin.
+ * Decide where each day starts, and carry the accommodation that decided it.
+ *
+ * The accommodation the traveler told us about wins, because it is where they actually
+ * are. With coordinates it becomes a real point, so distances and the day schedule work
+ * from their door; with only a name — which is every payload written by the earlier
+ * free-text version — it stays a text origin for Google to resolve, exactly as before.
+ * Otherwise the day starts from the stay's top recommended area. Days belonging to no stay
+ * get no base.
+ *
+ * Origin and lodging travel together in one map because `buildGuideDays` needs both, and
+ * threading two parallel maps keyed the same way invites them to drift apart.
  */
-export function guideOrigins(
+export function dayBases(
   recommendations: StayRecommendation[],
-  stayOrigins: Record<string, string> = {}
-): Map<number, NavOrigin> {
-  const byDay = new Map<number, NavOrigin>();
+  lodging: Record<string, StayLodging> = {}
+): Map<number, DayBase> {
+  const byDay = new Map<number, DayBase>();
   for (const rec of recommendations) {
     const firstDay = rec.stay.dayIndexes[0];
     if (firstDay === undefined) continue;
 
-    const typed = stayOrigins[stayKey(rec.stay.region, firstDay)]?.trim();
-    let origin: NavOrigin | null = null;
-    if (typed) {
-      origin = textOrigin(typed, cityProper(rec.stay.places[0]?.city));
+    const stay = lodging[stayKey(rec.stay.region, firstDay)];
+    const name = stay?.name.trim();
+
+    let base: DayBase | null = null;
+    if (stay && name) {
+      const origin: NavOrigin =
+        stay.lat !== undefined && stay.lng !== undefined
+          ? { name, lat: stay.lat, lng: stay.lng }
+          : textOrigin(name, cityProper(rec.stay.places[0]?.city));
+      base = { origin, lodging: stay };
     } else {
       const top = rec.areas[0];
-      if (top) origin = { name: top.name, lat: top.lat, lng: top.lng };
+      if (top) base = { origin: { name: top.name, lat: top.lat, lng: top.lng }, lodging: null };
     }
-    if (!origin) continue;
+    if (!base) continue;
 
-    for (const dayIndex of rec.stay.dayIndexes) byDay.set(dayIndex, origin);
+    for (const dayIndex of rec.stay.dayIndexes) byDay.set(dayIndex, base);
   }
   return byDay;
 }
@@ -106,7 +135,7 @@ export function guideOrigins(
  */
 export function buildGuideDays(
   days: Day[],
-  origins: Map<number, NavOrigin>,
+  bases: Map<number, DayBase>,
   mode: TransportMode
 ): GuideDay[] {
   return days.map((day) => {
@@ -118,7 +147,8 @@ export function buildGuideDays(
       places.push(p);
     }
 
-    const origin = origins.get(day.dayIndex) ?? null;
+    const base = bases.get(day.dayIndex) ?? null;
+    const origin = base?.origin ?? null;
     let from: NavOrigin | null = origin;
     let startIndex = 0;
     if (!from) {
@@ -140,7 +170,13 @@ export function buildGuideDays(
       from = to;
     }
 
-    return { dayIndex: day.dayIndex, date: day.date, origin, legs };
+    return {
+      dayIndex: day.dayIndex,
+      date: day.date,
+      origin,
+      lodging: base?.lodging ?? null,
+      legs,
+    };
   });
 }
 

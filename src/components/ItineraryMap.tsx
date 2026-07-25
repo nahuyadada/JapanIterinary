@@ -4,6 +4,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Day } from "@/lib/itinerary";
 import type { StayRecommendation } from "@/lib/lodging";
+import { stayKey } from "@/lib/guide";
+import type { StayLodging } from "@/lib/tripPayload";
 
 const DAY_COLORS = ["#e11d48", "#2563eb", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#65a30d"];
 
@@ -26,9 +28,12 @@ const lodgingIcon = (color: string) =>
 export default function ItineraryMap({
   days,
   stayRecommendations = [],
+  lodging = {},
 }: {
   days: Day[];
   stayRecommendations?: StayRecommendation[];
+  /** The traveler's own accommodation per stay, keyed by stayKey(region, firstDayIndex). */
+  lodging?: Record<string, StayLodging>;
 }) {
   const markers = days.flatMap((day) =>
     day.places
@@ -36,13 +41,45 @@ export default function ItineraryMap({
       .map((p) => ({ place: p, dayIndex: day.dayIndex }))
   );
 
-  const lodgingMarkers = stayRecommendations
-    .filter((r) => r.areas.length > 0)
-    .map((r) => ({
-      area: r.areas[0],
-      dayIndex: r.stay.dayIndexes[0],
-      region: r.stay.region,
-    }));
+  /**
+   * One pin per stay. The traveler's own accommodation wins over the recommended area when
+   * it has coordinates — that is where they will actually wake up. A name-only
+   * accommodation leaves the area's pin in place: there is nothing to move it to, and
+   * guessing a position would be a fabrication.
+   */
+  const lodgingMarkers = stayRecommendations.flatMap((r) => {
+    const dayIndex = r.stay.dayIndexes[0];
+    const booked = lodging[stayKey(r.stay.region, dayIndex)];
+    const region = r.stay.region;
+
+    if (booked && booked.lat !== undefined && booked.lng !== undefined) {
+      return [
+        {
+          key: `booked-${region}-${dayIndex}`,
+          name: booked.name,
+          lat: booked.lat,
+          lng: booked.lng,
+          dayIndex,
+          region,
+          booked: true,
+        },
+      ];
+    }
+
+    const area = r.areas[0];
+    if (!area) return [];
+    return [
+      {
+        key: `area-${area.id}-${dayIndex}`,
+        name: area.name,
+        lat: area.lat,
+        lng: area.lng,
+        dayIndex,
+        region,
+        booked: false,
+      },
+    ];
+  });
 
   const center: [number, number] = markers.length
     ? [
@@ -70,14 +107,17 @@ export default function ItineraryMap({
           </Popup>
         </Marker>
       ))}
-      {lodgingMarkers.map(({ area, dayIndex, region }) => (
+      {lodgingMarkers.map(({ key, name, lat, lng, dayIndex, region, booked }) => (
         <Marker
-          key={`lodging-${area.id}-${dayIndex}`}
-          position={[area.lat, area.lng]}
+          key={key}
+          position={[lat, lng]}
           icon={lodgingIcon(DAY_COLORS[dayIndex % DAY_COLORS.length])}
         >
           <Popup>
-            <span className="font-semibold">Stay: {area.name}</span>
+            <span className="font-semibold">
+              {booked ? "Your stay: " : "Stay: "}
+              {name}
+            </span>
             <br />
             {region}
           </Popup>

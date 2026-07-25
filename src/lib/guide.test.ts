@@ -11,7 +11,7 @@ import {
   buildGuideDays,
   completeLeg,
   currentLeg,
-  guideOrigins,
+  dayBases,
   guideStorageKey,
   isDayDone,
   legsDone,
@@ -24,9 +24,11 @@ import {
   tripPosition,
   tripProgress,
   undoLeg,
+  type DayBase,
   type GuideDay,
   type GuideProgress,
 } from "@/lib/guide";
+import type { StayLodging } from "@/lib/tripPayload";
 
 const place = (id: string, lat: number, lng: number, city = "Osaka"): Place => ({
   id,
@@ -87,12 +89,16 @@ const NAMBA = area("osaka-namba", "Namba / Dotonbori", 34.6659, 135.5012);
 /** Progress for a trip already under way, so tests can focus on the counts. */
 const p = (done: Record<number, number>): GuideProgress => ({ started: true, done });
 
+/** Bases for buildGuideDays from plain origins, with no traveler accommodation behind them. */
+const bases = (entries: [number, NavOrigin][]): Map<number, DayBase> =>
+  new Map(entries.map(([dayIndex, origin]) => [dayIndex, { origin, lodging: null }]));
+
 /** A guide day whose `count` attractions all follow a coordinate origin. */
 function guideDayWithLegs(dayIndex: number, count: number): GuideDay {
   const places = [USJ, DOTONBORI, CASTLE].slice(0, count);
   return buildGuideDays(
     [day(dayIndex, places)],
-    new Map<number, NavOrigin>([[dayIndex, { name: NAMBA.name, lat: NAMBA.lat, lng: NAMBA.lng }]]),
+    bases([[dayIndex, { name: NAMBA.name, lat: NAMBA.lat, lng: NAMBA.lng }]]),
     "transit"
   )[0];
 }
@@ -124,11 +130,19 @@ describe("textOrigin", () => {
   });
 });
 
-describe("guideOrigins", () => {
+describe("dayBases", () => {
+  const PINNED: StayLodging = {
+    name: "My Airbnb",
+    lat: 34.6937,
+    lng: 135.5023,
+    source: "pinned",
+  };
+
+  // Case 3: no accommodation — the stay's top recommended area.
   it("starts every day of a stay from the stay's top lodging area", () => {
-    const origins = guideOrigins([rec([0, 1, 2], [NAMBA, area("b", "B", 34.7, 135.5)])]);
+    const found = dayBases([rec([0, 1, 2], [NAMBA, area("b", "B", 34.7, 135.5)])]);
     for (const dayIndex of [0, 1, 2]) {
-      expect(origins.get(dayIndex)).toEqual({
+      expect(found.get(dayIndex)!.origin).toEqual({
         name: "Namba / Dotonbori",
         lat: 34.6659,
         lng: 135.5012,
@@ -136,55 +150,91 @@ describe("guideOrigins", () => {
     }
   });
 
-  it("prefers the hotel the traveler typed over the recommendation", () => {
-    const origins = guideOrigins([rec([0, 1], [NAMBA], [USJ])], { "Osaka-0": "Sakura Inn" });
-    const origin = origins.get(0)!;
-    expect(hasCoords(origin)).toBe(false);
-    expect(origin).toEqual({ name: "Sakura Inn", query: "Sakura Inn, Osaka" });
-    expect(origins.get(1)).toEqual(origin);
+  it("reports no lodging when the origin is a recommended area", () => {
+    const found = dayBases([rec([0, 1], [NAMBA])]);
+    expect(found.get(0)!.lodging).toBeNull();
+    expect(found.get(1)!.lodging).toBeNull();
   });
 
-  it("anchors a typed hotel to the city, not the attraction's district", () => {
+  // Case 1: accommodation with coordinates — a real point.
+  it("uses the accommodation's own coordinates when it has them", () => {
+    const found = dayBases([rec([0, 1], [NAMBA], [USJ])], { "Osaka-0": PINNED });
+    const origin = found.get(0)!.origin;
+    expect(hasCoords(origin)).toBe(true);
+    expect(origin).toEqual({ name: "My Airbnb", lat: 34.6937, lng: 135.5023 });
+    expect(found.get(1)!.origin).toEqual(origin);
+  });
+
+  it("carries the accommodation alongside the origin it produced", () => {
+    const found = dayBases([rec([0, 1], [NAMBA], [USJ])], { "Osaka-0": PINNED });
+    expect(found.get(0)!.lodging).toEqual(PINNED);
+    expect(found.get(1)!.lodging).toEqual(PINNED);
+  });
+
+  it("prefers a coordinate accommodation over the recommended area", () => {
+    const found = dayBases([rec([0], [NAMBA], [USJ])], { "Osaka-0": PINNED });
+    expect(found.get(0)!.origin).not.toMatchObject({ name: "Namba / Dotonbori" });
+  });
+
+  // Case 2: accommodation with a name only — today's text-origin behavior.
+  it("falls back to a text origin for a name-only accommodation", () => {
+    const found = dayBases([rec([0, 1], [NAMBA], [USJ])], {
+      "Osaka-0": { name: "Sakura Inn" },
+    });
+    const origin = found.get(0)!.origin;
+    expect(hasCoords(origin)).toBe(false);
+    expect(origin).toEqual({ name: "Sakura Inn", query: "Sakura Inn, Osaka" });
+    expect(found.get(1)!.origin).toEqual(origin);
+    expect(found.get(0)!.lodging).toEqual({ name: "Sakura Inn" });
+  });
+
+  it("anchors a name-only accommodation to the city, not the attraction's district", () => {
     // The hotel is very often in a different district than the day's first stop, so
     // "Konohana, Osaka" would point Google at the wrong neighbourhood.
     const inDistrict = place("usj", 34.6654, 135.4323, "Konohana, Osaka");
-    const origins = guideOrigins([rec([0], [NAMBA], [inDistrict])], { "Osaka-0": "Sakura Inn" });
-    expect(origins.get(0)).toMatchObject({ query: "Sakura Inn, Osaka" });
+    const found = dayBases([rec([0], [NAMBA], [inDistrict])], {
+      "Osaka-0": { name: "Sakura Inn" },
+    });
+    expect(found.get(0)!.origin).toMatchObject({ query: "Sakura Inn, Osaka" });
   });
 
   it("uses a single-part city as-is", () => {
     const simple = place("beppu-onsen", 33.2794, 131.5006, "Beppu");
-    const origins = guideOrigins([rec([0], [NAMBA], [simple])], { "Osaka-0": "Sakura Inn" });
-    expect(origins.get(0)).toMatchObject({ query: "Sakura Inn, Beppu" });
+    const found = dayBases([rec([0], [NAMBA], [simple])], { "Osaka-0": { name: "Sakura Inn" } });
+    expect(found.get(0)!.origin).toMatchObject({ query: "Sakura Inn, Beppu" });
   });
 
-  it("ignores a whitespace-only hotel and falls back to the recommendation", () => {
-    const origins = guideOrigins([rec([0], [NAMBA])], { "Osaka-0": "   " });
-    expect(hasCoords(origins.get(0)!)).toBe(true);
+  it("ignores a whitespace-only name and falls back to the recommendation", () => {
+    const found = dayBases([rec([0], [NAMBA])], { "Osaka-0": { name: "   " } });
+    expect(hasCoords(found.get(0)!.origin)).toBe(true);
+    expect(found.get(0)!.lodging).toBeNull();
   });
 
-  it("keys the typed hotel by region and the stay's first day", () => {
+  it("keys the accommodation by region and the stay's first day", () => {
     const recs = [rec([0, 1], [NAMBA]), rec([2, 3], [NAMBA])];
-    const origins = guideOrigins(recs, { "Osaka-2": "Second Hotel" });
-    expect(hasCoords(origins.get(0)!)).toBe(true);
-    expect(origins.get(2)).toMatchObject({ name: "Second Hotel" });
-    expect(origins.get(3)).toMatchObject({ name: "Second Hotel" });
+    const found = dayBases(recs, { "Osaka-2": { name: "Second Hotel" } });
+    expect(hasCoords(found.get(0)!.origin)).toBe(true);
+    expect(found.get(0)!.lodging).toBeNull();
+    expect(found.get(2)!.origin).toMatchObject({ name: "Second Hotel" });
+    expect(found.get(3)!.origin).toMatchObject({ name: "Second Hotel" });
   });
 
-  it("gives no origin for a stay with no areas and no typed hotel", () => {
-    const origins = guideOrigins([rec([0], [])]);
-    expect(origins.has(0)).toBe(false);
+  it("still bases a stay with no areas on a name-only accommodation", () => {
+    const found = dayBases([rec([0], [], [USJ])], { "Osaka-0": { name: "Sakura Inn" } });
+    expect(found.get(0)!.origin).toMatchObject({ name: "Sakura Inn" });
+  });
+
+  it("gives no base for a stay with no areas and no accommodation", () => {
+    expect(dayBases([rec([0], [])]).has(0)).toBe(false);
   });
 
   it("returns nothing when there are no stays", () => {
-    expect(guideOrigins([]).size).toBe(0);
+    expect(dayBases([]).size).toBe(0);
   });
 });
 
 describe("buildGuideDays", () => {
-  const origins = new Map<number, NavOrigin>([
-    [0, { name: NAMBA.name, lat: NAMBA.lat, lng: NAMBA.lng }],
-  ]);
+  const origins = bases([[0, { name: NAMBA.name, lat: NAMBA.lat, lng: NAMBA.lng }]]);
 
   it("creates one leg per attraction, starting from the origin", () => {
     const [built] = buildGuideDays([day(0, [USJ, DOTONBORI])], origins, "transit");
@@ -214,7 +264,7 @@ describe("buildGuideDays", () => {
   });
 
   it("reports no distance from a typed hotel rather than inventing one", () => {
-    const typed = new Map<number, NavOrigin>([[0, { name: "Sakura Inn", query: "Sakura Inn" }]]);
+    const typed = bases([[0, { name: "Sakura Inn", query: "Sakura Inn" }]]);
     const [built] = buildGuideDays([day(0, [USJ, DOTONBORI])], typed, "transit");
     expect(built.legs[0].straightLineKm).toBeNull();
     // Once travelling between known places, distance is measurable again.
@@ -222,9 +272,7 @@ describe("buildGuideDays", () => {
   });
 
   it("links to Google Maps using the typed text as the origin", () => {
-    const typed = new Map<number, NavOrigin>([
-      [0, { name: "Sakura Inn", query: "Sakura Inn, Osaka" }],
-    ]);
+    const typed = bases([[0, { name: "Sakura Inn", query: "Sakura Inn, Osaka" }]]);
     const [built] = buildGuideDays([day(0, [USJ])], typed, "walking");
     expect(built.legs[0].directionsUrl).toContain(encodeURIComponent("Sakura Inn, Osaka"));
     expect(built.legs[0].directionsUrl).toContain("travelmode=walking");
@@ -237,6 +285,49 @@ describe("buildGuideDays", () => {
         ["directionsUrl", "from", "index", "place", "straightLineKm", "to"].sort()
       );
     }
+  });
+
+  it("surfaces the accommodation on the day when the traveler set one", () => {
+    const lodging: StayLodging = {
+      name: "My Airbnb",
+      lat: 34.6937,
+      lng: 135.5023,
+      source: "pinned",
+    };
+    const withLodging = dayBases([rec([0], [NAMBA], [USJ])], { "Osaka-0": lodging });
+    const [built] = buildGuideDays([day(0, [USJ])], withLodging, "transit");
+    expect(built.lodging).toEqual(lodging);
+  });
+
+  it("leaves lodging null when the day is based on a recommended area", () => {
+    const [built] = buildGuideDays([day(0, [USJ])], origins, "transit");
+    expect(built.lodging).toBeNull();
+  });
+
+  it("leaves lodging null for a day belonging to no stay", () => {
+    const [built] = buildGuideDays([day(0, [USJ, DOTONBORI])], new Map(), "transit");
+    expect(built.lodging).toBeNull();
+  });
+
+  it("does not add the accommodation as a leg, which would corrupt stop counts", () => {
+    const withLodging = dayBases([rec([0], [NAMBA], [USJ, DOTONBORI])], {
+      "Osaka-0": { name: "My Airbnb", lat: 34.6937, lng: 135.5023, source: "pinned" },
+    });
+    const [built] = buildGuideDays([day(0, [USJ, DOTONBORI])], withLodging, "transit");
+    expect(built.legs).toHaveLength(2);
+    expect(built.legs.map((l) => l.place.id)).toEqual(["usj", "dotonbori"]);
+  });
+
+  it("measures the first leg from a coordinate accommodation but not from a name-only one", () => {
+    const coords = dayBases([rec([0], [NAMBA], [USJ])], {
+      "Osaka-0": { name: "My Airbnb", lat: 34.6937, lng: 135.5023, source: "pinned" },
+    });
+    const nameOnly = dayBases([rec([0], [NAMBA], [USJ])], { "Osaka-0": { name: "Sakura Inn" } });
+    expect(buildGuideDays([day(0, [USJ])], coords, "transit")[0].legs[0].straightLineKm)
+      .toBeGreaterThan(0);
+    expect(
+      buildGuideDays([day(0, [USJ])], nameOnly, "transit")[0].legs[0].straightLineKm
+    ).toBeNull();
   });
 
   it("begins at the first attraction when the day has no origin", () => {

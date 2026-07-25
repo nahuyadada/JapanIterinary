@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getItinerary } from "@/lib/db";
-import { buildGuideDays, guideOrigins } from "@/lib/guide";
+import { buildGuideDays, dayBases } from "@/lib/guide";
 import { recommendStays } from "@/lib/lodging";
 import { isShareCode, normalizeShareCode } from "@/lib/shareCode";
 import { decodePayload, parsePayload, payloadToItinerary, type TripPayload } from "@/lib/tripPayload";
@@ -59,8 +59,8 @@ export default async function SharedItineraryPage({
   // Rebuilt with the same functions the wizard uses, so a shared link picks up later
   // routing improvements instead of showing a frozen schedule.
   const days = payloadToItinerary(payload);
-  const origins = guideOrigins(recommendStays(days, 3), payload.stayOrigins);
-  const guideDays = buildGuideDays(days, origins, payload.transportMode);
+  const bases = dayBases(recommendStays(days, 3), payload.stayOrigins);
+  const guideDays = buildGuideDays(days, bases, payload.transportMode);
 
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-8 sm:py-12">

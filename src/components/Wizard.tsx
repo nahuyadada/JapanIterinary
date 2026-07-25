@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { PLACES, REGIONS, CATEGORY_LABELS } from "@/data/places";
 import type { Region, Category, Place } from "@/data/places";
@@ -8,7 +8,12 @@ import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
 import { recommendStays } from "@/lib/lodging";
 import { suggestForItinerary } from "@/lib/suggestions";
 import { stayKey } from "@/lib/guide";
-import { buildPayload, encodePayload } from "@/lib/tripPayload";
+import {
+  buildPayload,
+  encodePayload,
+  parseStayLodgings,
+  type StayLodging,
+} from "@/lib/tripPayload";
 
 import type { TransportMode } from "@/lib/navigation";
 import PlaceCard from "@/components/PlaceCard";
@@ -34,8 +39,8 @@ type PersistedState = {
   dayAllocations: Record<string, number>;
   adults: number;
   transportMode: TransportMode;
-  /** Typed hotel per stay, keyed by stayKey(region, firstDayIndex). */
-  stayOrigins: Record<string, string>;
+  /** The traveler's accommodation per stay, keyed by stayKey(region, firstDayIndex). */
+  stayOrigins: Record<string, StayLodging>;
   customPlaces?: Place[];
 };
 
@@ -56,6 +61,7 @@ type ShareState =
   | { status: "failed"; message: string };
 
 export default function Wizard() {
+  const rootRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState<Step>("select");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [start, setStart] = useState("");
@@ -66,7 +72,7 @@ export default function Wizard() {
   const [dayAllocations, setDayAllocations] = useState<Record<string, number>>({});
   const [adults, setAdults] = useState(2);
   const [transportMode, setTransportMode] = useState<TransportMode>("transit");
-  const [stayOrigins, setStayOrigins] = useState<Record<string, string>>({});
+  const [stayOrigins, setStayOrigins] = useState<Record<string, StayLodging>>({});
   const [customPlaces, setCustomPlaces] = useState<Place[]>([]);
   const [share, setShare] = useState<ShareState>({ status: "idle" });
   const [copied, setCopied] = useState(false);
@@ -95,7 +101,11 @@ export default function Wizard() {
         if (s.transportMode === "transit" || s.transportMode === "walking" || s.transportMode === "driving") {
           setTransportMode(s.transportMode);
         }
-        if (s.stayOrigins && typeof s.stayOrigins === "object") setStayOrigins(s.stayOrigins);
+        // State saved by the free-text version holds plain strings, so normalize rather
+        // than trust the shape.
+        if (s.stayOrigins && typeof s.stayOrigins === "object") {
+          setStayOrigins(parseStayLodgings(s.stayOrigins));
+        }
         if (Array.isArray(s.customPlaces)) setCustomPlaces(s.customPlaces);
       }
     } catch {
@@ -242,8 +252,17 @@ export default function Wizard() {
     setDayAllocations((prev) => ({ ...prev, [id]: count }));
   }
 
-  function setStayOrigin(key: string, value: string) {
-    setStayOrigins((prev) => ({ ...prev, [key]: value }));
+  /** Set or clear one stay's accommodation. Clearing removes the key rather than storing null. */
+  function setStayLodging(key: string, lodging: StayLodging | null) {
+    setStayOrigins((prev) => {
+      if (!lodging) {
+        if (!(key in prev)) return prev;
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }
+      return { ...prev, [key]: lodging };
+    });
   }
 
   async function shareTrip() {
@@ -288,8 +307,10 @@ export default function Wizard() {
       // Server / network error fallback
     }
 
-    // Client-side fallback if server endpoint fails or is unreachable
-    const encoded = encodePayload(payload);
+    // Client-side fallback if server endpoint fails or is unreachable. The compact string
+    // must be URL-encoded — see the note in POST /api/itinerary: without it the URL layer
+    // undoes the escaping that keeps an accommodation name out of the format's delimiters.
+    const encoded = encodeURIComponent(encodePayload(payload));
     setShare({
       status: "shared",
       code: "LINK",
@@ -340,8 +361,26 @@ export default function Wizard() {
 
   const activeIndex = STEPS.findIndex((x) => x.key === step);
 
+  /**
+   * Bring the wizard into view on every step change. Without this, advancing from
+   * "Choose places" (long enough to scroll well past the wizard's top) to "Pick dates"
+   * swaps the content but leaves the viewport wherever the user happened to be, so the new
+   * step can render off-screen or behind stale content.
+   */
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [step]);
+
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-5 sm:p-8 grid gap-6">
+    <div
+      ref={rootRef}
+      className="bg-white rounded-2xl shadow-lg border border-red-100 p-5 sm:p-8 grid gap-6"
+    >
       <ol className="flex flex-wrap gap-2">
         {STEPS.map((s, i) => {
           const state = i === activeIndex ? "active" : i < activeIndex ? "done" : "todo";
@@ -641,7 +680,11 @@ export default function Wizard() {
             </p>
           )}
 
-          <ItineraryMap days={days} stayRecommendations={stayRecommendations} />
+          <ItineraryMap
+            days={days}
+            stayRecommendations={stayRecommendations}
+            lodging={stayOrigins}
+          />
 
           <TripChecklist days={days} />
 
@@ -654,9 +697,9 @@ export default function Wizard() {
               adults={adults}
               mode={transportMode}
               suggestion={suggestionByStay.get(stayKey(rec.stay.region, rec.stay.dayIndexes[0]))}
-              stayOrigin={stayOrigins[stayKey(rec.stay.region, rec.stay.dayIndexes[0])] ?? ""}
-              onStayOrigin={(value) =>
-                setStayOrigin(stayKey(rec.stay.region, rec.stay.dayIndexes[0]), value)
+              lodging={stayOrigins[stayKey(rec.stay.region, rec.stay.dayIndexes[0])] ?? null}
+              onLodging={(lodging) =>
+                setStayLodging(stayKey(rec.stay.region, rec.stay.dayIndexes[0]), lodging)
               }
               onRemove={removePlace}
               onMove={movePlace}

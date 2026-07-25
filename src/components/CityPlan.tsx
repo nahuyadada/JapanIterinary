@@ -7,6 +7,8 @@ import type { StaySuggestion } from "@/lib/suggestions";
 import ItineraryDay from "@/components/ItineraryDay";
 import DaySchedule from "@/components/DaySchedule";
 import AddAttraction from "@/components/AddAttraction";
+import StayLodgingPicker from "@/components/StayLodgingPicker";
+import type { StayLodging } from "@/lib/tripPayload";
 
 import type { Place } from "@/data/places";
 
@@ -21,8 +23,8 @@ export default function CityPlan({
   adults,
   mode,
   suggestion,
-  stayOrigin,
-  onStayOrigin,
+  lodging,
+  onLodging,
   onRemove,
   onMove,
   onAdd,
@@ -34,9 +36,9 @@ export default function CityPlan({
   adults: number;
   mode: TransportMode;
   suggestion: StaySuggestion | undefined;
-  /** Where the traveler is actually staying, as they typed it. Empty when unset. */
-  stayOrigin: string;
-  onStayOrigin: (value: string) => void;
+  /** Where the traveler actually booked for this stay, or null when they haven't said. */
+  lodging: StayLodging | null;
+  onLodging: (lodging: StayLodging | null) => void;
   onRemove: (placeId: string) => void;
   onMove: (placeId: string, toDayIndex: number) => void;
   onAdd: (placeId: string) => void;
@@ -45,7 +47,22 @@ export default function CityPlan({
 
   const { stay, areas } = rec;
   const top = areas[0];
-  const origin: NavPoint | null = top ? { name: top.name, lat: top.lat, lng: top.lng } : null;
+  const areaOrigin: NavPoint | null = top
+    ? { name: top.name, lat: top.lat, lng: top.lng }
+    : null;
+
+  /**
+   * The schedule used to estimate its first leg from the recommended area even when the
+   * traveler had told us where they were staying, which is why the wizard's schedule could
+   * disagree with the guide's origin. A resolved accommodation now wins here too.
+   *
+   * A name-only accommodation cannot: `buildDaySchedule` needs coordinates to estimate a
+   * leg, and inventing them is the fabrication this feature exists to avoid.
+   */
+  const origin: NavPoint | null =
+    lodging && lodging.lat !== undefined && lodging.lng !== undefined
+      ? { name: lodging.name, lat: lodging.lat, lng: lodging.lng }
+      : areaOrigin;
 
   const firstDay = stay.dayIndexes[0] + 1;
   const lastDay = stay.dayIndexes[stay.dayIndexes.length - 1] + 1;
@@ -102,23 +119,18 @@ export default function CityPlan({
         </div>
       )}
 
-      <label className="grid gap-1 text-sm">
-        <span className="font-medium text-gray-800 dark:text-gray-100">
-          Booked somewhere already?
-        </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          Name your hotel and the shared trip guide will give directions from its door instead
-          of from the suggested area.
-        </span>
-        <input
-          type="text"
-          value={stayOrigin}
-          onChange={(e) => onStayOrigin(e.target.value)}
-          maxLength={120}
-          placeholder={`e.g. a hotel or address in ${stay.region}`}
-          className="mt-1 border border-gray-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
-        />
-      </label>
+      <StayLodgingPicker
+        region={stay.region}
+        cityHint={stay.places[0]?.city?.split(",").pop()?.trim()}
+        value={lodging}
+        onChange={onLodging}
+        defaultCenter={
+          areaOrigin
+            ? { lat: areaOrigin.lat, lng: areaOrigin.lng }
+            : // Nothing recommended for this stay, so start the pin over central Japan.
+              { lat: 36.2048, lng: 138.2529 }
+        }
+      />
 
       {days.map((day) => (
         <div key={day.dayIndex} className="grid gap-3">

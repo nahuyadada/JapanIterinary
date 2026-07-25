@@ -18,9 +18,71 @@ import {
 } from "@/lib/guide";
 import { directionsUrl, hasCoords } from "@/lib/navigation";
 import type { Day } from "@/lib/itinerary";
+import type { Place } from "@/data/places";
+import type { StayLodging } from "@/lib/tripPayload";
 import { bookingLinksForArea, recommendStays } from "@/lib/lodging";
 import type { TripPayload } from "@/lib/tripPayload";
 import TripChecklist from "@/components/TripChecklist";
+
+/** A place's photo, falling back to a plain tile when there is no image or it fails to load. */
+function PlaceThumb({ place, className }: { place: Place; className: string }) {
+  const [error, setError] = useState(false);
+  if (!place.imageUrl || error) {
+    return (
+      <div
+        className={`${className} bg-gradient-to-br from-red-100 to-pink-100 dark:from-neutral-800 dark:to-neutral-900`}
+        aria-hidden
+      />
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={place.imageUrl}
+      alt={place.name}
+      className={`${className} object-cover`}
+      onError={() => setError(true)}
+    />
+  );
+}
+
+/**
+ * Where the traveler sleeps that night, as its own row.
+ *
+ * Deliberately not one of the day's stops: adding it to `legs` would inflate the "X of Y
+ * stops done" counter, shift every stop's number, and put a leg distance between the last
+ * attraction and the hotel that the traveler never asked to walk.
+ */
+function OvernightRow({ lodging }: { lodging: StayLodging }) {
+  const point =
+    lodging.lat !== undefined && lodging.lng !== undefined
+      ? { name: lodging.name, lat: lodging.lat, lng: lodging.lng }
+      : null;
+
+  return (
+    <div className="flex items-center gap-2.5 rounded-xl border border-dashed border-gray-300 dark:border-neutral-600 bg-gray-50 dark:bg-neutral-800/50 px-3 py-2">
+      <span aria-hidden className="text-base">
+        🛏️
+      </span>
+      <span className="min-w-0 flex-1 text-sm">
+        <span className="text-gray-500 dark:text-gray-400">Overnight · </span>
+        <span className="font-medium text-gray-900 dark:text-gray-100 break-words">
+          {lodging.name}
+        </span>
+      </span>
+      {point && (
+        <a
+          href={directionsUrl(null, point)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 text-xs text-red-600 dark:text-red-400 underline hover:no-underline"
+        >
+          Directions ↗
+        </a>
+      )}
+    </div>
+  );
+}
 
 function fmtDate(d: Date): string {
   return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
@@ -302,9 +364,23 @@ export default function TripGuide({
                 </header>
 
                 {userHotel && (
-                  <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 p-3 text-sm">
-                    <span className="font-medium text-red-800 dark:text-red-300">Booked Hotel: </span>
-                    <span className="text-red-700 dark:text-red-200">{userHotel}</span>
+                  <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 p-3 text-sm grid gap-0.5">
+                    <p>
+                      <span className="font-medium text-red-800 dark:text-red-300">
+                        Booked Hotel:{" "}
+                      </span>
+                      <span className="text-red-700 dark:text-red-200">{userHotel.name}</span>
+                    </p>
+                    {userHotel.address && (
+                      <p className="text-xs text-red-700/80 dark:text-red-200/70">
+                        {userHotel.address}
+                      </p>
+                    )}
+                    <p className="text-[11px] text-red-600/80 dark:text-red-300/70">
+                      {userHotel.source === "geocoded" && "📍 Matched on the map"}
+                      {userHotel.source === "pinned" && "🎯 Pin placed by hand"}
+                      {!userHotel.source && "✏️ Name only — looked up when you open directions"}
+                    </p>
                   </div>
                 )}
 
@@ -380,17 +456,22 @@ export default function TripGuide({
                     Nothing planned — a free day.
                   </p>
                 ) : (
-                  <ul className="mt-2 grid gap-1">
+                  <ul className="mt-2 grid gap-2">
                     {d.legs.map((leg) => (
-                      <li key={leg.index} className="text-sm text-gray-700 dark:text-gray-300">
-                        {leg.index + 1}. {leg.place.name}
-                        <span className="text-gray-400 dark:text-gray-500">
-                          {" "}
-                          · {leg.place.city}
+                      <li key={leg.index} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <PlaceThumb place={leg.place} className="w-10 h-10 rounded-lg shrink-0" />
+                        <span className="min-w-0">
+                          {leg.index + 1}. {leg.place.name}
+                          <span className="text-gray-400 dark:text-gray-500"> · {leg.place.city}</span>
                         </span>
                       </li>
                     ))}
                   </ul>
+                )}
+                {d.lodging && (
+                  <div className="mt-2">
+                    <OvernightRow lodging={d.lodging} />
+                  </div>
                 )}
               </li>
             ))}
@@ -449,7 +530,11 @@ export default function TripGuide({
           )}
 
           {current ? (
-            <section className="grid gap-3 rounded-2xl border-2 border-red-200 dark:border-red-900 bg-red-50/60 dark:bg-red-950/20 p-4">
+            <section className="grid gap-3 rounded-2xl border-2 border-red-200 dark:border-red-900 bg-red-50/60 dark:bg-red-950/20 p-4 overflow-hidden">
+              <PlaceThumb
+                place={current.place}
+                className="-mx-4 -mt-4 w-[calc(100%+2rem)] h-40 sm:h-48"
+              />
               <p className="text-xs uppercase tracking-wide text-red-600 dark:text-red-400">
                 Stop {current.index + 1} of {day.legs.length}
               </p>
@@ -462,6 +547,13 @@ export default function TripGuide({
                   {fmtKm(current.straightLineKm) ? ` · ${fmtKm(current.straightLineKm)}` : ""}
                 </p>
               </div>
+              {current.place.activities.length > 0 && (
+                <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 grid gap-0.5">
+                  {current.place.activities.map((activity) => (
+                    <li key={activity}>{activity}</li>
+                  ))}
+                </ul>
+              )}
               <p className="text-sm text-gray-600 dark:text-gray-300">From {current.from.name}</p>
               <a
                 href={directionsUrl(null, current.to)}
@@ -547,6 +639,8 @@ export default function TripGuide({
               })}
             </ol>
           )}
+
+          {day.lodging && <OvernightRow lodging={day.lodging} />}
 
           <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <p className="text-sm text-gray-500 dark:text-gray-400">

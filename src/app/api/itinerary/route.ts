@@ -60,8 +60,12 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
-  // Database fallback: URL-encoded payload link guarantees sharing always works
-  const encoded = encodePayload(payload);
+  // Database fallback: URL-encoded payload link guarantees sharing always works.
+  // encodeURIComponent is required, not cosmetic: the compact string percent-escapes an
+  // accommodation name so it cannot contain the format's `:`/`|`/`~` delimiters, and
+  // dropping it in raw would let the URL layer decode those escapes back into delimiters
+  // and split the name into fragments.
+  const encoded = encodeURIComponent(encodePayload(payload));
   return Response.json({
     code: "LINK",
     url: `/itinerary/view?p=${encoded}`,

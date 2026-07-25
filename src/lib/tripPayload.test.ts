@@ -54,7 +54,7 @@ describe("buildPayload", () => {
       dayAllocations: { [SENSOJI]: 1 },
       adults: 3,
       transportMode: "walking",
-      stayOrigins: { "Tokyo-0": "Hotel Example" },
+      stayOrigins: { "Tokyo-0": { name: "Hotel Example" } },
     });
     expect(built).toEqual({
       v: 1,
@@ -67,7 +67,7 @@ describe("buildPayload", () => {
       dayAllocations: { [SENSOJI]: 1 },
       adults: 3,
       transportMode: "walking",
-      stayOrigins: { "Tokyo-0": "Hotel Example" },
+      stayOrigins: { "Tokyo-0": { name: "Hotel Example" } },
     });
   });
 
@@ -180,7 +180,7 @@ describe("parsePayload", () => {
     expect(parsed?.dayAllocations).toEqual({});
   });
 
-  it("trims stay origins, drops blanks, and caps their length", () => {
+  it("migrates a legacy bare-string stay origin to a name-only accommodation", () => {
     const parsed = parsePayload({
       ...payload(),
       stayOrigins: {
@@ -190,10 +190,115 @@ describe("parsePayload", () => {
         "Nara-7": "x".repeat(500),
       },
     });
-    expect(parsed?.stayOrigins["Tokyo-0"]).toBe("Hotel Example");
+    expect(parsed?.stayOrigins["Tokyo-0"]).toEqual({ name: "Hotel Example" });
     expect("Kyoto-3" in parsed!.stayOrigins).toBe(false);
     expect("Osaka-5" in parsed!.stayOrigins).toBe(false);
-    expect(parsed?.stayOrigins["Nara-7"]).toHaveLength(120);
+    expect(parsed?.stayOrigins["Nara-7"].name).toHaveLength(120);
+  });
+
+  it("keeps a fully resolved accommodation", () => {
+    const lodging = {
+      name: "Hotel Gracery",
+      lat: 35.6955,
+      lng: 139.7006,
+      address: "1-19-1 Kabukicho, Shinjuku, Tokyo",
+      source: "geocoded",
+    };
+    const parsed = parsePayload({ ...payload(), stayOrigins: { "Tokyo-0": lodging } });
+    expect(parsed?.stayOrigins["Tokyo-0"]).toEqual(lodging);
+  });
+
+  it("drops an accommodation object with no usable name", () => {
+    const parsed = parsePayload({
+      ...payload(),
+      stayOrigins: {
+        "Tokyo-0": { lat: 35.6, lng: 139.7 },
+        "Kyoto-3": { name: "   ", lat: 35, lng: 135 },
+        "Osaka-5": { name: 42 },
+        "Nara-7": null,
+        "Kobe-9": [],
+      },
+    });
+    expect(parsed?.stayOrigins).toEqual({});
+  });
+
+  it("drops both coordinates when either is out of range", () => {
+    const parsed = parsePayload({
+      ...payload(),
+      stayOrigins: {
+        "Tokyo-0": { name: "Too far north", lat: 91, lng: 139.7, source: "pinned" },
+        "Kyoto-3": { name: "Too far east", lat: 35, lng: 181, source: "pinned" },
+      },
+    });
+    expect(parsed?.stayOrigins["Tokyo-0"]).toEqual({ name: "Too far north" });
+    expect(parsed?.stayOrigins["Kyoto-3"]).toEqual({ name: "Too far east" });
+  });
+
+  it("never keeps half a coordinate pair", () => {
+    const parsed = parsePayload({
+      ...payload(),
+      stayOrigins: {
+        "Tokyo-0": { name: "Lat only", lat: 35.6 },
+        "Kyoto-3": { name: "Lng only", lng: 139.7 },
+        "Osaka-5": { name: "Not numbers", lat: "35.6", lng: "139.7" },
+        "Nara-7": { name: "Not finite", lat: NaN, lng: Infinity },
+      },
+    });
+    for (const key of ["Tokyo-0", "Kyoto-3", "Osaka-5", "Nara-7"]) {
+      expect(parsed?.stayOrigins[key].lat).toBeUndefined();
+      expect(parsed?.stayOrigins[key].lng).toBeUndefined();
+    }
+  });
+
+  it("keeps source only when it is one of the two known values", () => {
+    const parsed = parsePayload({
+      ...payload(),
+      stayOrigins: {
+        "Tokyo-0": { name: "A", lat: 35, lng: 139, source: "geocoded" },
+        "Kyoto-3": { name: "B", lat: 35, lng: 135, source: "pinned" },
+        "Osaka-5": { name: "C", lat: 34, lng: 135, source: "trustworthy" },
+        "Nara-7": { name: "D", lat: 34, lng: 135, source: 1 },
+      },
+    });
+    expect(parsed?.stayOrigins["Tokyo-0"].source).toBe("geocoded");
+    expect(parsed?.stayOrigins["Kyoto-3"].source).toBe("pinned");
+    expect(parsed?.stayOrigins["Osaka-5"].source).toBeUndefined();
+    expect(parsed?.stayOrigins["Nara-7"].source).toBeUndefined();
+  });
+
+  it("drops source when there are no coordinates for it to describe", () => {
+    const parsed = parsePayload({
+      ...payload(),
+      stayOrigins: { "Tokyo-0": { name: "Name only", source: "geocoded" } },
+    });
+    expect(parsed?.stayOrigins["Tokyo-0"]).toEqual({ name: "Name only" });
+  });
+
+  it("caps the address and drops a blank one", () => {
+    const parsed = parsePayload({
+      ...payload(),
+      stayOrigins: {
+        "Tokyo-0": { name: "A", address: "a".repeat(900) },
+        "Kyoto-3": { name: "B", address: "   " },
+        "Osaka-5": { name: "C", address: 7 },
+      },
+    });
+    expect(parsed?.stayOrigins["Tokyo-0"].address).toHaveLength(200);
+    expect(parsed?.stayOrigins["Kyoto-3"].address).toBeUndefined();
+    expect(parsed?.stayOrigins["Osaka-5"].address).toBeUndefined();
+  });
+
+  it("caps the number of stays", () => {
+    const many: Record<string, unknown> = {};
+    for (let i = 0; i < 100; i++) many[`Tokyo-${i}`] = { name: `Hotel ${i}` };
+    const parsed = parsePayload({ ...payload(), stayOrigins: many });
+    expect(Object.keys(parsed!.stayOrigins)).toHaveLength(40);
+  });
+
+  it("defaults stay origins to empty when the map is the wrong shape", () => {
+    expect(parsePayload({ ...payload(), stayOrigins: "Hotel" })?.stayOrigins).toEqual({});
+    expect(parsePayload({ ...payload(), stayOrigins: [1, 2] })?.stayOrigins).toEqual({});
+    expect(parsePayload({ ...payload(), stayOrigins: undefined })?.stayOrigins).toEqual({});
   });
 
   it("ignores city preferences that are not non-empty strings", () => {
@@ -342,5 +447,132 @@ describe("encodePayload & decodePayload", () => {
   it("returns null for malformed or un-decodable strings", () => {
     expect(decodePayload("")).toBeNull();
     expect(decodePayload("garbage_string")).toBeNull();
+  });
+
+  // The compact format is the only share path when there is no database, so an
+  // accommodation must survive it rather than silently vanishing.
+  describe("stay accommodation in the compact format", () => {
+    const roundTrip = (stayOrigins: TripPayload["stayOrigins"]) =>
+      decodePayload(encodePayload(payload({ stayOrigins })))?.stayOrigins;
+
+    it("preserves coordinates and source through a round trip", () => {
+      const lodging = {
+        name: "Hotel Gracery Shinjuku",
+        lat: 35.6955,
+        lng: 139.7006,
+        source: "geocoded" as const,
+      };
+      expect(roundTrip({ "Tokyo-0": lodging })).toEqual({ "Tokyo-0": lodging });
+    });
+
+    it("preserves a pinned accommodation's source", () => {
+      const lodging = { name: "My Airbnb", lat: 34.6937, lng: 135.5023, source: "pinned" as const };
+      expect(roundTrip({ "Osaka-2": lodging })).toEqual({ "Osaka-2": lodging });
+    });
+
+    it("preserves negative coordinates", () => {
+      const lodging = { name: "Southern Cross", lat: -33.8688, lng: -70.6693, source: "pinned" as const };
+      expect(roundTrip({ "Tokyo-0": lodging })).toEqual({ "Tokyo-0": lodging });
+    });
+
+    it("round-trips a name-only accommodation", () => {
+      expect(roundTrip({ "Tokyo-0": { name: "Sakura Inn" } })).toEqual({
+        "Tokyo-0": { name: "Sakura Inn" },
+      });
+    });
+
+    it("drops only the address, which the compact format deliberately does not carry", () => {
+      const decoded = roundTrip({
+        "Tokyo-0": {
+          name: "Hotel Gracery",
+          lat: 35.6955,
+          lng: 139.7006,
+          address: "1-19-1 Kabukicho, Shinjuku, Tokyo",
+          source: "geocoded",
+        },
+      });
+      expect(decoded?.["Tokyo-0"]).toEqual({
+        name: "Hotel Gracery",
+        lat: 35.6955,
+        lng: 139.7006,
+        source: "geocoded",
+      });
+    });
+
+    it("survives names containing the format's own delimiters", () => {
+      for (const name of [
+        "Hotel: The Best | Tokyo ~ Annex",
+        "B&B #3 (50% off)",
+        "Ryokan ~ Kyoto",
+        "旅館 さくら",
+        "Hotel:::::",
+      ]) {
+        const lodging = { name, lat: 35.6, lng: 139.7, source: "pinned" as const };
+        expect(roundTrip({ "Tokyo-0": lodging })).toEqual({ "Tokyo-0": lodging });
+      }
+    });
+
+    it("keeps a name with delimiters from corrupting the rest of the payload", () => {
+      const original = payload({
+        startCity: "Tokyo",
+        manualMoves: { [SENSOJI]: 1 },
+        stayOrigins: { "Tokyo-0": { name: "A~B|C:D", lat: 35.6, lng: 139.7 } },
+      });
+      expect(decodePayload(encodePayload(original))).toEqual(original);
+    });
+
+    it("preserves several stays at once", () => {
+      const stays = {
+        "Tokyo-0": { name: "Tokyo Hotel", lat: 35.68, lng: 139.76, source: "geocoded" as const },
+        "Kyoto-3": { name: "Kyoto Ryokan" },
+      };
+      expect(roundTrip(stays)).toEqual(stays);
+    });
+
+    it("still reads a legacy compact link whose stay is plain text", () => {
+      // What encodePayload used to emit: `key:name`, no coordinates.
+      const legacy = `2026-04-01~2026-04-03~2~transit~0~:~~~Tokyo-0:Sakura Inn`;
+      const decoded = decodePayload(legacy);
+      expect(decoded).not.toBeNull();
+      expect(decoded?.stayOrigins["Tokyo-0"]).toEqual({ name: "Sakura Inn" });
+    });
+
+    it("reads a legacy compact stay name that happens to contain colons", () => {
+      const legacy = `2026-04-01~2026-04-03~2~transit~0~:~~~Tokyo-0:Hotel: Annex: East`;
+      expect(decodePayload(legacy)?.stayOrigins["Tokyo-0"]).toEqual({
+        name: "Hotel: Annex: East",
+      });
+    });
+
+    it("ignores a stay entry with no key or no value", () => {
+      const broken = `2026-04-01~2026-04-03~2~transit~0~:~~~:orphan|Tokyo-0:|`;
+      const decoded = decodePayload(broken);
+      expect(decoded).not.toBeNull();
+      expect(decoded?.stayOrigins).toEqual({});
+    });
+
+    /**
+     * The compact string is opaque and must be URL-encoded by whoever puts it in `?p=`.
+     * Without that, the URL layer percent-decodes the escaped name before decodePayload
+     * sees it, and a name containing `|` splits into two entries — silently truncating the
+     * accommodation. Both callers (Wizard.shareTrip and POST /api/itinerary) encode.
+     */
+    it("survives a full round trip through a URL query parameter", () => {
+      const original = payload({
+        stayOrigins: {
+          "Tokyo-0": { name: "Annex|East ~ 50% off", lat: 35.6955, lng: 139.7022, source: "pinned" },
+        },
+      });
+      const url = new URL(
+        `http://example.test/itinerary/view?p=${encodeURIComponent(encodePayload(original))}`
+      );
+      expect(decodePayload(url.searchParams.get("p")!)).toEqual(original);
+    });
+
+    it("routes hostile compact coordinates through parsePayload's range checks", () => {
+      const hostile = `2026-04-01~2026-04-03~2~transit~0~:~~~Tokyo-0:999:139.7:p:Fake`;
+      const decoded = decodePayload(hostile);
+      expect(decoded?.stayOrigins["Tokyo-0"]).toEqual({ name: "Fake" });
+    });
   });
 });
