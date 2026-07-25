@@ -1,6 +1,29 @@
 "use client";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { REGIONS, CATEGORIES, CATEGORY_LABELS, type Category, type Place, type Region } from "@/data/places";
+
+const CustomLocationMapPicker = dynamic(
+  () => import("@/components/CustomLocationMapPicker"),
+  { ssr: false }
+);
+
+const REGION_COORDS: Record<Region, [number, number]> = {
+  Tokyo: [35.6762, 139.6503],
+  Kyoto: [35.0116, 135.7681],
+  Osaka: [34.6937, 135.5023],
+  Nara: [34.6851, 135.8048],
+  "Hakone / Fuji": [35.2324, 139.1069],
+  Hiroshima: [34.3853, 132.4553],
+  "Sapporo / Hokkaido": [43.0618, 141.3545],
+  "Kobe / Himeji": [34.6901, 135.1955],
+  "Chubu (Nagoya / Kanazawa / Takayama)": [35.1815, 136.9066],
+  "Kyushu (Fukuoka / Beppu / Nagasaki)": [33.5902, 130.4017],
+  Shikoku: [34.3402, 134.0433],
+  Okinawa: [26.2124, 127.6809],
+  Tohoku: [38.2682, 140.8694],
+  "Chugoku (Okayama / Tottori)": [34.6551, 133.9195],
+};
 
 export default function AddCustomLocationModal({
   isOpen,
@@ -21,7 +44,18 @@ export default function AddCustomLocationModal({
   const [durationHours, setDurationHours] = useState(1);
   const [description, setDescription] = useState("");
 
+  const initialCoords = REGION_COORDS[defaultRegion] ?? [35.6762, 139.6503];
+  const [lat, setLat] = useState(initialCoords[0]);
+  const [lng, setLng] = useState(initialCoords[1]);
+
   if (!isOpen) return null;
+
+  const handleRegionChange = (newRegion: Region) => {
+    setRegion(newRegion);
+    const coords = REGION_COORDS[newRegion] ?? [35.6762, 139.6503];
+    setLat(coords[0]);
+    setLng(coords[1]);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,8 +68,8 @@ export default function AddCustomLocationModal({
       region,
       category,
       description: description.trim() || `Custom location in ${region}`,
-      lat: NaN,
-      lng: NaN,
+      lat,
+      lng,
       durationHours,
       customTime: customTime.trim() || undefined,
       isCustom: true,
@@ -52,8 +86,8 @@ export default function AddCustomLocationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-neutral-800 shadow-xl overflow-hidden">
-        <header className="px-5 py-4 border-b border-gray-100 dark:border-neutral-800 flex items-center justify-between">
+      <div className="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-neutral-800 shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+        <header className="px-5 py-4 border-b border-gray-100 dark:border-neutral-800 flex items-center justify-between shrink-0">
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <span>📍</span> Add Custom Location
           </h3>
@@ -67,7 +101,7 @@ export default function AddCustomLocationModal({
           </button>
         </header>
 
-        <form onSubmit={handleSubmit} className="p-5 grid gap-4 text-sm">
+        <form onSubmit={handleSubmit} className="p-5 grid gap-4 text-sm overflow-y-auto">
           <label className="grid gap-1">
             <span className="font-medium text-gray-800 dark:text-gray-200">
               Location Name <span className="text-red-500">*</span>
@@ -87,7 +121,7 @@ export default function AddCustomLocationModal({
               <span className="font-medium text-gray-800 dark:text-gray-200">Region</span>
               <select
                 value={region}
-                onChange={(e) => setRegion(e.target.value as Region)}
+                onChange={(e) => handleRegionChange(e.target.value as Region)}
                 className="border border-gray-300 dark:border-neutral-700 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-neutral-800 focus:ring-2 focus:ring-red-400 focus:outline-none text-xs"
               >
                 {REGIONS.map((r) => (
@@ -157,7 +191,17 @@ export default function AddCustomLocationModal({
             />
           </label>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-neutral-800">
+          {/* Interactive Map Picker with Draggable Pin */}
+          <CustomLocationMapPicker
+            lat={lat}
+            lng={lng}
+            onChange={(newLat, newLng) => {
+              setLat(newLat);
+              setLng(newLng);
+            }}
+          />
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-gray-100 dark:border-neutral-800 shrink-0">
             <button
               type="button"
               onClick={onClose}
