@@ -1,5 +1,6 @@
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80";
+// Chūreitō Pagoda with Mt. Fuji and cherry blossoms at sunset. Served from public/,
+// so the hero no longer depends on a third-party CDN staying up.
+const HERO_IMAGE = "/76402941-japan-wallpaper.jpg";
 
 export default function Hero() {
   return (
