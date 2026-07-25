@@ -162,40 +162,139 @@ export function payloadToItinerary(payload: TripPayload): Day[] {
   return cleaned;
 }
 
-/** Encode a TripPayload into a compact URL-safe base64 string. */
-export function encodePayload(payload: TripPayload): string {
-  const clean: Record<string, unknown> = {
-    v: payload.v,
-    selectedIds: payload.selectedIds,
-    start: payload.start,
-    end: payload.end,
-    adults: payload.adults,
-    transportMode: payload.transportMode,
-  };
-  if (payload.startCity) clean.startCity = payload.startCity;
-  if (payload.endCity) clean.endCity = payload.endCity;
-  if (Object.keys(payload.manualMoves).length > 0) clean.manualMoves = payload.manualMoves;
-  if (Object.keys(payload.dayAllocations).length > 0) clean.dayAllocations = payload.dayAllocations;
-  if (Object.keys(payload.stayOrigins).length > 0) clean.stayOrigins = payload.stayOrigins;
+const PLACE_INDEX_MAP = new Map(PLACES.map((p, i) => [p.id, i]));
 
-  const json = JSON.stringify(clean);
-  if (typeof Buffer !== "undefined") {
-    return Buffer.from(json).toString("base64url");
+function resolvePlaceId(token: string): string {
+  const num = parseInt(token, 10);
+  if (!isNaN(num) && num >= 0 && num < PLACES.length) {
+    return PLACES[num].id;
   }
-  const bytes = new TextEncoder().encode(json);
-  let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+  return token;
 }
 
-/** Decode a URL-safe base64 string back into a TripPayload, or null if invalid. */
+function resolvePlaceToken(id: string): string {
+  const idx = PLACE_INDEX_MAP.get(id);
+  return idx !== undefined ? String(idx) : id;
+}
+
+/** Encode a TripPayload into a super compact URL-safe string. */
+export function encodePayload(payload: TripPayload): string {
+  const placeTokens = payload.selectedIds ? payload.selectedIds.map(resolvePlaceToken).join(",") : "";
+
+  const parts: string[] = [
+    payload.start,
+    payload.end,
+    String(payload.adults),
+    payload.transportMode,
+    placeTokens,
+  ];
+
+  const hasCities = Boolean(payload.startCity || payload.endCity);
+  const hasMoves = Object.keys(payload.manualMoves).length > 0;
+  const hasAllocs = Object.keys(payload.dayAllocations).length > 0;
+  const hasStays = Object.keys(payload.stayOrigins).length > 0;
+
+  if (hasCities || hasMoves || hasAllocs || hasStays) {
+    parts.push(`${payload.startCity ?? ""}:${payload.endCity ?? ""}`);
+  }
+  if (hasMoves || hasAllocs || hasStays) {
+    const moves = Object.entries(payload.manualMoves)
+      .map(([id, day]) => `${resolvePlaceToken(id)}:${day}`)
+      .join(",");
+    parts.push(moves);
+  }
+  if (hasAllocs || hasStays) {
+    const allocs = Object.entries(payload.dayAllocations)
+      .map(([id, count]) => `${resolvePlaceToken(id)}:${count}`)
+      .join(",");
+    parts.push(allocs);
+  }
+  if (hasStays) {
+    const stays = Object.entries(payload.stayOrigins)
+      .map(([k, v]) => `${k}:${v}`)
+      .join("|");
+    parts.push(stays);
+  }
+
+  return parts.join("~");
+}
+
+/** Decode a compact string or base64url string back into a TripPayload, or null if invalid. */
 export function decodePayload(raw: string): TripPayload | null {
   if (!raw || typeof raw !== "string") return null;
+
+  // 1. Try compact string format (e.g. 2026-08-01~2026-08-11~2~transit~0,1,2,3)
+  if (raw.includes("~")) {
+    try {
+      const parts = raw.split("~");
+      if (parts.length >= 5) {
+        const [start, end, adultsStr, modeStr, placesStr, citiesStr, movesStr, allocsStr, staysStr] = parts;
+        const selectedIds = placesStr ? placesStr.split(",").map(resolvePlaceId) : [];
+        
+        let startCity: string | undefined;
+        let endCity: string | undefined;
+        if (citiesStr) {
+          const [sc, ec] = citiesStr.split(":");
+          if (sc) startCity = sc;
+          if (ec) endCity = ec;
+        }
+
+        const manualMoves: Record<string, number> = {};
+        if (movesStr) {
+          for (const item of movesStr.split(",")) {
+            const [pToken, dayStr] = item.split(":");
+            if (pToken && dayStr) {
+              const pId = resolvePlaceId(pToken);
+              const day = parseInt(dayStr, 10);
+              if (!isNaN(day)) manualMoves[pId] = day;
+            }
+          }
+        }
+
+        const dayAllocations: Record<string, number> = {};
+        if (allocsStr) {
+          for (const item of allocsStr.split(",")) {
+            const [pToken, countStr] = item.split(":");
+            if (pToken && countStr) {
+              const pId = resolvePlaceId(pToken);
+              const count = parseInt(countStr, 10);
+              if (!isNaN(count)) dayAllocations[pId] = count;
+            }
+          }
+        }
+
+        const stayOrigins: Record<string, string> = {};
+        if (staysStr) {
+          for (const item of staysStr.split("|")) {
+            const idx = item.indexOf(":");
+            if (idx > 0) {
+              const k = item.slice(0, idx);
+              const v = item.slice(idx + 1);
+              if (k && v) stayOrigins[k] = v;
+            }
+          }
+        }
+
+        return parsePayload({
+          v: 1,
+          selectedIds,
+          start,
+          end,
+          adults: parseInt(adultsStr, 10),
+          transportMode: modeStr,
+          startCity,
+          endCity,
+          manualMoves,
+          dayAllocations,
+          stayOrigins,
+        });
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  // 2. Fallback to base64url JSON decoding
   try {
     let json: string;
     if (typeof Buffer !== "undefined") {
@@ -215,4 +314,5 @@ export function decodePayload(raw: string): TripPayload | null {
     return null;
   }
 }
+
 
