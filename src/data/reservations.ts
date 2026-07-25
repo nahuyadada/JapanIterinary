@@ -251,7 +251,8 @@ export const RESERVATION_META: Record<string, ReservationMeta> = {
     closesDaysBefore: 1,
     bookByDaysBefore: 30,
     recommendedBookingTime: "4–8 weeks before travel",
-    officialBookingUrl: "https://www.usj.co.jp/web/en/us",
+    officialBookingUrl: "https://www.klook.com/en-US/activity/3374-universal-studios-japan-osaka/",
+
     ticketPrice: "¥8,900–¥10,900 (adult 1-Day Studio Pass, varies by date)",
     notes:
       "Studio Pass is date-specific and popular dates sell out — buy before you fly. Super Nintendo World and the Wizarding World also need a separate free timed-entry ticket obtained in the official app on the day, so install the app in advance. Express Passes are a separate paid add-on and sell out first.",
