@@ -5,11 +5,13 @@ import { PLACES, REGIONS, CATEGORY_LABELS } from "@/data/places";
 import type { Region, Category } from "@/data/places";
 import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
 import { recommendStays } from "@/lib/lodging";
+import { buildDayRoutes, type TransportMode } from "@/lib/navigation";
 import PlaceCard from "@/components/PlaceCard";
 import CatalogFilters from "@/components/CatalogFilters";
 import DateRangePicker from "@/components/DateRangePicker";
 import ItineraryDay from "@/components/ItineraryDay";
 import WhereToStay from "@/components/WhereToStay";
+import DayRoute from "@/components/DayRoute";
 
 const ItineraryMap = dynamic(() => import("@/components/ItineraryMap"), { ssr: false });
 
@@ -26,6 +28,7 @@ type PersistedState = {
   endCity: string;
   dayAllocations: Record<string, number>;
   adults: number;
+  transportMode: TransportMode;
 };
 
 const STEPS: { key: Step; label: string }[] = [
@@ -47,6 +50,7 @@ export default function Wizard() {
   const [manualMoves, setManualMoves] = useState<Record<string, number>>({});
   const [dayAllocations, setDayAllocations] = useState<Record<string, number>>({});
   const [adults, setAdults] = useState(2);
+  const [transportMode, setTransportMode] = useState<TransportMode>("transit");
   const [regionFilter, setRegionFilter] = useState<Region | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,6 +75,9 @@ export default function Wizard() {
         if (s.manualMoves && typeof s.manualMoves === "object") setManualMoves(s.manualMoves);
         if (s.dayAllocations && typeof s.dayAllocations === "object") setDayAllocations(s.dayAllocations);
         if (typeof s.adults === "number" && s.adults >= 1) setAdults(s.adults);
+        if (s.transportMode === "transit" || s.transportMode === "walking" || s.transportMode === "driving") {
+          setTransportMode(s.transportMode);
+        }
       }
     } catch {
       // ignore malformed storage
@@ -92,13 +99,14 @@ export default function Wizard() {
       endCity,
       dayAllocations,
       adults,
+      transportMode,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch {
       // ignore quota/availability errors
     }
-  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, adults]);
+  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, adults, transportMode]);
 
   const selectedPlaces = useMemo(
     () => PLACES.filter((p) => selectedIds.includes(p.id)),
@@ -146,6 +154,11 @@ export default function Wizard() {
 
   const stayRecommendations = useMemo(() => recommendStays(days, 3), [days]);
 
+  const routeByDay = useMemo(() => {
+    const routes = buildDayRoutes(days, stayRecommendations);
+    return new Map(routes.map((r) => [r.dayIndex, r]));
+  }, [days, stayRecommendations]);
+
   function togglePlace(id: string) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
@@ -181,6 +194,7 @@ export default function Wizard() {
     setManualMoves({});
     setDayAllocations({});
     setAdults(2);
+    setTransportMode("transit");
     setRegionFilter("all");
     setCategoryFilter("all");
     setSearchQuery("");
@@ -382,7 +396,19 @@ export default function Wizard() {
             <p className="text-gray-600">
               {tripDays(new Date(start), new Date(end))}-day trip with {selectedPlaces.length} places
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                Preferred transport
+                <select
+                  value={transportMode}
+                  onChange={(e) => setTransportMode(e.target.value as TransportMode)}
+                  className={selectClasses}
+                >
+                  <option value="transit">Transit</option>
+                  <option value="walking">Walking</option>
+                  <option value="driving">Driving</option>
+                </select>
+              </label>
               <button
                 type="button"
                 onClick={() => setStep("dates")}
@@ -402,15 +428,20 @@ export default function Wizard() {
           <ItineraryMap days={days} stayRecommendations={stayRecommendations} />
           <WhereToStay recommendations={stayRecommendations} adults={adults} />
           <div className="grid gap-4">
-            {days.map((day) => (
-              <ItineraryDay
-                key={day.dayIndex}
-                day={day}
-                dayCount={days.length}
-                onRemove={removePlace}
-                onMove={movePlace}
-              />
-            ))}
+            {days.map((day) => {
+              const route = routeByDay.get(day.dayIndex);
+              return (
+                <div key={day.dayIndex} className="grid gap-3">
+                  <ItineraryDay
+                    day={day}
+                    dayCount={days.length}
+                    onRemove={removePlace}
+                    onMove={movePlace}
+                  />
+                  {route && <DayRoute route={route} preferredMode={transportMode} />}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
