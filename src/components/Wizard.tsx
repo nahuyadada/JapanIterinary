@@ -6,12 +6,14 @@ import type { Region, Category } from "@/data/places";
 import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
 import { recommendStays } from "@/lib/lodging";
 import { buildDayRoutes, type TransportMode } from "@/lib/navigation";
+import { suggestForItinerary } from "@/lib/suggestions";
 import PlaceCard from "@/components/PlaceCard";
 import CatalogFilters from "@/components/CatalogFilters";
 import DateRangePicker from "@/components/DateRangePicker";
 import ItineraryDay from "@/components/ItineraryDay";
 import WhereToStay from "@/components/WhereToStay";
 import DayRoute from "@/components/DayRoute";
+import StaySuggestions from "@/components/StaySuggestions";
 
 const ItineraryMap = dynamic(() => import("@/components/ItineraryMap"), { ssr: false });
 
@@ -158,6 +160,8 @@ export default function Wizard() {
     const routes = buildDayRoutes(days, stayRecommendations);
     return new Map(routes.map((r) => [r.dayIndex, r]));
   }, [days, stayRecommendations]);
+
+  const suggestions = useMemo(() => suggestForItinerary(days, { limit: 5 }), [days]);
 
   function togglePlace(id: string) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -427,6 +431,7 @@ export default function Wizard() {
           </div>
           <ItineraryMap days={days} stayRecommendations={stayRecommendations} />
           <WhereToStay recommendations={stayRecommendations} adults={adults} />
+          <StaySuggestions groups={suggestions} onAdd={togglePlace} />
           <div className="grid gap-4">
             {days.map((day) => {
               const route = routeByDay.get(day.dayIndex);
