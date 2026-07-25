@@ -1,8 +1,8 @@
 import { insertItinerary } from "@/lib/db";
 import { generateShareCode } from "@/lib/shareCode";
-import { parsePayload } from "@/lib/tripPayload";
+import { encodePayload, parsePayload } from "@/lib/tripPayload";
 
-// Every request writes to the database, so there is nothing to prerender or cache.
+// Every request writes to the database or generates a share link, so there is nothing to prerender or cache.
 export const dynamic = "force-dynamic";
 
 /**
@@ -23,11 +23,7 @@ function error(message: string, status: number): Response {
 }
 
 /**
- * Store a trip and hand back its share code.
- *
- * The request body is untrusted: it is size-capped, then run through parsePayload, and
- * only the validated result is written. That way a stored row can never contain a place
- * id or a field the rest of the app doesn't recognise.
+ * Store a trip and hand back its share code (or an encoded share URL as a fallback).
  */
 export async function POST(request: Request): Promise<Response> {
   const declared = Number(request.headers.get("content-length"));
@@ -51,19 +47,25 @@ export async function POST(request: Request): Promise<Response> {
     return error("That trip is missing something we need — pick your places and dates again.", 400);
   }
 
-  try {
-    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      const code = generateShareCode();
-      if (await insertItinerary(code, payload)) {
-        return Response.json({ code }, { status: 201 });
+  if (process.env.DATABASE_URL) {
+    try {
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        const code = generateShareCode();
+        if (await insertItinerary(code, payload)) {
+          return Response.json({ code, url: `/itinerary/${code}` }, { status: 201 });
+        }
       }
+    } catch (cause) {
+      console.error("Failed to store shared itinerary in database, falling back to URL encoding", cause);
     }
-  } catch (cause) {
-    // The underlying message can name the database host or user, so it stays server-side.
-    console.error("Failed to store shared itinerary", cause);
-    return error("Could not save your trip. Please try again.", 500);
   }
 
-  console.error(`Could not find an unused share code in ${MAX_ATTEMPTS} attempts`);
-  return error("Could not save your trip. Please try again.", 500);
+  // Database fallback: URL-encoded payload link guarantees sharing always works
+  const encoded = encodePayload(payload);
+  return Response.json({
+    code: "LINK",
+    url: `/itinerary/view?p=${encoded}`,
+    fallback: true,
+  }, { status: 200 });
 }
+

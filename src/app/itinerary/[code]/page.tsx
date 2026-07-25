@@ -5,11 +5,10 @@ import { getItinerary } from "@/lib/db";
 import { buildGuideDays, guideOrigins } from "@/lib/guide";
 import { recommendStays } from "@/lib/lodging";
 import { isShareCode, normalizeShareCode } from "@/lib/shareCode";
-import { parsePayload, payloadToItinerary } from "@/lib/tripPayload";
+import { decodePayload, parsePayload, payloadToItinerary, type TripPayload } from "@/lib/tripPayload";
 import TripGuide from "@/components/TripGuide";
 
-// Read from the database on every request: a trip can be opened the moment it is saved,
-// and one code's render must never be served for another.
+// Read from the database or decode from payload on every request
 export const dynamic = "force-dynamic";
 
 /**
@@ -23,20 +22,38 @@ export const metadata: Metadata = {
 
 export default async function SharedItineraryPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ code: string }>;
+  searchParams?: Promise<{ p?: string }>;
 }) {
   const { code: raw } = await params;
-  const code = normalizeShareCode(decodeURIComponent(raw));
+  const sParams = searchParams ? await searchParams : {};
+  const decodedRaw = decodeURIComponent(raw);
 
-  // Reject anything that isn't shaped like a code before touching the database, so a
-  // scan of junk URLs costs nothing.
-  if (!isShareCode(code)) notFound();
+  let payload: TripPayload | null = null;
+  let code = normalizeShareCode(decodedRaw);
 
-  const stored = await getItinerary(code);
-  if (!stored) notFound();
+  // 1. Encoded payload in query param: /itinerary/view?p=...
+  if (sParams.p) {
+    payload = decodePayload(sParams.p);
+    code = "LINK";
+  }
 
-  const payload = parsePayload(stored.payload);
+  // 2. Direct encoded payload in path: /itinerary/eyJ2...
+  if (!payload && (decodedRaw === "view" || decodedRaw === "share" || decodedRaw.length > 20)) {
+    payload = decodePayload(decodedRaw);
+    code = "LINK";
+  }
+
+  // 3. Database share code: /itinerary/ABCDEFGH
+  if (!payload && isShareCode(code)) {
+    const stored = await getItinerary(code);
+    if (stored) {
+      payload = parsePayload(stored.payload);
+    }
+  }
+
   if (!payload) notFound();
 
   // Rebuilt with the same functions the wizard uses, so a shared link picks up later
@@ -56,3 +73,4 @@ export default async function SharedItineraryPage({
     </div>
   );
 }
+

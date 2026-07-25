@@ -7,7 +7,8 @@ import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
 import { recommendStays } from "@/lib/lodging";
 import { suggestForItinerary } from "@/lib/suggestions";
 import { stayKey } from "@/lib/guide";
-import { buildPayload } from "@/lib/tripPayload";
+import { buildPayload, encodePayload } from "@/lib/tripPayload";
+
 import type { TransportMode } from "@/lib/navigation";
 import PlaceCard from "@/components/PlaceCard";
 import CatalogFilters from "@/components/CatalogFilters";
@@ -230,45 +231,53 @@ export default function Wizard() {
 
   async function shareTrip() {
     setShare({ status: "saving" });
+    const payload = buildPayload({
+      selectedIds,
+      start,
+      end,
+      startCity: startCity || undefined,
+      endCity: endCity || undefined,
+      manualMoves,
+      dayAllocations,
+      adults,
+      transportMode,
+      stayOrigins,
+    });
+
     try {
       const response = await fetch("/api/itinerary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          buildPayload({
-            selectedIds,
-            start,
-            end,
-            startCity: startCity || undefined,
-            endCity: endCity || undefined,
-            manualMoves,
-            dayAllocations,
-            adults,
-            transportMode,
-            stayOrigins,
-          })
-        ),
+        body: JSON.stringify(payload),
       });
       const body = (await response.json().catch(() => null)) as
-        | { code?: string; error?: string }
+        | { code?: string; url?: string; error?: string }
         | null;
 
-      if (!response.ok || !body?.code) {
+      if (response.ok && (body?.url || body?.code)) {
+        const shareUrl = body.url
+          ? `${window.location.origin}${body.url}`
+          : `${window.location.origin}/itinerary/${body.code}`;
         setShare({
-          status: "failed",
-          message: body?.error ?? "Could not save your trip. Please try again.",
+          status: "shared",
+          code: body.code ?? "LINK",
+          url: shareUrl,
         });
         return;
       }
-      setShare({
-        status: "shared",
-        code: body.code,
-        url: `${window.location.origin}/itinerary/${body.code}`,
-      });
     } catch {
-      setShare({ status: "failed", message: "No connection. Check your network and try again." });
+      // Server / network error fallback
     }
+
+    // Client-side fallback if server endpoint fails or is unreachable
+    const encoded = encodePayload(payload);
+    setShare({
+      status: "shared",
+      code: "LINK",
+      url: `${window.location.origin}/itinerary/view?p=${encoded}`,
+    });
   }
+
 
   function startOver() {
     setSelectedIds([]);

@@ -161,3 +161,58 @@ export function payloadToItinerary(payload: TripPayload): Day[] {
   }
   return cleaned;
 }
+
+/** Encode a TripPayload into a compact URL-safe base64 string. */
+export function encodePayload(payload: TripPayload): string {
+  const clean: Record<string, unknown> = {
+    v: payload.v,
+    selectedIds: payload.selectedIds,
+    start: payload.start,
+    end: payload.end,
+    adults: payload.adults,
+    transportMode: payload.transportMode,
+  };
+  if (payload.startCity) clean.startCity = payload.startCity;
+  if (payload.endCity) clean.endCity = payload.endCity;
+  if (Object.keys(payload.manualMoves).length > 0) clean.manualMoves = payload.manualMoves;
+  if (Object.keys(payload.dayAllocations).length > 0) clean.dayAllocations = payload.dayAllocations;
+  if (Object.keys(payload.stayOrigins).length > 0) clean.stayOrigins = payload.stayOrigins;
+
+  const json = JSON.stringify(clean);
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(json).toString("base64url");
+  }
+  const bytes = new TextEncoder().encode(json);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+/** Decode a URL-safe base64 string back into a TripPayload, or null if invalid. */
+export function decodePayload(raw: string): TripPayload | null {
+  if (!raw || typeof raw !== "string") return null;
+  try {
+    let json: string;
+    if (typeof Buffer !== "undefined") {
+      json = Buffer.from(raw, "base64url").toString("utf-8");
+    } else {
+      const base64 = raw.replace(/-/g, "+").replace(/_/g, "/");
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      json = new TextDecoder().decode(bytes);
+    }
+    const parsed = JSON.parse(json);
+    return parsePayload(parsed);
+  } catch {
+    return null;
+  }
+}
+

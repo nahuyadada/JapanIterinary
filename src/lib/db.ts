@@ -35,21 +35,34 @@ export type StoredItinerary = {
   createdAt: Date;
 };
 
-/** Insert a trip under `code`. Returns false when the code is already taken. */
+/** Insert a trip under `code`. Returns false when the code is already taken or DB is unavailable. */
 export async function insertItinerary(code: string, payload: unknown): Promise<boolean> {
-  const result = await pool().query(
-    "insert into itineraries (code, payload) values ($1, $2) on conflict (code) do nothing",
-    [code, JSON.stringify(payload)]
-  );
-  return (result.rowCount ?? 0) > 0;
+  if (!process.env.DATABASE_URL) return false;
+  try {
+    const result = await pool().query(
+      "insert into itineraries (code, payload) values ($1, $2) on conflict (code) do nothing",
+      [code, JSON.stringify(payload)]
+    );
+    return (result.rowCount ?? 0) > 0;
+  } catch (cause) {
+    console.error("Database insert failed:", cause);
+    return false;
+  }
 }
 
-/** Fetch a trip by code, or null when no such trip exists. */
+/** Fetch a trip by code, or null when no such trip exists or DB is unavailable. */
 export async function getItinerary(code: string): Promise<StoredItinerary | null> {
-  const result = await pool().query<{ code: string; payload: unknown; created_at: Date }>(
-    "select code, payload, created_at from itineraries where code = $1",
-    [code]
-  );
-  const row = result.rows[0];
-  return row ? { code: row.code, payload: row.payload, createdAt: row.created_at } : null;
+  if (!process.env.DATABASE_URL) return null;
+  try {
+    const result = await pool().query<{ code: string; payload: unknown; created_at: Date }>(
+      "select code, payload, created_at from itineraries where code = $1",
+      [code]
+    );
+    const row = result.rows[0];
+    return row ? { code: row.code, payload: row.payload, createdAt: row.created_at } : null;
+  } catch (cause) {
+    console.error("Database query failed:", cause);
+    return null;
+  }
 }
+

@@ -2,11 +2,14 @@ import { describe, it, expect } from "vitest";
 import { PLACES } from "@/data/places";
 import {
   buildPayload,
+  decodePayload,
+  encodePayload,
   parsePayload,
   payloadPlaces,
   payloadToItinerary,
   type TripPayload,
 } from "@/lib/tripPayload";
+
 
 const SENSOJI = "tokyo-sensoji";
 const MEIJI = "tokyo-meiji";
@@ -289,3 +292,19 @@ describe("payloadToItinerary", () => {
     );
   });
 });
+
+describe("encodePayload & decodePayload", () => {
+  it("encodes and decodes a payload without loss", () => {
+    const original = payload({ startCity: "Tokyo", endCity: "Kyoto", manualMoves: { [SENSOJI]: 1 } });
+    const encoded = encodePayload(original);
+    expect(typeof encoded).toBe("string");
+    expect(encoded.length).toBeGreaterThan(0);
+    expect(decodePayload(encoded)).toEqual(original);
+  });
+
+  it("returns null for malformed or un-decodable strings", () => {
+    expect(decodePayload("not-valid-base64!!!")).toBeNull();
+    expect(decodePayload("")).toBeNull();
+  });
+});
+
