@@ -251,7 +251,7 @@ export const RESERVATION_META: Record<string, ReservationMeta> = {
     closesDaysBefore: 1,
     bookByDaysBefore: 30,
     recommendedBookingTime: "4–8 weeks before travel",
-    officialBookingUrl: "https://www.klook.com/en-US/activity/4660-universal-studios-japan-ticket-osaka/",
+    officialBookingUrl: "https://www.usjticketing.com/expressPass",
 
 
     ticketPrice: "¥8,900–¥10,900 (adult 1-Day Studio Pass, varies by date)",
