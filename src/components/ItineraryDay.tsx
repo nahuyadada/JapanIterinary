@@ -1,7 +1,7 @@
 "use client";
 import type { Day } from "@/lib/itinerary";
-import { CATEGORY_LABELS } from "@/data/places";
-import { durationRangeFor, formatRange, formatHours, dayEstimate } from "@/lib/duration";
+import { formatHours, dayEstimate } from "@/lib/duration";
+import ItineraryPlaceRow from "@/components/ItineraryPlaceRow";
 
 const DAY_COLORS = ["#e11d48", "#2563eb", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#65a30d"];
 
@@ -58,42 +58,15 @@ export default function ItineraryDay({
       ) : (
         <ul className="divide-y divide-gray-100 dark:divide-neutral-800">
           {day.places.map((place) => (
-            <li key={place.id} className="px-4 py-3 flex items-start justify-between gap-3">
-              <div>
-                <p className="font-medium text-gray-900 dark:text-gray-100">{place.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {place.city} - {CATEGORY_LABELS[place.category]}
-                </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">
-                  Est. visit {formatRange(durationRangeFor(place))}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <label className="sr-only" htmlFor={`move-${day.dayIndex}-${place.id}`}>
-                  Move {place.name} to another day
-                </label>
-                <select
-                  id={`move-${day.dayIndex}-${place.id}`}
-                  value={day.dayIndex}
-                  onChange={(e) => onMove(place.id, Number(e.target.value))}
-                  className="border border-gray-300 dark:border-neutral-600 rounded-lg px-2 py-1 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900"
-                >
-                  {Array.from({ length: dayCount }, (_, i) => (
-                    <option key={i} value={i}>
-                      Day {i + 1}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => onRemove(place.id)}
-                  className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400"
-                  aria-label={`Remove ${place.name}`}
-                >
-                  Remove
-                </button>
-              </div>
-            </li>
+            <ItineraryPlaceRow
+              key={place.id}
+              place={place}
+              visitDate={day.date}
+              dayIndex={day.dayIndex}
+              dayCount={dayCount}
+              onRemove={onRemove}
+              onMove={onMove}
+            />
           ))}
         </ul>
       )}

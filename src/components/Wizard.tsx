@@ -12,6 +12,7 @@ import CatalogFilters from "@/components/CatalogFilters";
 import DateRangePicker from "@/components/DateRangePicker";
 import ItineraryDay from "@/components/ItineraryDay";
 import CityPlan from "@/components/CityPlan";
+import TripChecklist from "@/components/TripChecklist";
 
 const ItineraryMap = dynamic(() => import("@/components/ItineraryMap"), { ssr: false });
 
@@ -444,6 +445,8 @@ export default function Wizard() {
           </div>
 
           <ItineraryMap days={days} stayRecommendations={stayRecommendations} />
+
+          <TripChecklist days={days} />
 
           {cityBlocks.map(({ rec, stayDays }) => (
             <CityPlan

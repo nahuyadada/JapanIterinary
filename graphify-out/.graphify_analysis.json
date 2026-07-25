@@ -1,0 +1,453 @@
+{
+  "communities": {
+    "0": [
+      "src_components_catalogfilters",
+      "src_components_catalogfilters_catalogfilters",
+      "src_components_daterangepicker",
+      "src_components_daterangepicker_daterangepicker",
+      "src_components_placecard",
+      "src_components_placecard_category_emoji",
+      "src_components_placecard_placecard",
+      "src_components_wizard",
+      "src_components_wizard_itinerarymap",
+      "src_components_wizard_persistedstate",
+      "src_components_wizard_staykey",
+      "src_components_wizard_step",
+      "src_components_wizard_steps",
+      "src_components_wizard_wizard",
+      "src_data_places",
+      "src_data_places_categories",
+      "src_data_places_category",
+      "src_data_places_category_labels",
+      "src_data_places_place",
+      "src_data_places_region",
+      "src_data_places_regions",
+      "src_lib_itinerary",
+      "src_lib_itinerary_atmidnight",
+      "src_lib_itinerary_builditinerary",
+      "src_lib_itinerary_itineraryoptions",
+      "src_lib_itinerary_orderplaces",
+      "src_lib_itinerary_orderregions",
+      "src_lib_itinerary_route_order",
+      "src_lib_itinerary_spineindex",
+      "src_lib_itinerary_test",
+      "src_lib_itinerary_tripdays"
+    ],
+    "1": [
+      "src_components_cityplan",
+      "src_components_cityplan_cityplan",
+      "src_components_cityplan_fmt",
+      "src_components_dayschedule",
+      "src_components_dayschedule_dayschedule",
+      "src_components_dayschedule_mode_labels",
+      "src_lib_itinerary_day",
+      "src_lib_lodging_haversinekm",
+      "src_lib_lodging_stayrecommendation",
+      "src_lib_navigation",
+      "src_lib_navigation_builddayroutes",
+      "src_lib_navigation_dayroute",
+      "src_lib_navigation_directionsurl",
+      "src_lib_navigation_leg",
+      "src_lib_navigation_navpoint",
+      "src_lib_navigation_test",
+      "src_lib_navigation_test_area",
+      "src_lib_navigation_test_day",
+      "src_lib_navigation_test_place",
+      "src_lib_navigation_transportmode",
+      "src_lib_schedule",
+      "src_lib_schedule_builddayschedule",
+      "src_lib_schedule_estimatetravelminutes",
+      "src_lib_schedule_formatclock",
+      "src_lib_schedule_scheduleentry",
+      "src_lib_schedule_scheduleoptions",
+      "src_lib_schedule_test",
+      "src_lib_schedule_test_day",
+      "src_lib_schedule_travel",
+      "src_lib_schedule_visitminutes"
+    ],
+    "2": [
+      "ref_dom",
+      "ref_dom_iterable",
+      "ref_esnext",
+      "ref_mts",
+      "ref_next_dev_types_ts",
+      "ref_next_env_d_ts",
+      "ref_next_types_ts",
+      "ref_node_modules",
+      "ref_ts",
+      "ref_tsx",
+      "tsconfig",
+      "tsconfig_compileroptions",
+      "tsconfig_compileroptions_allowjs",
+      "tsconfig_compileroptions_esmoduleinterop",
+      "tsconfig_compileroptions_incremental",
+      "tsconfig_compileroptions_isolatedmodules",
+      "tsconfig_compileroptions_jsx",
+      "tsconfig_compileroptions_lib",
+      "tsconfig_compileroptions_module",
+      "tsconfig_compileroptions_moduleresolution",
+      "tsconfig_compileroptions_noemit",
+      "tsconfig_compileroptions_paths",
+      "tsconfig_compileroptions_plugins",
+      "tsconfig_compileroptions_resolvejsonmodule",
+      "tsconfig_compileroptions_skiplibcheck",
+      "tsconfig_compileroptions_strict",
+      "tsconfig_compileroptions_target",
+      "tsconfig_exclude",
+      "tsconfig_include"
+    ],
+    "3": [
+      "src_components_addattraction",
+      "src_components_addattraction_addattraction",
+      "src_components_itineraryday",
+      "src_components_itineraryday_day_colors",
+      "src_components_itineraryday_itineraryday",
+      "src_components_itineraryday_verdict",
+      "src_components_staysuggestions",
+      "src_components_staysuggestions_staysuggestions",
+      "src_data_placemeta",
+      "src_data_placemeta_hourrange",
+      "src_data_placemeta_place_meta",
+      "src_data_placemeta_placedurationrange",
+      "src_data_placemeta_placehours",
+      "src_data_placemeta_placemeta",
+      "src_data_placemeta_placepopularity",
+      "src_lib_duration",
+      "src_lib_duration_dayestimate",
+      "src_lib_duration_dayverdict",
+      "src_lib_duration_durationrangefor",
+      "src_lib_duration_formathours",
+      "src_lib_duration_formatrange",
+      "src_lib_duration_test",
+      "src_lib_duration_test_day",
+      "src_lib_itinerary_placeduration",
+      "src_lib_itinerary_test_p",
+      "src_lib_suggestions",
+      "src_lib_suggestions_meandistancekm",
+      "src_lib_suggestions_staysuggestion",
+      "src_lib_suggestions_suggestforitinerary"
+    ],
+    "4": [
+      "leaflet",
+      "next",
+      "package",
+      "package_dependencies",
+      "package_dependencies_leaflet",
+      "package_dependencies_next",
+      "package_dependencies_react",
+      "package_dependencies_react_dom",
+      "package_dependencies_react_leaflet",
+      "package_name",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_dev",
+      "package_scripts_lint",
+      "package_scripts_start",
+      "package_scripts_test",
+      "package_scripts_test_watch",
+      "package_version",
+      "react",
+      "react_dom",
+      "react_leaflet"
+    ],
+    "5": [
+      "eslint",
+      "eslint_config_next",
+      "package_devdependencies",
+      "package_devdependencies_eslint",
+      "package_devdependencies_eslint_config_next",
+      "package_devdependencies_tailwindcss",
+      "package_devdependencies_tailwindcss_postcss",
+      "package_devdependencies_types_leaflet",
+      "package_devdependencies_types_node",
+      "package_devdependencies_types_react",
+      "package_devdependencies_types_react_dom",
+      "package_devdependencies_typescript",
+      "package_devdependencies_vitest",
+      "tailwindcss",
+      "tailwindcss_postcss",
+      "types_leaflet",
+      "types_node",
+      "types_react",
+      "types_react_dom",
+      "typescript",
+      "vitest"
+    ],
+    "6": [
+      "src_app_page",
+      "src_app_page_home",
+      "src_components_site_hero",
+      "src_components_site_hero_hero",
+      "src_components_site_siteheader",
+      "src_components_site_siteheader_nav",
+      "src_components_site_siteheader_siteheader",
+      "src_components_site_sitesections",
+      "src_components_site_sitesections_culturesection",
+      "src_components_site_sitesections_destinations",
+      "src_components_site_sitesections_populardestinations",
+      "src_components_site_sitesections_reasons",
+      "src_components_site_sitesections_sitefooter",
+      "src_components_site_sitesections_tips",
+      "src_components_site_sitesections_traditions",
+      "src_components_site_sitesections_traveltips",
+      "src_components_site_sitesections_whyjapan"
+    ],
+    "7": [
+      "src_data_lodging",
+      "src_data_lodging_lodging_areas",
+      "src_data_lodging_lodgingarea",
+      "src_lib_lodging",
+      "src_lib_lodging_bookinglink",
+      "src_lib_lodging_bookinglinksforarea",
+      "src_lib_lodging_groupstays",
+      "src_lib_lodging_meandistancetoplaces",
+      "src_lib_lodging_nightsbetween",
+      "src_lib_lodging_recommendforstay",
+      "src_lib_lodging_recommendstays",
+      "src_lib_lodging_stay",
+      "src_lib_lodging_test",
+      "src_lib_lodging_test_day",
+      "src_lib_lodging_test_place",
+      "src_lib_lodging_test_toisodatelocal",
+      "src_lib_lodging_toisodate"
+    ],
+    "8": [
+      "src_data_places_places",
+      "src_lib_duration_test_byid",
+      "src_lib_schedule_test_byid",
+      "src_lib_suggestions_test",
+      "src_lib_suggestions_test_byid",
+      "src_lib_suggestions_test_day"
+    ],
+    "9": [
+      "src_app_layout",
+      "src_app_layout_geistmono",
+      "src_app_layout_geistsans",
+      "src_app_layout_metadata",
+      "src_app_layout_rootlayout"
+    ],
+    "10": [
+      "src_components_itinerarymap",
+      "src_components_itinerarymap_day_colors",
+      "src_components_itinerarymap_itinerarymap",
+      "src_components_itinerarymap_lodgingicon",
+      "src_components_itinerarymap_numbericon"
+    ],
+    "11": [
+      "agents_md",
+      "claud_md"
+    ],
+    "12": [
+      "eslint_config",
+      "eslint_config_eslintconfig"
+    ],
+    "13": [
+      "next_config",
+      "next_config_nextconfig"
+    ],
+    "14": [
+      "postcss_config",
+      "postcss_config_config"
+    ],
+    "15": [
+      "image1"
+    ],
+    "16": [
+      "image2"
+    ],
+    "17": [
+      "public_file"
+    ],
+    "18": [
+      "public_globe"
+    ],
+    "19": [
+      "public_next"
+    ],
+    "20": [
+      "public_vercel"
+    ],
+    "21": [
+      "readme_md"
+    ],
+    "22": [
+      "todo_md"
+    ],
+    "23": [
+      "vitest_config"
+    ]
+  },
+  "cohesion": {
+    "0": 0.15053763440860216,
+    "1": 0.1471264367816092,
+    "2": 0.06896551724137931,
+    "3": 0.17733990147783252,
+    "4": 0.09090909090909091,
+    "5": 0.09523809523809523,
+    "6": 0.16176470588235295,
+    "7": 0.22058823529411764,
+    "8": 0.4,
+    "9": 0.4,
+    "10": 0.6,
+    "11": 1.0,
+    "12": 1.0,
+    "13": 1.0,
+    "14": 1.0,
+    "15": 1.0,
+    "16": 1.0,
+    "17": 1.0,
+    "18": 1.0,
+    "19": 1.0,
+    "20": 1.0,
+    "21": 1.0,
+    "22": 1.0,
+    "23": 1.0
+  },
+  "gods": [
+    {
+      "id": "tsconfig_compileroptions",
+      "label": "compilerOptions",
+      "degree": 16
+    },
+    {
+      "id": "src_lib_duration_durationrangefor",
+      "label": "durationRangeFor()",
+      "degree": 15
+    },
+    {
+      "id": "src_lib_itinerary_day",
+      "label": "Day",
+      "degree": 15
+    },
+    {
+      "id": "src_data_places_place",
+      "label": "Place",
+      "degree": 13
+    },
+    {
+      "id": "src_lib_duration_formatrange",
+      "label": "formatRange()",
+      "degree": 11
+    },
+    {
+      "id": "src_data_places_places",
+      "label": "PLACES",
+      "degree": 10
+    },
+    {
+      "id": "src_lib_lodging_haversinekm",
+      "label": "haversineKm()",
+      "degree": 9
+    },
+    {
+      "id": "src_lib_suggestions_suggestforitinerary",
+      "label": "suggestForItinerary()",
+      "degree": 9
+    },
+    {
+      "id": "src_data_places_region",
+      "label": "Region",
+      "degree": 8
+    },
+    {
+      "id": "src_lib_itinerary_tripdays",
+      "label": "tripDays()",
+      "degree": 8
+    }
+  ],
+  "surprises": [
+    {
+      "source": "CityPlan()",
+      "target": "area()",
+      "source_files": [
+        "src/components/CityPlan.tsx",
+        "src/lib/navigation.test.ts"
+      ],
+      "confidence": "INFERRED",
+      "relation": "indirect_call",
+      "why": "inferred connection - not explicitly stated in source; peripheral node `area()` unexpectedly reaches hub `CityPlan()`"
+    },
+    {
+      "source": "ItineraryMap()",
+      "target": "p()",
+      "source_files": [
+        "src/components/ItineraryMap.tsx",
+        "src/lib/itinerary.test.ts"
+      ],
+      "confidence": "INFERRED",
+      "relation": "indirect_call",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities"
+    },
+    {
+      "source": "AddAttraction()",
+      "target": "p()",
+      "source_files": [
+        "src/components/AddAttraction.tsx",
+        "src/lib/itinerary.test.ts"
+      ],
+      "confidence": "INFERRED",
+      "relation": "indirect_call",
+      "why": "inferred connection - not explicitly stated in source"
+    },
+    {
+      "source": "CityPlan()",
+      "target": "bookingLinksForArea()",
+      "source_files": [
+        "src/components/CityPlan.tsx",
+        "src/lib/lodging.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "DaySchedule()",
+      "target": "durationRangeFor()",
+      "source_files": [
+        "src/components/DaySchedule.tsx",
+        "src/lib/duration.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `devDependencies` connect `devDependencies` to `scripts`?",
+      "why": "High betweenness centrality (0.024) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `Day` connect `schedule.ts` to `Wizard.tsx`, `suggestions.ts`, `lib/lodging.ts`, `PLACES`, `ItineraryMap.tsx`?",
+      "why": "High betweenness centrality (0.017) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `eslintConfig`, `nextConfig`, `name` to the rest of the system?",
+      "why": "83 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `schedule.ts` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.1471264367816092 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `compilerOptions` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.06896551724137931 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `scripts` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `devDependencies` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.09523809523809523 - nodes in this community are weakly interconnected."
+    }
+  ]
+}
