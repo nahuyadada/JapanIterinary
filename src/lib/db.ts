@@ -12,8 +12,21 @@ const globalForDb = globalThis as unknown as { itineraryPool?: Pool };
 function getConnectionString(): string | undefined {
   const raw = process.env.DATABASE_URL;
   if (!raw) return undefined;
-  return raw.trim().replace(/^["']|["']$/g, "");
+  let str = raw.trim().replace(/^["']|["']$/g, "");
+  try {
+    const match = str.match(/^(postgres(?:ql)?:\/\/[^:]+:)([^@]+)(@.+)$/);
+    if (match) {
+      const [, prefix, pass, suffix] = match;
+      if (/[!*#$%/:]/.test(pass) && !/%[0-9A-Fa-f]{2}/.test(pass)) {
+        str = `${prefix}${encodeURIComponent(pass)}${suffix}`;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return str;
 }
+
 
 function pool(): Pool {
   if (!globalForDb.itineraryPool) {
