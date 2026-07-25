@@ -5,15 +5,13 @@ import { PLACES, REGIONS, CATEGORY_LABELS } from "@/data/places";
 import type { Region, Category } from "@/data/places";
 import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
 import { recommendStays } from "@/lib/lodging";
-import { buildDayRoutes, type TransportMode } from "@/lib/navigation";
 import { suggestForItinerary } from "@/lib/suggestions";
+import type { TransportMode } from "@/lib/navigation";
 import PlaceCard from "@/components/PlaceCard";
 import CatalogFilters from "@/components/CatalogFilters";
 import DateRangePicker from "@/components/DateRangePicker";
 import ItineraryDay from "@/components/ItineraryDay";
-import WhereToStay from "@/components/WhereToStay";
-import DayRoute from "@/components/DayRoute";
-import StaySuggestions from "@/components/StaySuggestions";
+import CityPlan from "@/components/CityPlan";
 
 const ItineraryMap = dynamic(() => import("@/components/ItineraryMap"), { ssr: false });
 
@@ -41,6 +39,8 @@ const STEPS: { key: Step; label: string }[] = [
 
 const selectClasses =
   "border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400";
+
+const stayKey = (region: string, firstDayIndex: number) => `${region}-${firstDayIndex}`;
 
 export default function Wizard() {
   const [step, setStep] = useState<Step>("select");
@@ -156,12 +156,25 @@ export default function Wizard() {
 
   const stayRecommendations = useMemo(() => recommendStays(days, 3), [days]);
 
-  const routeByDay = useMemo(() => {
-    const routes = buildDayRoutes(days, stayRecommendations);
-    return new Map(routes.map((r) => [r.dayIndex, r]));
-  }, [days, stayRecommendations]);
+  const suggestionByStay = useMemo(() => {
+    const groups = suggestForItinerary(days, { limit: 5 });
+    return new Map(groups.map((g) => [stayKey(g.region, g.dayIndexes[0]), g]));
+  }, [days]);
 
-  const suggestions = useMemo(() => suggestForItinerary(days, { limit: 5 }), [days]);
+  // Days grouped under their stay, plus any not covered by a stay (rendered plainly).
+  const cityBlocks = useMemo(
+    () =>
+      stayRecommendations.map((rec) => ({
+        rec,
+        stayDays: days.filter((d) => rec.stay.dayIndexes.includes(d.dayIndex)),
+      })),
+    [stayRecommendations, days]
+  );
+
+  const leftoverDays = useMemo(() => {
+    const covered = new Set(stayRecommendations.flatMap((r) => r.stay.dayIndexes));
+    return days.filter((d) => !covered.has(d.dayIndex));
+  }, [stayRecommendations, days]);
 
   function togglePlace(id: string) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -429,25 +442,37 @@ export default function Wizard() {
               </button>
             </div>
           </div>
+
           <ItineraryMap days={days} stayRecommendations={stayRecommendations} />
-          <WhereToStay recommendations={stayRecommendations} adults={adults} />
-          <StaySuggestions groups={suggestions} onAdd={togglePlace} />
-          <div className="grid gap-4">
-            {days.map((day) => {
-              const route = routeByDay.get(day.dayIndex);
-              return (
-                <div key={day.dayIndex} className="grid gap-3">
-                  <ItineraryDay
-                    day={day}
-                    dayCount={days.length}
-                    onRemove={removePlace}
-                    onMove={movePlace}
-                  />
-                  {route && <DayRoute route={route} preferredMode={transportMode} />}
-                </div>
-              );
-            })}
-          </div>
+
+          {cityBlocks.map(({ rec, stayDays }) => (
+            <CityPlan
+              key={stayKey(rec.stay.region, rec.stay.dayIndexes[0])}
+              rec={rec}
+              days={stayDays}
+              dayCount={days.length}
+              adults={adults}
+              mode={transportMode}
+              suggestion={suggestionByStay.get(stayKey(rec.stay.region, rec.stay.dayIndexes[0]))}
+              onRemove={removePlace}
+              onMove={movePlace}
+              onAdd={togglePlace}
+            />
+          ))}
+
+          {leftoverDays.length > 0 && (
+            <div className="grid gap-4">
+              {leftoverDays.map((day) => (
+                <ItineraryDay
+                  key={day.dayIndex}
+                  day={day}
+                  dayCount={days.length}
+                  onRemove={removePlace}
+                  onMove={movePlace}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

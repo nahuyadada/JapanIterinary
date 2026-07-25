@@ -1,8 +1,15 @@
 "use client";
 import type { Day } from "@/lib/itinerary";
 import { CATEGORY_LABELS } from "@/data/places";
+import { durationRangeFor, formatRange, formatHours, dayEstimate } from "@/lib/duration";
 
 const DAY_COLORS = ["#e11d48", "#2563eb", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#65a30d"];
+
+const VERDICT = {
+  light: { label: "Free time left", cls: "text-green-600 dark:text-green-400" },
+  full: { label: "Full day", cls: "text-amber-600 dark:text-amber-400" },
+  packed: { label: "Overbooked", cls: "text-red-600 dark:text-red-400" },
+} as const;
 
 export default function ItineraryDay({
   day,
@@ -21,6 +28,7 @@ export default function ItineraryDay({
     month: "short",
     day: "numeric",
   });
+  const est = dayEstimate(day);
 
   return (
     <section className="border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 overflow-hidden">
@@ -33,7 +41,16 @@ export default function ItineraryDay({
         </span>
         <div>
           <h3 className="font-semibold text-gray-900 dark:text-gray-100">Day {day.dayIndex + 1}</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{dateLabel}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {dateLabel}
+            {day.places.length > 0 && (
+              <>
+                {" · Est. "}
+                {formatHours(est.minHours)}–{formatHours(est.maxHours)}h{" · "}
+                <span className={VERDICT[est.verdict].cls}>{VERDICT[est.verdict].label}</span>
+              </>
+            )}
+          </p>
         </div>
       </header>
       {day.places.length === 0 ? (
@@ -46,6 +63,9 @@ export default function ItineraryDay({
                 <p className="font-medium text-gray-900 dark:text-gray-100">{place.name}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {place.city} - {CATEGORY_LABELS[place.category]}
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  Est. visit {formatRange(durationRangeFor(place))}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">

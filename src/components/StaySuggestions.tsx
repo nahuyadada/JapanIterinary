@@ -1,6 +1,6 @@
 "use client";
 import { CATEGORY_LABELS } from "@/data/places";
-import { placeDuration } from "@/lib/itinerary";
+import { durationRangeFor, formatRange } from "@/lib/duration";
 import { placeHours } from "@/data/placeMeta";
 import type { StaySuggestion } from "@/lib/suggestions";
 
@@ -49,7 +49,7 @@ export default function StaySuggestions({
                   <div>
                     <p className="font-medium text-gray-900 dark:text-gray-100">{p.name}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {CATEGORY_LABELS[p.category]} · ~{placeDuration(p)}h · {placeHours(p.id)}
+                      {CATEGORY_LABELS[p.category]} · {formatRange(durationRangeFor(p))} · {placeHours(p.id)}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300 mt-0.5">{p.description}</p>
                   </div>
