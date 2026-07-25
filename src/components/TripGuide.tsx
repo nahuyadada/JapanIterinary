@@ -17,7 +17,10 @@ import {
   type GuideProgress,
 } from "@/lib/guide";
 import { directionsUrl, hasCoords } from "@/lib/navigation";
-
+import type { Day } from "@/lib/itinerary";
+import { bookingLinksForArea, recommendStays } from "@/lib/lodging";
+import type { TripPayload } from "@/lib/tripPayload";
+import TripChecklist from "@/components/TripChecklist";
 
 function fmtDate(d: Date): string {
   return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
@@ -37,7 +40,18 @@ const quietButton =
   "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 " +
   "transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
 
-export default function TripGuide({ code, guideDays }: { code: string; guideDays: GuideDay[] }) {
+export default function TripGuide({
+  code,
+  guideDays,
+  days,
+  payload,
+}: {
+  code: string;
+  guideDays: GuideDay[];
+  days?: Day[];
+  payload?: TripPayload;
+}) {
+
   const [progress, setProgress] = useState<GuideProgress>(EMPTY_PROGRESS);
   const [hydrated, setHydrated] = useState(false);
   /** Now, read once on mount. Null until then, so server and client first render match. */
@@ -91,6 +105,36 @@ export default function TripGuide({ code, guideDays }: { code: string; guideDays
   }, [day]);
 
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<"guide" | "lodging" | "checklist">("guide");
+
+  const stayRecommendations = useMemo(
+    () => (days ? recommendStays(days, payload?.adults ?? 2) : []),
+    [days, payload]
+  );
+
+  const handleCustomize = () => {
+    if (payload) {
+      try {
+        const data = {
+          step: "itinerary",
+          selectedIds: payload.selectedIds,
+          start: payload.start,
+          end: payload.end,
+          startCity: payload.startCity ?? "",
+          endCity: payload.endCity ?? "",
+          manualMoves: payload.manualMoves,
+          dayAllocations: payload.dayAllocations,
+          adults: payload.adults,
+          transportMode: payload.transportMode,
+          stayOrigins: payload.stayOrigins,
+        };
+        localStorage.setItem("japan-itinerary-v1", JSON.stringify(data));
+      } catch {
+        // ignore
+      }
+    }
+    window.location.href = "/#plan";
+  };
 
   const handleSharePlan = async () => {
     const url = typeof window !== "undefined" ? window.location.href : "";
@@ -148,28 +192,171 @@ export default function TripGuide({ code, guideDays }: { code: string; guideDays
             </p>
           )}
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleSharePlan}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-full bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors"
+          >
+            {copied ? (
+              <>
+                <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Link copied!</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 107.032-2.128 3 3 0 00-7.032 2.128zm0 8a3 3 0 107.032 2.128 3 3 0 00-7.032-2.128z" />
+                </svg>
+                <span>Share plan</span>
+              </>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* Action banner to edit/customize the shared itinerary */}
+      <div className="flex flex-wrap items-center gap-2.5 rounded-2xl bg-gradient-to-r from-red-50 to-pink-50 dark:from-neutral-900 dark:to-neutral-900 border border-red-200/80 dark:border-neutral-700 p-3.5">
+        <div className="flex-1 min-w-[12rem]">
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Want to customize this trip?</p>
+          <p className="text-xs text-gray-600 dark:text-gray-300">Edit places, change dates, or choose different hotels in the planner.</p>
+        </div>
         <button
           type="button"
-          onClick={handleSharePlan}
-          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-full bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors"
+          onClick={handleCustomize}
+          className="px-4 py-2 rounded-full bg-red-500 hover:bg-red-600 text-white font-semibold text-xs transition-colors shrink-0 shadow-sm"
         >
-          {copied ? (
-            <>
-              <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              <span>Link copied!</span>
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 107.032-2.128 3 3 0 00-7.032 2.128zm0 8a3 3 0 107.032 2.128 3 3 0 00-7.032-2.128z" />
-              </svg>
-              <span>Share plan</span>
-            </>
-          )}
+          Customize & edit itinerary ✏️
         </button>
-      </header>
+      </div>
+
+      {/* Navigation tabs */}
+      <div className="flex border-b border-gray-200 dark:border-neutral-800 text-sm font-medium">
+        <button
+          type="button"
+          onClick={() => setActiveTab("guide")}
+          className={`px-4 py-2.5 border-b-2 transition-colors ${
+            activeTab === "guide"
+              ? "border-red-500 text-red-600 dark:text-red-400 font-semibold"
+              : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
+          }`}
+        >
+          🗺️ Daily Guide
+        </button>
+        {stayRecommendations.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setActiveTab("lodging")}
+            className={`px-4 py-2.5 border-b-2 transition-colors ${
+              activeTab === "lodging"
+                ? "border-red-500 text-red-600 dark:text-red-400 font-semibold"
+                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
+            }`}
+          >
+            🏨 Where to Stay
+          </button>
+        )}
+        {days && (
+          <button
+            type="button"
+            onClick={() => setActiveTab("checklist")}
+            className={`px-4 py-2.5 border-b-2 transition-colors ${
+              activeTab === "checklist"
+                ? "border-red-500 text-red-600 dark:text-red-400 font-semibold"
+                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
+            }`}
+          >
+            📋 Things to Book
+          </button>
+        )}
+      </div>
+
+      {activeTab === "lodging" && (
+        <section className="grid gap-4">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Where to Stay</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Recommended lodging areas tailored to this itinerary route.
+            </p>
+          </div>
+          {stayRecommendations.map((rec) => {
+            const { stay, areas } = rec;
+            const stayKey = `${stay.region}-${stay.dayIndexes[0]}`;
+            const userHotel = payload?.stayOrigins?.[stayKey];
+            const firstDay = stay.dayIndexes[0] + 1;
+            const lastDay = stay.dayIndexes[stay.dayIndexes.length - 1] + 1;
+            const dayLabel = firstDay === lastDay ? `Day ${firstDay}` : `Days ${firstDay}–${lastDay}`;
+
+            return (
+              <article
+                key={stayKey}
+                className="border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 overflow-hidden p-4 grid gap-3"
+              >
+                <header>
+                  <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{stay.region}</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {dayLabel} · {stay.nights} night{stay.nights === 1 ? "" : "s"} · {fmtDate(stay.checkIn)} → {fmtDate(stay.checkOut)}
+                  </p>
+                </header>
+
+                {userHotel && (
+                  <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 p-3 text-sm">
+                    <span className="font-medium text-red-800 dark:text-red-300">Booked Hotel: </span>
+                    <span className="text-red-700 dark:text-red-200">{userHotel}</span>
+                  </div>
+                )}
+
+                {areas.length > 0 && (
+                  <ul className="divide-y divide-gray-100 dark:divide-neutral-800 border-t border-gray-100 dark:border-neutral-800 pt-2">
+                    {areas.map((area, i) => {
+                      const links = bookingLinksForArea(area, stay.checkIn, stay.checkOut, payload?.adults ?? 2);
+                      return (
+                        <li key={area.id} className="py-3 grid gap-1.5">
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                              {area.name}
+                              {i === 0 && (
+                                <span className="ml-2 text-[11px] font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">
+                                  Top pick
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-xs text-gray-600 dark:text-gray-300">{area.blurb}</p>
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500">{area.goodFor}</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {links.map((link) => (
+                              <a
+                                key={link.provider}
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs px-3 py-1 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+                              >
+                                {link.label} ↗
+                              </a>
+                            ))}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </article>
+            );
+          })}
+        </section>
+      )}
+
+      {activeTab === "checklist" && days && (
+        <TripChecklist days={days} />
+      )}
+
+      {activeTab === "guide" && (
+        <>
+
 
 
       {!progress.started ? (
@@ -386,6 +573,9 @@ export default function TripGuide({ code, guideDays }: { code: string; guideDays
           </div>
         </>
       )}
+      </>
+      )}
     </div>
   );
 }
+

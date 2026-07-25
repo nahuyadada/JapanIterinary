@@ -64,13 +64,17 @@ export default async function SharedItineraryPage({
 
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-8 sm:py-12">
-      <TripGuide code={code} guideDays={guideDays} />
-      <footer className="mt-10 pt-6 border-t border-gray-200 dark:border-neutral-800">
-        <Link href="/" className="text-sm text-gray-500 dark:text-gray-400 underline">
+      <TripGuide code={code} guideDays={guideDays} days={days} payload={payload} />
+      <footer className="mt-10 pt-6 border-t border-gray-200 dark:border-neutral-800 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+        <Link href="/" className="underline hover:text-gray-700 dark:hover:text-gray-200">
           Plan another trip
+        </Link>
+        <Link href="/#plan" className="underline hover:text-gray-700 dark:hover:text-gray-200">
+          Create custom itinerary ↗
         </Link>
       </footer>
     </div>
   );
+
 }
 
