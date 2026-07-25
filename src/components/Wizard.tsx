@@ -6,6 +6,8 @@ import type { Region, Category } from "@/data/places";
 import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
 import { recommendStays } from "@/lib/lodging";
 import { suggestForItinerary } from "@/lib/suggestions";
+import { stayKey } from "@/lib/guide";
+import { buildPayload } from "@/lib/tripPayload";
 import type { TransportMode } from "@/lib/navigation";
 import PlaceCard from "@/components/PlaceCard";
 import CatalogFilters from "@/components/CatalogFilters";
@@ -30,6 +32,8 @@ type PersistedState = {
   dayAllocations: Record<string, number>;
   adults: number;
   transportMode: TransportMode;
+  /** Typed hotel per stay, keyed by stayKey(region, firstDayIndex). */
+  stayOrigins: Record<string, string>;
 };
 
 const STEPS: { key: Step; label: string }[] = [
@@ -41,7 +45,12 @@ const STEPS: { key: Step; label: string }[] = [
 const selectClasses =
   "border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400";
 
-const stayKey = (region: string, firstDayIndex: number) => `${region}-${firstDayIndex}`;
+/** What a successful share returns, or what went wrong. */
+type ShareState =
+  | { status: "idle" }
+  | { status: "saving" }
+  | { status: "shared"; url: string; code: string }
+  | { status: "failed"; message: string };
 
 export default function Wizard() {
   const [step, setStep] = useState<Step>("select");
@@ -54,6 +63,8 @@ export default function Wizard() {
   const [dayAllocations, setDayAllocations] = useState<Record<string, number>>({});
   const [adults, setAdults] = useState(2);
   const [transportMode, setTransportMode] = useState<TransportMode>("transit");
+  const [stayOrigins, setStayOrigins] = useState<Record<string, string>>({});
+  const [share, setShare] = useState<ShareState>({ status: "idle" });
   const [regionFilter, setRegionFilter] = useState<Region | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -81,6 +92,7 @@ export default function Wizard() {
         if (s.transportMode === "transit" || s.transportMode === "walking" || s.transportMode === "driving") {
           setTransportMode(s.transportMode);
         }
+        if (s.stayOrigins && typeof s.stayOrigins === "object") setStayOrigins(s.stayOrigins);
       }
     } catch {
       // ignore malformed storage
@@ -103,13 +115,22 @@ export default function Wizard() {
       dayAllocations,
       adults,
       transportMode,
+      stayOrigins,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch {
       // ignore quota/availability errors
     }
-  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, adults, transportMode]);
+  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, adults, transportMode, stayOrigins]);
+
+  // A share link is a snapshot. As soon as the trip changes it no longer describes what
+  // is on screen, so drop it rather than hand out a link to something stale.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    setShare({ status: "idle" });
+  }, [selectedIds, start, end, startCity, endCity, manualMoves, dayAllocations, adults, transportMode, stayOrigins]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const selectedPlaces = useMemo(
     () => PLACES.filter((p) => selectedIds.includes(p.id)),
@@ -203,6 +224,52 @@ export default function Wizard() {
     setDayAllocations((prev) => ({ ...prev, [id]: count }));
   }
 
+  function setStayOrigin(key: string, value: string) {
+    setStayOrigins((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function shareTrip() {
+    setShare({ status: "saving" });
+    try {
+      const response = await fetch("/api/itinerary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          buildPayload({
+            selectedIds,
+            start,
+            end,
+            startCity: startCity || undefined,
+            endCity: endCity || undefined,
+            manualMoves,
+            dayAllocations,
+            adults,
+            transportMode,
+            stayOrigins,
+          })
+        ),
+      });
+      const body = (await response.json().catch(() => null)) as
+        | { code?: string; error?: string }
+        | null;
+
+      if (!response.ok || !body?.code) {
+        setShare({
+          status: "failed",
+          message: body?.error ?? "Could not save your trip. Please try again.",
+        });
+        return;
+      }
+      setShare({
+        status: "shared",
+        code: body.code,
+        url: `${window.location.origin}/itinerary/${body.code}`,
+      });
+    } catch {
+      setShare({ status: "failed", message: "No connection. Check your network and try again." });
+    }
+  }
+
   function startOver() {
     setSelectedIds([]);
     setStart("");
@@ -213,6 +280,8 @@ export default function Wizard() {
     setDayAllocations({});
     setAdults(2);
     setTransportMode("transit");
+    setStayOrigins({});
+    setShare({ status: "idle" });
     setRegionFilter("all");
     setCategoryFilter("all");
     setSearchQuery("");
@@ -441,8 +510,55 @@ export default function Wizard() {
               >
                 Start over
               </button>
+              <button
+                type="button"
+                onClick={shareTrip}
+                disabled={share.status === "saving"}
+                className="px-6 py-2.5 rounded-full bg-red-500 text-white font-medium hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {share.status === "saving" ? "Creating link…" : "Share trip"}
+              </button>
             </div>
           </div>
+
+          {share.status === "shared" && (
+            <div className="grid gap-2 rounded-xl border border-green-200 bg-green-50 p-4">
+              <p className="text-sm font-medium text-green-800">
+                Your trip is ready to share — code {share.code}
+              </p>
+              <p className="text-sm text-green-700">
+                Open this on your phone for a step-by-step guide while you travel.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href={`/itinerary/${share.code}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm px-4 py-2 rounded-full bg-white border border-green-300 text-green-800 hover:bg-green-100 transition-colors break-all"
+                >
+                  Open trip guide ↗
+                </a>
+                <input
+                  type="text"
+                  readOnly
+                  value={share.url}
+                  onFocus={(e) => e.currentTarget.select()}
+                  aria-label="Shareable link"
+                  className="flex-1 min-w-[16rem] text-sm border border-green-300 rounded-lg px-3 py-2 bg-white text-gray-700"
+                />
+              </div>
+              <p className="text-xs text-green-700">
+                Anyone with this link can see the trip, so only send it to people you want to
+                share it with.
+              </p>
+            </div>
+          )}
+
+          {share.status === "failed" && (
+            <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {share.message}
+            </p>
+          )}
 
           <ItineraryMap days={days} stayRecommendations={stayRecommendations} />
 
@@ -457,6 +573,10 @@ export default function Wizard() {
               adults={adults}
               mode={transportMode}
               suggestion={suggestionByStay.get(stayKey(rec.stay.region, rec.stay.dayIndexes[0]))}
+              stayOrigin={stayOrigins[stayKey(rec.stay.region, rec.stay.dayIndexes[0])] ?? ""}
+              onStayOrigin={(value) =>
+                setStayOrigin(stayKey(rec.stay.region, rec.stay.dayIndexes[0]), value)
+              }
               onRemove={removePlace}
               onMove={movePlace}
               onAdd={togglePlace}

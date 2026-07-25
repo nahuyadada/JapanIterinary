@@ -6,6 +6,21 @@ export type TransportMode = "transit" | "walking" | "driving";
 
 export type NavPoint = { name: string; lat: number; lng: number };
 
+/**
+ * A place we only know by name — a hotel the traveler typed in. Google Maps geocodes
+ * `query` on its side; we never guess coordinates for it, so anything that needs a
+ * distance (and therefore a time estimate) has to treat it as unknown.
+ */
+export type TextPoint = { name: string; query: string };
+
+/** Somewhere a route can start: known coordinates, or text for Google to resolve. */
+export type NavOrigin = NavPoint | TextPoint;
+
+/** Whether an origin carries real coordinates, so distance math is possible. */
+export function hasCoords(point: NavOrigin): point is NavPoint {
+  return "lat" in point;
+}
+
 export type Leg = {
   from: NavPoint;
   to: NavPoint;
@@ -15,17 +30,22 @@ export type Leg = {
 
 export type DayRoute = { dayIndex: number; legs: Leg[] };
 
+/** The `origin`/`destination` value Google Maps expects for a point. */
+function mapsQuery(point: NavOrigin): string {
+  return hasCoords(point) ? `${point.lat},${point.lng}` : point.query;
+}
+
 /**
  * Google Maps directions deep link. Opening it shows the real route, travel time,
  * and fare on Google's side — this app does not compute or fabricate those.
+ *
+ * `from` may be a typed hotel with no coordinates; Google resolves the text.
  */
-export function directionsUrl(from: NavPoint, to: NavPoint, mode: TransportMode): string {
-  const origin = `${from.lat},${from.lng}`;
-  const destination = `${to.lat},${to.lng}`;
+export function directionsUrl(from: NavOrigin, to: NavPoint, mode: TransportMode): string {
   return (
     "https://www.google.com/maps/dir/?api=1" +
-    `&origin=${encodeURIComponent(origin)}` +
-    `&destination=${encodeURIComponent(destination)}` +
+    `&origin=${encodeURIComponent(mapsQuery(from))}` +
+    `&destination=${encodeURIComponent(mapsQuery(to))}` +
     `&travelmode=${mode}`
   );
 }

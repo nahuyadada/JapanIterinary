@@ -19,6 +19,8 @@ export default function CityPlan({
   adults,
   mode,
   suggestion,
+  stayOrigin,
+  onStayOrigin,
   onRemove,
   onMove,
   onAdd,
@@ -29,6 +31,9 @@ export default function CityPlan({
   adults: number;
   mode: TransportMode;
   suggestion: StaySuggestion | undefined;
+  /** Where the traveler is actually staying, as they typed it. Empty when unset. */
+  stayOrigin: string;
+  onStayOrigin: (value: string) => void;
   onRemove: (placeId: string) => void;
   onMove: (placeId: string, toDayIndex: number) => void;
   onAdd: (placeId: string) => void;
@@ -91,6 +96,24 @@ export default function CityPlan({
           </ul>
         </div>
       )}
+
+      <label className="grid gap-1 text-sm">
+        <span className="font-medium text-gray-800 dark:text-gray-100">
+          Booked somewhere already?
+        </span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          Name your hotel and the shared trip guide will give directions from its door instead
+          of from the suggested area.
+        </span>
+        <input
+          type="text"
+          value={stayOrigin}
+          onChange={(e) => onStayOrigin(e.target.value)}
+          maxLength={120}
+          placeholder={`e.g. a hotel or address in ${stay.region}`}
+          className="mt-1 border border-gray-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
+        />
+      </label>
 
       {days.map((day) => (
         <div key={day.dayIndex} className="grid gap-3">

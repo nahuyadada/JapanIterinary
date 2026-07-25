@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { directionsUrl, buildDayRoutes, type NavPoint } from "@/lib/navigation";
+import {
+  directionsUrl,
+  buildDayRoutes,
+  hasCoords,
+  type NavPoint,
+  type TextPoint,
+} from "@/lib/navigation";
 import type { Day } from "@/lib/itinerary";
 import type { Place } from "@/data/places";
 import type { StayRecommendation } from "@/lib/lodging";
@@ -48,6 +54,22 @@ describe("directionsUrl", () => {
   it("respects the chosen mode", () => {
     expect(directionsUrl(from, to, "walking")).toContain("travelmode=walking");
     expect(directionsUrl(from, to, "driving")).toContain("travelmode=driving");
+  });
+
+  it("uses the raw text when the origin is a typed hotel with no coordinates", () => {
+    const hotel: TextPoint = { name: "Hotel Example", query: "Hotel Example, Osaka" };
+    const url = directionsUrl(hotel, to, "transit");
+    expect(url).toContain(`origin=${encodeURIComponent("Hotel Example, Osaka")}`);
+    expect(url).toContain(`destination=${encodeURIComponent("34.6654,135.4323")}`);
+    // The display name must not leak into the link when a fuller query was supplied.
+    expect(url).not.toContain("origin=Hotel+Example&");
+  });
+});
+
+describe("hasCoords", () => {
+  it("separates coordinate points from text-only points", () => {
+    expect(hasCoords({ name: "USJ", lat: 34.66, lng: 135.43 })).toBe(true);
+    expect(hasCoords({ name: "Hotel Example", query: "Hotel Example" })).toBe(false);
   });
 });
 
