@@ -65,9 +65,9 @@
     "semantic_hash": "50a18ffc201e7410f0ecd18c8408b4d9"
   },
   "src/components/ItineraryDay.tsx": {
-    "mtime": 1784938635.7866206,
-    "ast_hash": "766cfac83efac05f955127e504bb7782",
-    "semantic_hash": "766cfac83efac05f955127e504bb7782"
+    "mtime": 1784955449.0279725,
+    "ast_hash": "1f40c5afb2226c4c1358bc021daaba4b",
+    "semantic_hash": ""
   },
   "src/components/ItineraryMap.tsx": {
     "mtime": 1784936414.2823243,
@@ -85,9 +85,9 @@
     "semantic_hash": "1d9b4e786132ed5b76752465d044d350"
   },
   "src/components/Wizard.tsx": {
-    "mtime": 1784939550.33142,
-    "ast_hash": "37651fd1fe6f4feb6c5e3d742be7ee48",
-    "semantic_hash": "37651fd1fe6f4feb6c5e3d742be7ee48"
+    "mtime": 1784955449.1318443,
+    "ast_hash": "fcb001d0b7b18ff0f067588878fce55f",
+    "semantic_hash": ""
   },
   "src/components/site/Hero.tsx": {
     "mtime": 1784907200.272863,
@@ -238,5 +238,75 @@
     "mtime": 1784946455.4096324,
     "ast_hash": "53b99880f14259339caf9b19d7b4379b",
     "semantic_hash": "53b99880f14259339caf9b19d7b4379b"
+  },
+  "src/components/BookingBadge.tsx": {
+    "mtime": 1784955448.8060007,
+    "ast_hash": "3b560b097083b74106bd326a11b16820",
+    "semantic_hash": ""
+  },
+  "src/components/BookingCard.tsx": {
+    "mtime": 1784955448.8333375,
+    "ast_hash": "8b432aef64ec1d667f073c8269b40374",
+    "semantic_hash": ""
+  },
+  "src/components/ItineraryPlaceRow.tsx": {
+    "mtime": 1784955448.8623116,
+    "ast_hash": "38977a2be5f3162fda40abe413908a37",
+    "semantic_hash": ""
+  },
+  "src/components/TripChecklist.tsx": {
+    "mtime": 1784955448.8925726,
+    "ast_hash": "38114be7d6eb93a7362cf669e4b4d418",
+    "semantic_hash": ""
+  },
+  "src/data/reservations.ts": {
+    "mtime": 1784955448.9256277,
+    "ast_hash": "dca9d0288d033de23f3107c47b4168e3",
+    "semantic_hash": ""
+  },
+  "src/lib/reservations.test.ts": {
+    "mtime": 1784955693.0154297,
+    "ast_hash": "22a7815e8ba6b2dc0861512c4bb93256",
+    "semantic_hash": ""
+  },
+  "src/lib/reservations.ts": {
+    "mtime": 1784955621.8669353,
+    "ast_hash": "d6c47a0f55a84abc68283c8b21b6de4a",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-07-24-japan-itinerary-maker.md": {
+    "mtime": 1784885202.0098727,
+    "ast_hash": "ec0d647f5945da51c1b566bcb063cb08",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-07-25-itinerary-accommodation-recommendations.md": {
+    "mtime": 1784936414.325907,
+    "ast_hash": "563e6fe4241d1fa803af2f4113a3b676",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-07-24-japan-itinerary-maker-design.md": {
+    "mtime": 1784884843.654457,
+    "ast_hash": "2abe5dee44966186d58d0e93c0a64a8d",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-07-25-itinerary-accommodation-recommendations-design.md": {
+    "mtime": 1784936414.3029025,
+    "ast_hash": "a3cb6ba862eb8d3d32ae022f41df88fa",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-07-25-reservation-ticket-assistant-design.md": {
+    "mtime": 1784955448.777826,
+    "ast_hash": "19b591e6de3eed2fd699bc50082e7377",
+    "semantic_hash": ""
+  },
+  "public/window.svg": {
+    "mtime": 1784884426.8054817,
+    "ast_hash": "a2760511c65806022ad20adf74370ff3",
+    "semantic_hash": ""
+  },
+  "src/app/icon.svg": {
+    "mtime": 1784946497.6443355,
+    "ast_hash": "2ae424559793fe07620e2ab99c7084c2",
+    "semantic_hash": ""
   }
 }
