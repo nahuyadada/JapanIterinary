@@ -20,6 +20,7 @@ export const LODGING_AREAS: LodgingArea[] = [
   { id: "tokyo-ueno-asakusa", name: "Ueno / Asakusa", region: "Tokyo", lat: 35.7138, lng: 139.7770, blurb: "Old-Tokyo temples, museums, and value stays on the northeast side.", goodFor: "Sightseeing, budget, families", searchTerm: "Asakusa, Tokyo, Japan" },
   { id: "tokyo-ginza-station", name: "Ginza / Tokyo Station", region: "Tokyo", lat: 35.6812, lng: 139.7671, blurb: "Upscale central district with easy Shinkansen access.", goodFor: "Shopping, Shinkansen access, comfort", searchTerm: "Ginza, Tokyo, Japan" },
   { id: "tokyo-shibuya", name: "Shibuya", region: "Tokyo", lat: 35.6595, lng: 139.7005, blurb: "Youthful, fashionable, and central to west-side sights.", goodFor: "Trendy dining, west Tokyo sights", searchTerm: "Shibuya, Tokyo, Japan" },
+  { id: "tokyo-maihama", name: "Maihama (Tokyo Disney Resort)", region: "Tokyo", lat: 35.6363, lng: 139.8838, blurb: "Resort hotels clustered around the Disney parks on Tokyo Bay.", goodFor: "Disney days, families", searchTerm: "Maihama, Urayasu, Chiba, Japan" },
 
   // Kyoto
   { id: "kyoto-station", name: "Kyoto Station", region: "Kyoto", lat: 34.9858, lng: 135.7588, blurb: "Transit heart of Kyoto with hotels of every budget.", goodFor: "Day trips, Shinkansen access", searchTerm: "Kyoto Station, Kyoto, Japan" },
