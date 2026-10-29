@@ -16,11 +16,13 @@ export default function ItineraryDay({
   dayCount,
   onRemove,
   onMove,
+  fixedDates,
 }: {
   day: Day;
   dayCount: number;
   onRemove: (placeId: string) => void;
   onMove: (placeId: string, toDayIndex: number) => void;
+  fixedDates?: Record<string, string>;
 }) {
   const color = DAY_COLORS[day.dayIndex % DAY_COLORS.length];
   const dateLabel = day.date.toLocaleDateString(undefined, {
@@ -66,6 +68,7 @@ export default function ItineraryDay({
               dayCount={dayCount}
               onRemove={onRemove}
               onMove={onMove}
+              pinned={Boolean(fixedDates?.[place.id])}
             />
           ))}
         </ul>

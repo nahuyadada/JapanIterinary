@@ -20,6 +20,7 @@ export default function ItineraryPlaceRow({
   dayCount,
   onRemove,
   onMove,
+  pinned = false,
 }: {
   place: Place;
   visitDate: Date;
@@ -27,6 +28,8 @@ export default function ItineraryPlaceRow({
   dayCount: number;
   onRemove: (placeId: string) => void;
   onMove: (placeId: string, toDayIndex: number) => void;
+  /** Locked to this date by the traveler; moving it re-plans the trip around the new date. */
+  pinned?: boolean;
 }) {
   const booking = resolveBooking(place, visitDate);
   const targetNavPoint = { name: `${place.name}, ${place.city}`, lat: place.lat, lng: place.lng };
@@ -38,6 +41,11 @@ export default function ItineraryPlaceRow({
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-medium text-gray-900 dark:text-gray-100">{place.name}</p>
             <BookingBadge status={booking.status} />
+            {pinned && (
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900">
+                📌 Fixed date
+              </span>
+            )}
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             {place.city} · {CATEGORY_LABELS[place.category] ?? place.category}

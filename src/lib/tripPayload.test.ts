@@ -576,3 +576,54 @@ describe("encodePayload & decodePayload", () => {
     });
   });
 });
+
+describe("fixed dates", () => {
+  const USJ = "osaka-usj";
+
+  it("carries fixed dates through buildPayload, and omits them when empty", () => {
+    const base = {
+      selectedIds: [USJ],
+      start: "2026-04-01",
+      end: "2026-04-05",
+      manualMoves: {},
+      dayAllocations: {},
+      adults: 2,
+      transportMode: "transit" as const,
+      stayOrigins: {},
+    };
+    expect(buildPayload({ ...base, fixedDates: { [USJ]: "2026-04-03" } }).fixedDates).toEqual({ [USJ]: "2026-04-03" });
+    expect("fixedDates" in buildPayload({ ...base, fixedDates: {} })).toBe(false);
+  });
+
+  it("keeps only valid dates for selected places", () => {
+    const parsed = parsePayload({
+      ...payload({ selectedIds: [USJ, SENSOJI] }),
+      fixedDates: { [USJ]: "2026-04-02", [SENSOJI]: "not-a-date", [MEIJI]: "2026-04-02", bogus: "2026-04-02" },
+    });
+    expect(parsed?.fixedDates).toEqual({ [USJ]: "2026-04-02" });
+  });
+
+  it("pins the place on its date in the rebuilt itinerary", () => {
+    const days = payloadToItinerary(
+      payload({ selectedIds: [USJ, SENSOJI, MEIJI], fixedDates: { [USJ]: "2026-04-03" } })
+    );
+    expect(days[2].places.map((p) => p.id)).toContain(USJ);
+  });
+
+  it("survives the compact share format", () => {
+    const original = payload({ selectedIds: [USJ, SENSOJI], fixedDates: { [USJ]: "2026-04-02" } });
+    expect(decodePayload(encodePayload(original))).toEqual(original);
+  });
+
+  it("survives the compact format alongside every other optional field", () => {
+    const original = payload({
+      selectedIds: [USJ, SENSOJI],
+      startCity: "Tokyo",
+      manualMoves: { [SENSOJI]: 1 },
+      dayAllocations: { [USJ]: 2 },
+      stayOrigins: { "Tokyo-0": { name: "Hotel" } },
+      fixedDates: { [USJ]: "2026-04-02" },
+    });
+    expect(decodePayload(encodePayload(original))).toEqual(original);
+  });
+});

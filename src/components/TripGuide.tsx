@@ -186,6 +186,7 @@ export default function TripGuide({
           endCity: payload.endCity ?? "",
           manualMoves: payload.manualMoves,
           dayAllocations: payload.dayAllocations,
+          fixedDates: payload.fixedDates ?? {},
           adults: payload.adults,
           transportMode: payload.transportMode,
           stayOrigins: payload.stayOrigins,

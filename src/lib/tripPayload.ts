@@ -49,6 +49,8 @@ export type TripPayload = {
   stayOrigins: Record<string, StayLodging>;
   /** Custom user-added locations */
   customPlaces?: Place[];
+  /** placeId → local ISO date the place is pinned to (e.g. a dated USJ ticket). */
+  fixedDates?: Record<string, string>;
 };
 
 const TRANSPORT_MODES: TransportMode[] = ["transit", "walking", "driving"];
@@ -65,6 +67,16 @@ function numberMap(v: unknown): Record<string, number> {
   const out: Record<string, number> = {};
   for (const [key, value] of Object.entries(v)) {
     if (typeof value === "number" && Number.isFinite(value)) out[key] = Math.floor(value);
+  }
+  return out;
+}
+
+/** Keep only pins on a real ISO date for a place that is actually in the trip. */
+function dateMap(v: unknown, selected: Set<string>): Record<string, string> {
+  if (!isRecord(v)) return {};
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(v)) {
+    if (selected.has(key) && typeof value === "string" && ISO_DATE.test(value)) out[key] = value;
   }
   return out;
 }
@@ -178,6 +190,7 @@ export function buildPayload(input: {
   transportMode: TransportMode;
   stayOrigins: Record<string, StayLodging>;
   customPlaces?: Place[];
+  fixedDates?: Record<string, string>;
 }): TripPayload {
   return {
     v: 1,
@@ -192,6 +205,7 @@ export function buildPayload(input: {
     transportMode: input.transportMode,
     stayOrigins: input.stayOrigins,
     ...(input.customPlaces && input.customPlaces.length > 0 ? { customPlaces: input.customPlaces } : {}),
+    ...(input.fixedDates && Object.keys(input.fixedDates).length > 0 ? { fixedDates: input.fixedDates } : {}),
   };
 }
 
@@ -227,6 +241,7 @@ export function parsePayload(raw: unknown): TripPayload | null {
     typeof raw.adults === "number" && Number.isFinite(raw.adults)
       ? Math.min(8, Math.max(1, Math.floor(raw.adults)))
       : 2;
+  const fixedDates = dateMap(raw.fixedDates, new Set(selectedIds));
 
   return {
     v: 1,
@@ -241,6 +256,7 @@ export function parsePayload(raw: unknown): TripPayload | null {
     transportMode: mode,
     stayOrigins: parseStayLodgings(raw.stayOrigins),
     ...(customPlaces ? { customPlaces } : {}),
+    ...(Object.keys(fixedDates).length > 0 ? { fixedDates } : {}),
   };
 }
 
@@ -263,6 +279,7 @@ export function payloadToItinerary(payload: TripPayload): Day[] {
     startCity: payload.startCity,
     endCity: payload.endCity,
     dayAllocations: payload.dayAllocations,
+    fixedDates: payload.fixedDates,
   });
 
   const moves = Object.entries(payload.manualMoves).filter(([id]) =>
@@ -397,25 +414,33 @@ export function encodePayload(payload: TripPayload): string {
   const hasMoves = Object.keys(payload.manualMoves).length > 0;
   const hasAllocs = Object.keys(payload.dayAllocations).length > 0;
   const hasStays = Object.keys(payload.stayOrigins).length > 0;
+  const hasFixed = Object.keys(payload.fixedDates ?? {}).length > 0;
 
-  if (hasCities || hasMoves || hasAllocs || hasStays) {
+  // Fields are positional, so a later field being present forces every earlier one out.
+  if (hasCities || hasMoves || hasAllocs || hasStays || hasFixed) {
     parts.push(`${payload.startCity ?? ""}:${payload.endCity ?? ""}`);
   }
-  if (hasMoves || hasAllocs || hasStays) {
+  if (hasMoves || hasAllocs || hasStays || hasFixed) {
     const moves = Object.entries(payload.manualMoves)
       .map(([id, day]) => `${resolvePlaceToken(id)}:${day}`)
       .join(",");
     parts.push(moves);
   }
-  if (hasAllocs || hasStays) {
+  if (hasAllocs || hasStays || hasFixed) {
     const allocs = Object.entries(payload.dayAllocations)
       .map(([id, count]) => `${resolvePlaceToken(id)}:${count}`)
       .join(",");
     parts.push(allocs);
   }
-  if (hasStays) {
+  if (hasStays || hasFixed) {
     const stays = Object.entries(payload.stayOrigins).map(encodeStay).join("|");
     parts.push(stays);
+  }
+  if (hasFixed) {
+    const fixed = Object.entries(payload.fixedDates ?? {})
+      .map(([id, date]) => `${resolvePlaceToken(id)}:${date}`)
+      .join(",");
+    parts.push(fixed);
   }
 
   return parts.join("~");
@@ -430,7 +455,7 @@ export function decodePayload(raw: string): TripPayload | null {
     try {
       const parts = raw.split("~");
       if (parts.length >= 5) {
-        const [start, end, adultsStr, modeStr, placesStr, citiesStr, movesStr, allocsStr, staysStr] = parts;
+        const [start, end, adultsStr, modeStr, placesStr, citiesStr, movesStr, allocsStr, staysStr, fixedStr] = parts;
         const selectedIds = placesStr ? placesStr.split(",").map(resolvePlaceId) : [];
         
         let startCity: string | undefined;
@@ -473,6 +498,14 @@ export function decodePayload(raw: string): TripPayload | null {
           }
         }
 
+        const fixedDates: Record<string, string> = {};
+        if (fixedStr) {
+          for (const item of fixedStr.split(",")) {
+            const [pToken, date] = item.split(":");
+            if (pToken && date) fixedDates[resolvePlaceId(pToken)] = date;
+          }
+        }
+
         return parsePayload({
           v: 1,
           selectedIds,
@@ -485,6 +518,7 @@ export function decodePayload(raw: string): TripPayload | null {
           manualMoves,
           dayAllocations,
           stayOrigins,
+          fixedDates,
         });
       }
     } catch {

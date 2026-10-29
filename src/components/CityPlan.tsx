@@ -29,6 +29,7 @@ export default function CityPlan({
   onMove,
   onAdd,
   onAddCustom,
+  fixedDates,
 }: {
   rec: StayRecommendation;
   days: Day[];
@@ -43,6 +44,8 @@ export default function CityPlan({
   onMove: (placeId: string, toDayIndex: number) => void;
   onAdd: (placeId: string) => void;
   onAddCustom?: (place: Place) => void;
+  /** placeId → locked date, so pinned places can be marked. */
+  fixedDates?: Record<string, string>;
 }) {
 
   const { stay, areas } = rec;
@@ -134,7 +137,7 @@ export default function CityPlan({
 
       {days.map((day) => (
         <div key={day.dayIndex} className="grid gap-3">
-          <ItineraryDay day={day} dayCount={dayCount} onRemove={onRemove} onMove={onMove} />
+          <ItineraryDay day={day} dayCount={dayCount} onRemove={onRemove} onMove={onMove} fixedDates={fixedDates} />
           <DaySchedule entries={buildDaySchedule(day, origin, mode)} />
         </div>
       ))}

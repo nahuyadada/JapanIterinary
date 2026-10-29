@@ -5,7 +5,7 @@ import { PLACES, REGIONS, CATEGORY_LABELS } from "@/data/places";
 import type { Region, Category, Place } from "@/data/places";
 
 import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
-import { recommendStays } from "@/lib/lodging";
+import { recommendStays, toISODate } from "@/lib/lodging";
 import { suggestForItinerary } from "@/lib/suggestions";
 import { stayKey } from "@/lib/guide";
 import {
@@ -19,6 +19,7 @@ import type { TransportMode } from "@/lib/navigation";
 import PlaceCard from "@/components/PlaceCard";
 import CatalogFilters from "@/components/CatalogFilters";
 import DateRangePicker from "@/components/DateRangePicker";
+import FixedDatesPicker from "@/components/FixedDatesPicker";
 import ItineraryDay from "@/components/ItineraryDay";
 import CityPlan from "@/components/CityPlan";
 import TripChecklist from "@/components/TripChecklist";
@@ -37,6 +38,8 @@ type PersistedState = {
   startCity: string;
   endCity: string;
   dayAllocations: Record<string, number>;
+  /** placeId → local ISO date the place is locked to (e.g. a dated USJ ticket). */
+  fixedDates: Record<string, string>;
   adults: number;
   transportMode: TransportMode;
   /** The traveler's accommodation per stay, keyed by stayKey(region, firstDayIndex). */
@@ -70,6 +73,7 @@ export default function Wizard() {
   const [endCity, setEndCity] = useState("");
   const [manualMoves, setManualMoves] = useState<Record<string, number>>({});
   const [dayAllocations, setDayAllocations] = useState<Record<string, number>>({});
+  const [fixedDates, setFixedDates] = useState<Record<string, string>>({});
   const [adults, setAdults] = useState(2);
   const [transportMode, setTransportMode] = useState<TransportMode>("transit");
   const [stayOrigins, setStayOrigins] = useState<Record<string, StayLodging>>({});
@@ -97,6 +101,13 @@ export default function Wizard() {
         if (typeof s.endCity === "string") setEndCity(s.endCity);
         if (s.manualMoves && typeof s.manualMoves === "object") setManualMoves(s.manualMoves);
         if (s.dayAllocations && typeof s.dayAllocations === "object") setDayAllocations(s.dayAllocations);
+        if (s.fixedDates && typeof s.fixedDates === "object") {
+          setFixedDates(
+            Object.fromEntries(
+              Object.entries(s.fixedDates).filter(([, v]) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v))
+            )
+          );
+        }
         if (typeof s.adults === "number" && s.adults >= 1) setAdults(s.adults);
         if (s.transportMode === "transit" || s.transportMode === "walking" || s.transportMode === "driving") {
           setTransportMode(s.transportMode);
@@ -127,6 +138,7 @@ export default function Wizard() {
       startCity,
       endCity,
       dayAllocations,
+      fixedDates,
       adults,
       transportMode,
       stayOrigins,
@@ -137,13 +149,13 @@ export default function Wizard() {
     } catch {
       // ignore quota/availability errors
     }
-  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, adults, transportMode, stayOrigins, customPlaces]);
+  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, fixedDates, adults, transportMode, stayOrigins, customPlaces]);
 
   // A share link is a snapshot.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setShare({ status: "idle" });
-  }, [selectedIds, start, end, startCity, endCity, manualMoves, dayAllocations, adults, transportMode, stayOrigins, customPlaces]);
+  }, [selectedIds, start, end, startCity, endCity, manualMoves, dayAllocations, fixedDates, adults, transportMode, stayOrigins, customPlaces]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const allPlacesMap = useMemo(() => {
@@ -184,6 +196,7 @@ export default function Wizard() {
       startCity: startCity || undefined,
       endCity: endCity || undefined,
       dayAllocations,
+      fixedDates,
     });
     if (Object.keys(manualMoves).length === 0) return base;
 
@@ -202,7 +215,7 @@ export default function Wizard() {
       cleaned[target].places.push(place);
     }
     return cleaned;
-  }, [datesValid, selectedPlaces, start, end, startCity, endCity, manualMoves, dayAllocations]);
+  }, [datesValid, selectedPlaces, start, end, startCity, endCity, manualMoves, dayAllocations, fixedDates]);
 
   const stayRecommendations = useMemo(() => recommendStays(days, 3), [days]);
 
@@ -242,10 +255,37 @@ export default function Wizard() {
       delete next[id];
       return next;
     });
+    setFixedDate(id, null);
   }
 
   function movePlace(id: string, toDayIndex: number) {
+    // Moving a locked place changes its date, so the rest of the trip re-plans around it.
+    if (fixedDates[id] && days[toDayIndex]) {
+      setFixedDate(id, toISODate(days[toDayIndex].date));
+      return;
+    }
     setManualMoves((prev) => ({ ...prev, [id]: toDayIndex }));
+  }
+
+  /** Lock a place to a date, or unlock it. A locked place drops any manual day move. */
+  function setFixedDate(id: string, date: string | null) {
+    setFixedDates((prev) => {
+      if (!date) {
+        if (!(id in prev)) return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      return { ...prev, [id]: date };
+    });
+    if (date) {
+      setManualMoves((prev) => {
+        if (!(id in prev)) return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
   }
 
   function setDays(id: string, count: number) {
@@ -275,6 +315,7 @@ export default function Wizard() {
       endCity: endCity || undefined,
       manualMoves,
       dayAllocations,
+      fixedDates,
       adults,
       transportMode,
       stayOrigins,
@@ -327,6 +368,7 @@ export default function Wizard() {
     setEndCity("");
     setManualMoves({});
     setDayAllocations({});
+    setFixedDates({});
     setAdults(2);
     setTransportMode("transit");
     setStayOrigins({});
@@ -524,6 +566,13 @@ export default function Wizard() {
               </div>
             </div>
           )}
+          <FixedDatesPicker
+            places={selectedPlaces}
+            start={start}
+            end={end}
+            fixedDates={fixedDates}
+            onChange={setFixedDate}
+          />
           <div className="flex items-center justify-between">
             <button
               type="button"
@@ -705,6 +754,7 @@ export default function Wizard() {
               onMove={movePlace}
               onAdd={togglePlace}
               onAddCustom={handleAddCustomPlace}
+              fixedDates={fixedDates}
             />
 
           ))}
@@ -718,6 +768,7 @@ export default function Wizard() {
                   dayCount={days.length}
                   onRemove={removePlace}
                   onMove={movePlace}
+                  fixedDates={fixedDates}
                 />
               ))}
             </div>
