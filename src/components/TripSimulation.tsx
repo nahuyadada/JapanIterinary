@@ -1,12 +1,19 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import type { Day } from "@/lib/itinerary";
 import type { GuideDay } from "@/lib/guide";
-import { hasCoords, type NavPoint, type TransportMode } from "@/lib/navigation";
+import { directionsUrl, hasCoords, type NavPoint, type TransportMode } from "@/lib/navigation";
 import { formatClock } from "@/lib/schedule";
-import { buildSimulation, type SimStep } from "@/lib/simulation";
+import { buildSimulation, dayHops, hopSegments, type HopSegment, type SimStep } from "@/lib/simulation";
+import { STATION_MAX_POINTS, pointKey, type Station } from "@/lib/stations";
 import { thumbUrl } from "@/lib/image";
 import Icon, { type IconName } from "@/components/Icon";
+
+// Leaflet touches `window` on import, so the map can only load in the browser.
+const TripSimulationMap = dynamic(() => import("@/components/TripSimulationMap"), { ssr: false });
+
+const SEGMENT_ICON: Record<HopSegment["kind"], IconName> = { walk: "walk", train: "train", drive: "car" };
 
 const MODE_ICON: Record<TransportMode, IconName> = { transit: "train", walking: "walk", driving: "car" };
 const STEP_MS = 1800;
@@ -20,6 +27,13 @@ function fmtMinutes(minutes: number): string {
   const m = minutes % 60;
   if (h === 0) return `${m} min`;
   return m === 0 ? `${h} h` : `${h} h ${m} min`;
+}
+
+function segmentText(s: HopSegment): string {
+  const minutes = fmtMinutes(Math.round(s.end - s.start));
+  if (s.kind === "walk") return `Walk ${minutes} to ${s.to.name}`;
+  if (s.kind === "drive") return `Drive ${minutes} to ${s.to.name}`;
+  return `Train from ${s.from.name} to ${s.to.name}, about ${minutes}`;
 }
 
 function stepTitle(step: SimStep): string {
@@ -75,8 +89,73 @@ export default function TripSimulation({
     return () => clearInterval(timer);
   }, [playing, steps.length]);
 
+  const dayIndex = steps[index]?.dayIndex ?? -1;
+  const hops = useMemo(() => dayHops(steps, dayIndex), [steps, dayIndex]);
+
+  /** Nearest station per point, by pointKey. Null means we asked and there is none nearby. */
+  const [stations, setStations] = useState<Record<string, Station | null>>({});
+  const requested = useRef(new Set<string>());
+
+  useEffect(() => {
+    if (mode !== "transit") return;
+    const wanted = new Map<string, NavPoint>();
+    for (const hop of hops) {
+      for (const point of [hop.from, hop.to]) {
+        const key = pointKey(point);
+        if (!requested.current.has(key)) wanted.set(key, point);
+      }
+    }
+    const points = [...wanted.entries()].slice(0, STATION_MAX_POINTS);
+    if (points.length === 0) return;
+    for (const [key] of points) requested.current.add(key);
+
+    const pts = points.map(([, p]) => `${p.lat},${p.lng}`).join(";");
+    fetch(`/api/stations?pts=${encodeURIComponent(pts)}`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body: { stations?: (Station | null)[] } | null) => {
+        const found = body?.stations;
+        if (!Array.isArray(found)) return;
+        setStations((prev) => ({
+          ...prev,
+          ...Object.fromEntries(points.map(([key], i) => [key, found[i] ?? null])),
+        }));
+      })
+      .catch(() => {
+        // Without stations each journey simply stays one estimated piece.
+      });
+  }, [hops, mode]);
+
+  const hopParts = useMemo(
+    () =>
+      hops.map((hop) =>
+        hopSegments(hop, mode, stations[pointKey(hop.from)] ?? null, stations[pointKey(hop.to)] ?? null)
+      ),
+    [hops, mode, stations]
+  );
+
   const step = steps[index];
   if (!step) return null;
+
+  const activeHop = hops.findIndex((hop) => hop.stepIndex === index);
+  const journey = activeHop >= 0 ? { hop: hops[activeHop], parts: hopParts[activeHop] } : null;
+
+  const here: NavPoint | null =
+    step.kind === "visit" && step.place
+      ? { name: step.place.name, lat: step.place.lat, lng: step.place.lng }
+      : step.base ?? null;
+
+  const mapStops: { point: NavPoint; label: string }[] = [];
+  for (const s of steps) {
+    if (s.dayIndex !== step.dayIndex) continue;
+    if (s.kind === "leave" && s.base) mapStops.push({ point: s.base, label: "H" });
+    if (s.kind === "visit" && s.place) {
+      const number = mapStops.filter((stop) => stop.label !== "H").length + 1;
+      mapStops.push({
+        point: { name: s.place.name, lat: s.place.lat, lng: s.place.lng },
+        label: String(number),
+      });
+    }
+  }
 
   const daySteps = steps
     .map((s, i) => ({ s, i }))
@@ -127,11 +206,37 @@ export default function TripSimulation({
                 : ""}
             </p>
           )}
-          {step.travelMinutes !== undefined && (
+          {step.travelMinutes !== undefined && !journey && (
             <p className="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
               <Icon name={MODE_ICON[mode]} />
               About {fmtMinutes(step.travelMinutes)} to get here
             </p>
+          )}
+          {journey && (
+            <div className="mt-1.5 grid gap-1.5 border-t border-gray-100 dark:border-neutral-800 pt-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Getting here from {journey.hop.from.name}
+              </p>
+              <ol className="grid gap-1">
+                {journey.parts.map((part, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700 dark:text-gray-300">
+                    <span className="w-11 shrink-0 font-semibold tabular-nums text-gray-900 dark:text-gray-100">
+                      {formatClock(part.start)}
+                    </span>
+                    <Icon name={SEGMENT_ICON[part.kind]} className="w-4 h-4 mt-0.5 shrink-0 text-gray-500" />
+                    <span className="min-w-0">{segmentText(part)}</span>
+                  </li>
+                ))}
+              </ol>
+              <a
+                href={directionsUrl(journey.hop.from, journey.hop.to, mode)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="justify-self-start text-xs text-red-600 dark:text-red-400 underline hover:no-underline"
+              >
+                Real departure times in Google Maps ↗
+              </a>
+            </div>
           )}
           {step.kind === "free" && (
             <p className="text-sm text-gray-600 dark:text-gray-300">Nothing planned for this day.</p>
@@ -145,6 +250,13 @@ export default function TripSimulation({
           )}
         </div>
       </div>
+
+      <TripSimulationMap
+        stops={mapStops}
+        hops={hopParts}
+        activeHop={activeHop >= 0 ? activeHop : null}
+        here={here}
+      />
 
       <div className="grid gap-2">
         <input
@@ -247,8 +359,9 @@ export default function TripSimulation({
       </ol>
 
       <p className="text-xs text-gray-500 dark:text-gray-400">
-        Times are estimates for a day that starts at 9:00. Running the simulation does not change
-        your saved trip progress.
+        The map shows this day only. Times are estimates for a day that starts at 9:00, and train
+        legs are drawn as straight lines between the nearest stations, not the real line or
+        timetable. Running the simulation does not change your saved trip progress.
       </p>
     </section>
   );
