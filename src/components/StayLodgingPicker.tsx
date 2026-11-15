@@ -42,6 +42,8 @@ export default function StayLodgingPicker({
   const [results, setResults] = useState<GeocodeResult[] | null>(null);
   const [pinning, setPinning] = useState(false);
   const [pin, setPin] = useState(defaultCenter);
+  const [preview, setPreview] = useState<GeocodeResult | null>(null);
+  const [approximate, setApproximate] = useState(false);
 
   /**
    * Only the newest search may write results. Without this, a slow first request landing
@@ -52,6 +54,7 @@ export default function StayLodgingPicker({
   function reset() {
     setEditing(false);
     setPinning(false);
+    setPreview(null);
     setQuery("");
     setResults(null);
     setError(null);
@@ -65,6 +68,7 @@ export default function StayLodgingPicker({
     setError(null);
     setStatus("idle");
     setPinning(false);
+    setPreview(null);
     setPin(
       value?.lat !== undefined && value.lng !== undefined
         ? { lat: value.lat, lng: value.lng }
@@ -86,11 +90,12 @@ export default function StayLodgingPicker({
     setStatus("loading");
     setError(null);
     setResults(null);
+    setPreview(null);
 
     try {
       const response = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
       const body = (await response.json().catch(() => null)) as
-        | { results?: GeocodeResult[]; error?: string }
+        | { results?: GeocodeResult[]; approximate?: boolean; error?: string }
         | null;
       if (ticket !== latestSearch.current) return;
 
@@ -100,6 +105,7 @@ export default function StayLodgingPicker({
         return;
       }
       setResults(body.results);
+      setApproximate(body.approximate === true);
       setStatus("idle");
     } catch {
       if (ticket !== latestSearch.current) return;
@@ -108,13 +114,21 @@ export default function StayLodgingPicker({
     }
   }
 
-  function choose(result: GeocodeResult) {
+  function showOnMap(result: GeocodeResult) {
+    setPreview(result);
+    setPinning(false);
+    setPin({ lat: result.lat, lng: result.lng });
+  }
+
+  function confirmPreview() {
+    if (!preview) return;
+    const moved = pin.lat !== preview.lat || pin.lng !== preview.lng;
     onChange({
-      name: result.name,
-      address: result.address,
-      lat: result.lat,
-      lng: result.lng,
-      source: "geocoded",
+      name: preview.name,
+      address: preview.address,
+      lat: pin.lat,
+      lng: pin.lng,
+      source: moved ? "pinned" : "geocoded",
     });
     reset();
   }
@@ -233,8 +247,13 @@ export default function StayLodgingPicker({
             <li key={`${result.lat},${result.lng},${result.name}`}>
               <button
                 type="button"
-                onClick={() => choose(result)}
-                className="w-full text-left px-3 py-2 rounded-lg border border-gray-200 dark:border-neutral-700 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                onClick={() => showOnMap(result)}
+                aria-pressed={preview === result}
+                className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
+                  preview === result
+                    ? "border-red-400 bg-red-50 dark:bg-red-950/30"
+                    : "border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-800"
+                }`}
               >
                 <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                   {result.name}
@@ -246,6 +265,43 @@ export default function StayLodgingPicker({
             </li>
           ))}
         </ul>
+      )}
+
+      {results !== null && results.length > 0 && !preview && (
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {approximate
+            ? "No exact match, so these are the closest places we found. Pick one to see it on the map, then drag the pin if it's off."
+            : "Pick a result to see it on the map before you confirm."}
+        </p>
+      )}
+
+      {preview && (
+        <div className="grid gap-2">
+          <CustomLocationMapPicker
+            key={`${preview.lat},${preview.lng}`}
+            lat={pin.lat}
+            lng={pin.lng}
+            zoom={17}
+            onChange={(lat, lng) => setPin({ lat, lng })}
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={confirmPreview}
+              className="px-3.5 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors"
+            >
+              Yes, this is my place
+            </button>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(preview.address || preview.name)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-200 text-xs font-medium hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+              Check on Google Maps ↗
+            </a>
+          </div>
+        </div>
       )}
 
       {results !== null && results.length === 0 && (
@@ -285,6 +341,7 @@ export default function StayLodgingPicker({
             type="button"
             onClick={() => {
               setPinning(true);
+              setPreview(null);
               setError(null);
               setStatus("idle");
             }}

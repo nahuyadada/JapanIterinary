@@ -116,6 +116,59 @@ export function parseNominatimResults(raw: unknown): GeocodeResult[] {
   return out;
 }
 
+const PHOTON_SEARCH = "https://photon.komoot.io/api/";
+/** minLon,minLat,maxLon,maxLat around Japan. Photon has no country filter, only a box. */
+const JAPAN_BBOX = "122,24,154,46";
+
+/**
+ * The fallback upstream. Nominatim only matches when every word is in OpenStreetMap, so a
+ * name or address copied from Google Maps ("... Shinsaibashi East", "1 Chome-7-10 ...")
+ * usually returns nothing; Photon searches the same data loosely.
+ */
+export function photonSearchUrl(query: string): string {
+  const url = new URL(PHOTON_SEARCH);
+  url.searchParams.set("q", query);
+  url.searchParams.set("limit", String(GEOCODE_MAX_RESULTS));
+  url.searchParams.set("lang", "en");
+  url.searchParams.set("bbox", JAPAN_BBOX);
+  return url.toString();
+}
+
+/** Normalize a parsed Photon GeoJSON body into the same candidates Nominatim yields. */
+export function parsePhotonResults(raw: unknown): GeocodeResult[] {
+  if (!isRecord(raw) || !Array.isArray(raw.features)) return [];
+
+  const out: GeocodeResult[] = [];
+  for (const feature of raw.features) {
+    if (out.length >= GEOCODE_MAX_RESULTS) break;
+    if (!isRecord(feature) || !isRecord(feature.properties) || !isRecord(feature.geometry)) continue;
+    const props = feature.properties;
+    // The bounding box also covers parts of Korea, China and Russia.
+    if (props.countrycode !== "JP") continue;
+
+    const text = (key: string) => (typeof props[key] === "string" ? squash(props[key]) : "");
+    const street = squash(`${text("housenumber")} ${text("street")}`);
+    const parts = [text("name"), street, text("locality"), text("district"), text("city"), text("state"), text("postcode")]
+      .filter((part, i, all) => part && all.indexOf(part) === i);
+    const name = parts[0];
+    if (!name) continue;
+
+    const coords = feature.geometry.coordinates;
+    if (!Array.isArray(coords)) continue;
+    const lng = coord(coords[0], 180);
+    const lat = coord(coords[1], 90);
+    if (lat === null || lng === null) continue;
+
+    out.push({
+      name: name.slice(0, MAX_NAME_LENGTH),
+      address: parts.join(", ").slice(0, MAX_ADDRESS_LENGTH),
+      lat,
+      lng,
+    });
+  }
+  return out;
+}
+
 export type TtlCache<T> = {
   get(key: string): T | undefined;
   set(key: string, value: T): void;

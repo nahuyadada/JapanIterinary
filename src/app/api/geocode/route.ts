@@ -5,6 +5,8 @@ import {
   nominatimSearchUrl,
   normalizeQuery,
   parseNominatimResults,
+  parsePhotonResults,
+  photonSearchUrl,
   type GeocodeResult,
 } from "@/lib/geocode";
 
@@ -25,7 +27,26 @@ const UPSTREAM_TIMEOUT_MS = 5_000;
  * scaled deployment caches per instance — acceptable, because the cache is an optimisation
  * and not a correctness requirement.
  */
-const cache = createTtlCache<GeocodeResult[]>(GEOCODE_CACHE_TTL_MS);
+const cache = createTtlCache<{ results: GeocodeResult[]; approximate: boolean }>(GEOCODE_CACHE_TTL_MS);
+
+/**
+ * Second opinion when Nominatim finds nothing. Best effort: any failure here just leaves the
+ * traveler with the empty result they already had.
+ */
+async function searchPhoton(query: string): Promise<GeocodeResult[]> {
+  try {
+    const response = await fetch(photonSearchUrl(query), {
+      headers: { "User-Agent": geocoderUserAgent(process.env.GEOCODER_CONTACT) },
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+      cache: "no-store",
+    });
+    if (!response.ok) return [];
+    return parsePhotonResults(await response.json());
+  } catch (cause) {
+    console.error("Fallback geocoder request failed", cause);
+    return [];
+  }
+}
 
 function fail(message: string, status: number): Response {
   return Response.json({ error: message }, { status });
@@ -48,7 +69,7 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const hit = cache.get(query);
-  if (hit) return Response.json({ results: hit });
+  if (hit) return Response.json(hit);
 
   let upstream: Response;
   try {
@@ -87,9 +108,13 @@ export async function GET(request: Request): Promise<Response> {
     return fail("Could not read the lookup result. Set the location on the map instead.", 502);
   }
 
-  const results = parseNominatimResults(body);
+  let results = parseNominatimResults(body);
+  // Loose matches are flagged so the UI can ask the traveler to check them on the map.
+  const approximate = results.length === 0;
+  if (approximate) results = await searchPhoton(query);
   // An empty list is cached too: a name OSM does not know will not start knowing it within
   // the hour, and re-asking every time is exactly what the usage policy discourages.
-  cache.set(query, results);
-  return Response.json({ results });
+  const payload = { results, approximate: approximate && results.length > 0 };
+  cache.set(query, payload);
+  return Response.json(payload);
 }

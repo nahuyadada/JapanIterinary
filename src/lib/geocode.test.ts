@@ -6,6 +6,8 @@ import {
   normalizeQuery,
   nominatimSearchUrl,
   parseNominatimResults,
+  parsePhotonResults,
+  photonSearchUrl,
 } from "@/lib/geocode";
 
 /** One well-formed Nominatim jsonv2 row. Note lat/lon arrive as strings. */
@@ -204,5 +206,65 @@ describe("createTtlCache", () => {
     expect(cache.get("a")).toBeUndefined();
     expect(cache.get("b")).toBe("2");
     expect(cache.get("c")).toBe("3");
+  });
+});
+
+describe("photonSearchUrl", () => {
+  it("encodes the query and limits the search to a box around Japan", () => {
+    const url = new URL(photonSearchUrl("APA Hotel & Resort #1"));
+    expect(url.origin + url.pathname).toBe("https://photon.komoot.io/api/");
+    expect(url.searchParams.get("q")).toBe("APA Hotel & Resort #1");
+    expect(url.searchParams.get("bbox")).toBe("122,24,154,46");
+  });
+});
+
+describe("parsePhotonResults", () => {
+  const feature = (properties: Record<string, unknown>, coordinates: unknown = [135.505, 34.6729]) => ({
+    type: "Feature",
+    properties,
+    geometry: { type: "Point", coordinates },
+  });
+
+  it("builds a name and address from the feature's properties", () => {
+    const results = parsePhotonResults({
+      features: [
+        feature({
+          name: "APA Hotel",
+          housenumber: "8",
+          street: "Suomachi-suji",
+          district: "Chuo Ward",
+          city: "Osaka",
+          state: "Osaka Prefecture",
+          postcode: "542-0083",
+          countrycode: "JP",
+        }),
+      ],
+    });
+    expect(results).toEqual([
+      {
+        name: "APA Hotel",
+        address: "APA Hotel, 8 Suomachi-suji, Chuo Ward, Osaka, Osaka Prefecture, 542-0083",
+        lat: 34.6729,
+        lng: 135.505,
+      },
+    ]);
+  });
+
+  it("drops features outside Japan, without a name, or without usable coordinates", () => {
+    const results = parsePhotonResults({
+      features: [
+        feature({ name: "Seoul Hotel", countrycode: "KR" }),
+        feature({ countrycode: "JP" }),
+        feature({ name: "No point", countrycode: "JP" }, ["", 34]),
+        feature({ name: "Kept", countrycode: "JP" }),
+      ],
+    });
+    expect(results.map((r) => r.name)).toEqual(["Kept"]);
+  });
+
+  it("returns nothing for a body that is not a feature collection", () => {
+    expect(parsePhotonResults(null)).toEqual([]);
+    expect(parsePhotonResults([])).toEqual([]);
+    expect(parsePhotonResults({ features: "nope" })).toEqual([]);
   });
 });

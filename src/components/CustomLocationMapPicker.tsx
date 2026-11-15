@@ -61,10 +61,12 @@ export default function CustomLocationMapPicker({
   lat,
   lng,
   onChange,
+  zoom = 13,
 }: {
   lat: number;
   lng: number;
   onChange: (lat: number, lng: number) => void;
+  zoom?: number;
 }) {
   const [mounted, setMounted] = useState(false);
 
@@ -94,7 +96,7 @@ export default function CustomLocationMapPicker({
         </span>
       </div>
       <div className="h-52 w-full rounded-xl overflow-hidden border border-gray-300 dark:border-neutral-700 relative z-0">
-        <MapContainer center={position} zoom={13} className="h-full w-full">
+        <MapContainer center={position} zoom={zoom} className="h-full w-full">
           <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
           <MapEventsAndMarker position={position} onChange={onChange} />
         </MapContainer>
