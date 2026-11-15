@@ -1024,7 +1024,7 @@ export default function Wizard() {
             lodging={stayOrigins}
           />
 
-          <TripChecklist days={days} />
+          <TripChecklist days={days} booked={fixedDates} times={fixedTimes} />
 
           <p className="text-xs text-gray-500 -mb-2">
             Times and travel are estimates. Tap a hop or Directions for live routes.

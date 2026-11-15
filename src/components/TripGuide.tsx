@@ -444,7 +444,7 @@ export default function TripGuide({
       )}
 
       {activeTab === "checklist" && days && (
-        <TripChecklist days={days} />
+        <TripChecklist days={days} booked={payload?.fixedDates} times={payload?.fixedTimes} defaultOpen />
       )}
 
       {activeTab === "guide" && simulating && days && (

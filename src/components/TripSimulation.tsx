@@ -9,6 +9,7 @@ import { buildSimulation, dayHops, hopSegments, type HopSegment, type SimStep } 
 import { STATION_MAX_POINTS, pointKey, type Station } from "@/lib/stations";
 import { thumbUrl } from "@/lib/image";
 import Icon, { type IconName } from "@/components/Icon";
+import JourneyScene, { SCENE_MS } from "@/components/JourneyScene";
 
 // Leaflet touches `window` on import, so the map can only load in the browser.
 const TripSimulationMap = dynamic(() => import("@/components/TripSimulationMap"), { ssr: false });
@@ -78,19 +79,7 @@ export default function TripSimulation({
   const [playing, setPlaying] = useState(false);
   const atEnd = index >= steps.length - 1;
 
-  useEffect(() => {
-    if (!playing) return;
-    const timer = setInterval(() => {
-      setIndex((i) => {
-        if (i >= steps.length - 1) {
-          setPlaying(false);
-          return i;
-        }
-        return i + 1;
-      });
-    }, STEP_MS);
-    return () => clearInterval(timer);
-  }, [playing, steps.length]);
+  const [showMap, setShowMap] = useState(false);
 
   const dayIndex = steps[index]?.dayIndex ?? -1;
   const hops = useMemo(() => dayHops(steps, dayIndex), [steps, dayIndex]);
@@ -135,6 +124,20 @@ export default function TripSimulation({
       ),
     [hops, mode, stations]
   );
+
+  // A step with a journey waits for its animation to finish before moving on.
+  useEffect(() => {
+    if (!playing) return;
+    const hasJourney = hops.some((hop) => hop.stepIndex === index);
+    const timer = setTimeout(
+      () => {
+        if (index >= steps.length - 1) setPlaying(false);
+        else setIndex(index + 1);
+      },
+      hasJourney ? SCENE_MS + 900 : STEP_MS
+    );
+    return () => clearTimeout(timer);
+  }, [playing, index, hops, steps.length]);
 
   const step = steps[index];
   if (!step) return null;
@@ -220,6 +223,7 @@ export default function TripSimulation({
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 Getting here from {journey.hop.from.name}
               </p>
+              <JourneyScene key={index} parts={journey.parts} />
               <ol className="grid gap-1">
                 {journey.parts.map((part, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700 dark:text-gray-300">
@@ -254,12 +258,24 @@ export default function TripSimulation({
         </div>
       </div>
 
-      <TripSimulationMap
-        stops={mapStops}
-        hops={hopParts}
-        activeHop={activeHop >= 0 ? activeHop : null}
-        here={here}
-      />
+      <button
+        type="button"
+        onClick={() => setShowMap((v) => !v)}
+        aria-expanded={showMap}
+        className="justify-self-start inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+      >
+        <Icon name="map" />
+        {showMap ? "Hide map" : "Show this day on a map"}
+        <Icon name="chevronDown" className={`w-4 h-4 transition-transform ${showMap ? "rotate-180" : ""}`} />
+      </button>
+      {showMap && (
+        <TripSimulationMap
+          stops={mapStops}
+          hops={hopParts}
+          activeHop={activeHop >= 0 ? activeHop : null}
+          here={here}
+        />
+      )}
 
       <div className="grid gap-2">
         <input
@@ -362,9 +378,9 @@ export default function TripSimulation({
       </ol>
 
       <p className="text-xs text-gray-500 dark:text-gray-400">
-        The map shows this day only. Times are estimates for a day that starts at 9:00 unless a ticket sets it, and train
-        legs are drawn as straight lines between the nearest stations, not the real line or
-        timetable. Running the simulation does not change your saved trip progress.
+        The animation is a picture of the plan, not to scale. Times are estimates for a day that
+        starts at 9:00 unless a ticket sets it, and stations are the nearest ones found, not a
+        real timetable. Running the simulation does not change your saved trip progress.
       </p>
     </section>
   );
