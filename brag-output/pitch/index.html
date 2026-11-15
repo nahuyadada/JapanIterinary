@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Geist"; font-style: normal; font-weight: 100 900; src: url("assets/img/geist-latin.woff2") format("woff2"); }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #fdf2f8; }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; font-family: "Geist", sans-serif; color: #101828;
+        background: linear-gradient(135deg, #fce7f3 0%, #fff5f7 55%, #ffffff 100%); }
+      .scene { position: absolute; inset: 0; overflow: hidden; }
+
+      #frame { position: absolute; left: 152px; top: 26px; width: 1616px; height: 909px; border-radius: 20px; background: #ffffff;
+        box-shadow: 0 30px 70px -24px rgba(130, 24, 26, 0.35), 0 0 0 1px #ffc9c9; }
+      video.shot { position: absolute; left: 152px; top: 26px; width: 1616px; height: 909px; border-radius: 20px; object-fit: cover; background: #ffffff; }
+
+      .pill { position: absolute; left: 152px; top: 968px; height: 68px; display: flex; align-items: center; gap: 16px; padding: 0 30px 0 12px; border-radius: 999px;
+        background: #ffffff; border: 2px solid #e7000b; color: #9f0712; font-size: 30px; font-weight: 600; white-space: nowrap; }
+      .pill b { width: 46px; height: 46px; border-radius: 50%; background: #e7000b; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; }
+      .caption { position: absolute; left: 520px; top: 952px; width: 1248px; height: 100px; display: flex; align-items: center; justify-content: flex-end; text-align: right;
+        font-size: 33px; line-height: 1.3; font-weight: 500; color: #1e2939; }
+      .caption.wide { left: 260px; width: 1400px; top: 930px; justify-content: center; text-align: center; color: #ffffff; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6); }
+
+      #phone { position: absolute; left: 1398px; top: 150px; width: 372px; height: 728px; border-radius: 52px; background: #101828;
+        box-shadow: 0 40px 80px -20px rgba(16, 24, 40, 0.55); }
+      #v-phone { position: absolute; left: 1412px; top: 164px; width: 344px; height: 700px; border-radius: 40px; object-fit: cover; object-position: top; background: #ffffff; }
+
+      #intro, #outro { color: #ffffff; }
+      .bg { position: absolute; inset: 0; background: url("assets/img/hero.jpg") center / cover; }
+      .shade { position: absolute; inset: 0; background: rgba(16, 24, 40, 0.62); }
+      .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 44px; }
+      #q { font-size: 92px; font-weight: 600; letter-spacing: -0.03em; }
+      #pains { display: flex; gap: 26px; }
+      #pains span { font-size: 40px; font-weight: 500; padding: 20px 38px; border-radius: 999px; background: rgba(255, 255, 255, 0.14); border: 2px solid rgba(255, 255, 255, 0.55); }
+      .sun { width: 150px; height: 150px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; }
+      .sun i { display: block; width: 92px; height: 92px; border-radius: 50%; background: linear-gradient(135deg, #ff6467, #e7000b); }
+      .name { font-size: 150px; line-height: 1; font-weight: 600; letter-spacing: -0.04em; }
+      #steps { display: flex; gap: 22px; }
+      #steps span { display: flex; align-items: center; gap: 14px; font-size: 36px; font-weight: 600; padding: 12px 30px 12px 12px; border-radius: 999px; background: #ffffff; color: #9f0712; }
+      #steps b { width: 48px; height: 48px; border-radius: 50%; background: #e7000b; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+      #tag { font-size: 50px; font-weight: 500; }
+      #facts { font-size: 34px; color: #e5e7eb; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="79.61" data-width="1920" data-height="1080">
+
+      <div id="intro" class="scene clip" data-start="0" data-duration="10.93" data-track-index="1" style="z-index: 5">
+        <div class="bg" id="intro-bg"></div><div class="shade"></div>
+        <div class="center" id="intro-a">
+          <div id="q">Planning a trip to Japan?</div>
+          <div id="pains"><span id="p1">A dozen browser tabs</span><span id="p2">A spreadsheet</span><span id="p3">A lot of guessing</span></div>
+        </div>
+        <div class="center" id="intro-b">
+          <div class="sun" id="intro-sun"><i></i></div>
+          <div class="name" id="intro-name">Trip to Japan</div>
+          <div id="steps"><span><b>1</b>Choose places</span><span><b>2</b>Pick dates</span><span><b>3</b>Your itinerary</span></div>
+        </div>
+      </div>
+
+      <div id="frame" class="clip" data-start="10.38" data-duration="63.94" data-track-index="2" style="z-index: 1"></div>
+      <video id="v-landing" class="clip shot" data-start="10.58" data-duration="5.8" data-track-index="3" style="z-index: 2" muted playsinline src="assets/clips/landing.mp4"></video>
+      <video id="v-choose" class="clip shot" data-start="16.38" data-duration="17.47" data-track-index="4" style="z-index: 2" muted playsinline src="assets/clips/choose.mp4"></video>
+      <video id="v-dates" class="clip shot" data-start="33.85" data-duration="13.2" data-track-index="3" style="z-index: 2" muted playsinline src="assets/clips/dates.mp4"></video>
+      <video id="v-itinerary" class="clip shot" data-start="47.05" data-duration="19.8" data-track-index="4" style="z-index: 2" muted playsinline src="assets/clips/itinerary.mp4"></video>
+      <video id="v-share" class="clip shot" data-start="66.85" data-duration="7.17" data-track-index="3" style="z-index: 2" muted playsinline src="assets/clips/share.mp4"></video>
+      <div id="pill-choose" class="clip pill" data-start="16.38" data-duration="17.47" data-track-index="6" style="z-index: 3"><b>1</b>Choose places</div>
+      <div id="pill-dates" class="clip pill" data-start="33.85" data-duration="13.2" data-track-index="6" style="z-index: 3"><b>2</b>Pick dates</div>
+      <div id="pill-itinerary" class="clip pill" data-start="47.05" data-duration="19.8" data-track-index="6" style="z-index: 3"><b>3</b>Your itinerary</div>
+      <div id="pill-share" class="clip pill" data-start="66.85" data-duration="7.17" data-track-index="6" style="z-index: 3"><b>↗</b>Share trip</div>
+
+      <div id="phone" class="clip" data-start="69.45" data-duration="4.57" data-track-index="7" style="z-index: 4"></div>
+      <video id="v-phone" class="clip" data-start="69.45" data-duration="4.57" data-track-index="8" style="z-index: 4" muted playsinline src="assets/clips/phone.mp4"></video>
+
+      <div id="outro" class="scene clip" data-start="74.02" data-duration="5.59" data-track-index="9" style="z-index: 5">
+        <div class="bg"></div><div class="shade"></div>
+        <div class="center">
+          <div class="sun" id="outro-sun"><i></i></div>
+          <div class="name" id="outro-name">Trip to Japan</div>
+          <div id="tag">From a wish list to a day-by-day plan</div>
+          <div id="facts">152 places · 14 regions · map, day plan and booking checklist</div>
+        </div>
+      </div>
+
+      <div id="cap-0" class="clip caption wide" data-start="0.45" data-duration="4.89" data-track-index="10" style="z-index: 6">Planning a trip to Japan usually means a dozen browser tabs, a spreadsheet,</div>
+      <div id="cap-1" class="clip caption wide" data-start="5.34" data-duration="5.04" data-track-index="11" style="z-index: 6">and a lot of guessing. Trip to Japan turns that into three simple steps.</div>
+      <div id="cap-2" class="clip caption" data-start="11.03" data-duration="4.7" data-track-index="10" style="z-index: 6">It all starts on one page. Press Start Your Journey, and you are in the planner.</div>
+      <div id="cap-3" class="clip caption" data-start="16.83" data-duration="1.86" data-track-index="11" style="z-index: 6">Step one: choose your places.</div>
+      <div id="cap-4" class="clip caption" data-start="18.69" data-duration="4.36" data-track-index="10" style="z-index: 6">The catalog has one hundred fifty-two spots across fourteen regions,</div>
+      <div id="cap-5" class="clip caption" data-start="23.05" data-duration="2.69" data-track-index="11" style="z-index: 6">each with a photo and a short description.</div>
+      <div id="cap-6" class="clip caption" data-start="25.74" data-duration="3.46" data-track-index="10" style="z-index: 6">Search, filter by category, and tap the ones you want.</div>
+      <div id="cap-7" class="clip caption" data-start="29.2" data-duration="2.72" data-track-index="11" style="z-index: 6">Your picks are always one click away.</div>
+      <div id="cap-8" class="clip caption" data-start="34.3" data-duration="5.41" data-track-index="10" style="z-index: 6">Step two: pick your dates. The planner tells you right away whether your places fit comfortably,</div>
+      <div id="cap-9" class="clip caption" data-start="39.71" data-duration="2.31" data-track-index="11" style="z-index: 6">or whether some days would be overbooked.</div>
+      <div id="cap-10" class="clip caption" data-start="42.02" data-duration="4.41" data-track-index="10" style="z-index: 6">Already holding a ticket for a certain day? Lock that place to its date.</div>
+      <div id="cap-11" class="clip caption" data-start="47.5" data-duration="4.72" data-track-index="11" style="z-index: 6">Step three: your itinerary. Every stop appears on the map, numbered by day.</div>
+      <div id="cap-12" class="clip caption" data-start="52.22" data-duration="2.89" data-track-index="10" style="z-index: 6">A checklist shows what to book before you fly.</div>
+      <div id="cap-13" class="clip caption" data-start="55.11" data-duration="5.53" data-track-index="11" style="z-index: 6">Each city comes with a recommended area to stay, and each day gets a suggested schedule,</div>
+      <div id="cap-14" class="clip caption" data-start="60.64" data-duration="5.32" data-track-index="10" style="z-index: 6">with travel times and directions. Want a change? Move any place to another day.</div>
+      <div id="cap-15" class="clip caption" data-start="67.3" data-duration="2.3" data-track-index="11" style="z-index: 6">When you are happy with it, share the trip.</div>
+      <div id="cap-16" class="clip caption" data-start="69.6" data-duration="3.83" data-track-index="10" style="z-index: 6">The link opens a step-by-step guide you can follow on your phone.</div>
+      <div id="cap-17" class="clip caption wide" data-start="74.47" data-duration="3.74" data-track-index="11" style="z-index: 6">Trip to Japan. From a wish list to a day-by-day plan.</div>
+
+      <audio id="music" data-start="0" data-duration="79.61" data-track-index="20" data-volume="0.09" data-fade-in="0.6" data-fade-out="2.5" src="assets/music/happy-beats-business-moves-vol-12-by-ende-dot-app.mp3"></audio>
+      <audio id="vo-intro" data-start="0.45" data-duration="9.58" data-track-index="21" data-volume="1" src="assets/vo/intro.wav"></audio>
+      <audio id="vo-landing" data-start="11.03" data-duration="4.35" data-track-index="22" data-volume="1" src="assets/vo/landing.wav"></audio>
+      <audio id="vo-choose" data-start="16.83" data-duration="14.74" data-track-index="23" data-volume="1" src="assets/vo/choose.wav"></audio>
+      <audio id="vo-dates" data-start="34.3" data-duration="11.78" data-track-index="24" data-volume="1" src="assets/vo/dates.wav"></audio>
+      <audio id="vo-itinerary" data-start="47.5" data-duration="18.11" data-track-index="25" data-volume="1" src="assets/vo/itinerary.wav"></audio>
+      <audio id="vo-share" data-start="67.3" data-duration="5.78" data-track-index="26" data-volume="1" src="assets/vo/share.wav"></audio>
+      <audio id="vo-outro" data-start="74.47" data-duration="3.39" data-track-index="27" data-volume="1" src="assets/vo/outro.wav"></audio>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      const I = {"tabs":2.97,"sheet":4.4,"guess":5.37,"name":6.86,"steps":8.8};
+      const S = {"intro":{"start":0,"dur":10.58},"landing":{"start":10.58,"dur":5.8},"choose":{"start":16.38,"dur":17.47},"dates":{"start":33.85,"dur":13.2},"itinerary":{"start":47.05,"dur":19.8},"share":{"start":66.85,"dur":7.17},"outro":{"start":74.02,"dur":5.59}};
+      const PHONE = 69.45;
+
+      gsap.set(["#p1", "#p2", "#p3", "#intro-b"], { autoAlpha: 0 });
+
+      // Intro: the problem, then the name
+      tl.fromTo("#intro-bg", { scale: 1.08 }, { scale: 1, duration: S.intro.dur + 0.3, ease: "none" }, 0);
+      [["#p1", I.tabs], ["#p2", I.sheet], ["#p3", I.guess]].forEach(([sel, at]) =>
+        tl.fromTo(sel, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: "back.out(1.6)" }, at));
+      tl.to("#intro-a", { autoAlpha: 0, y: -30, duration: 0.35, ease: "power2.in" }, I.name - 0.4);
+      tl.fromTo("#intro-b", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, I.name - 0.05);
+      tl.fromTo("#intro-sun", { scale: 0.4 }, { scale: 1, duration: 0.5, ease: "back.out(1.8)" }, I.name - 0.05);
+      tl.fromTo("#intro-name", { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, I.name + 0.05);
+      tl.fromTo("#steps span", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.6)", stagger: 0.16 }, I.steps - 0.15);
+      tl.to("#intro", { opacity: 0, duration: 0.35, ease: "power1.inOut" }, S.intro.dur);
+
+      // Demo: each recording slides in over the last one
+      tl.fromTo("#frame", { opacity: 0 }, { opacity: 1, duration: 0.3 }, S.landing.start - 0.2);
+      ["choose", "dates", "itinerary", "share"].forEach((id) => {
+        tl.fromTo("#v-" + id, { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, S[id].start);
+        tl.fromTo("#pill-" + id, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.6)" }, S[id].start + 0.1);
+      });
+      tl.fromTo(["#phone", "#v-phone"], { opacity: 0, x: 140 }, { opacity: 1, x: 0, duration: 0.55, ease: "power3.out" }, PHONE);
+
+      // Outro
+      tl.fromTo("#outro", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" }, S.outro.start);
+      tl.fromTo("#outro-sun", { scale: 0.4 }, { scale: 1, duration: 0.5, ease: "back.out(1.8)" }, S.outro.start + 0.15);
+      tl.fromTo("#outro-name", { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, S.outro.start + 0.3);
+      tl.fromTo("#tag", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, S.outro.start + 1.3);
+      tl.fromTo("#facts", { opacity: 0 }, { opacity: 1, duration: 0.45 }, S.outro.start + 2.0);
+      tl.to({}, { duration: 0.01 }, 79.61 - 0.01);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

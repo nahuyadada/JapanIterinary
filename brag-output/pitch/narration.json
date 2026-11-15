@@ -1,0 +1,9 @@
+[
+  { "id": "intro", "text": "Planning a trip to Japan usually means a dozen browser tabs, a spreadsheet, and a lot of guessing. Trip to Japan turns that into three simple steps." },
+  { "id": "landing", "text": "It all starts on one page. Press Start Your Journey, and you are in the planner." },
+  { "id": "choose", "text": "Step one: choose your places. The catalog has one hundred fifty-two spots across fourteen regions, each with a photo and a short description. Search, filter by category, and tap the ones you want. Your picks are always one click away." },
+  { "id": "dates", "text": "Step two: pick your dates. The planner tells you right away whether your places fit comfortably, or whether some days would be overbooked. Already holding a ticket for a certain day? Lock that place to its date." },
+  { "id": "itinerary", "text": "Step three: your itinerary. Every stop appears on the map, numbered by day. A checklist shows what to book before you fly. Each city comes with a recommended area to stay, and each day gets a suggested schedule, with travel times and directions. Want a change? Move any place to another day." },
+  { "id": "share", "text": "When you are happy with it, share the trip. The link opens a step-by-step guide you can follow on your phone." },
+  { "id": "outro", "text": "Trip to Japan. From a wish list to a day-by-day plan." }
+]

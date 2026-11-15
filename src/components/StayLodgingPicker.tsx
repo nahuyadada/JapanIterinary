@@ -180,7 +180,7 @@ export default function StayLodgingPicker({
         onClick={startEditing}
         className="justify-self-start text-sm px-3.5 py-2 rounded-full border border-dashed border-gray-400 dark:border-neutral-600 text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-neutral-800 transition-colors"
       >
-        🏨 Already booked somewhere in {region}?
+        ＋ I already booked a place in {region}
       </button>
     );
   }

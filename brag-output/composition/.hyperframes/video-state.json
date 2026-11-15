@@ -1,0 +1,920 @@
+{
+  "version": 1,
+  "historyId": "0749eaf8-7c9e-4357-9bff-64c9a17e93a6",
+  "currentRevision": "0380abdc-b144-4b35-94eb-dcdf84a7f6a9",
+  "pendingChanges": false,
+  "files": {
+    "AGENTS.md": {
+      "hash": "268ff46777938da818baa92a718571785e9acf2cef2d3ffbacbb93483dcba37a",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\26\\268ff46777938da818baa92a718571785e9acf2cef2d3ffbacbb93483dcba37a"
+    },
+    "CLAUDE.md": {
+      "hash": "268ff46777938da818baa92a718571785e9acf2cef2d3ffbacbb93483dcba37a",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\26\\268ff46777938da818baa92a718571785e9acf2cef2d3ffbacbb93483dcba37a"
+    },
+    "assets/app/03e26d37a5b055e0.jpg": {
+      "hash": "6a9be14c19efefcc6c615c6af4fcbc010b5cf7847110194b07a909f33813ce48",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\6a\\6a9be14c19efefcc6c615c6af4fcbc010b5cf7847110194b07a909f33813ce48"
+    },
+    "assets/app/0e6999d862ebec6d.jpg": {
+      "hash": "c35b170a7a13316c600170d6a98c4b50fd650fcf731184f3ae1ecdac67be5570",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\c3\\c35b170a7a13316c600170d6a98c4b50fd650fcf731184f3ae1ecdac67be5570"
+    },
+    "assets/app/2b42ca3de0a41d2c.jpg": {
+      "hash": "8c59d4c1e0d97e5d41f7a54343dc33807793b6f242056518077a7c55ff49ec9b",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\8c\\8c59d4c1e0d97e5d41f7a54343dc33807793b6f242056518077a7c55ff49ec9b"
+    },
+    "assets/app/301c4c437b68b777.woff2": {
+      "hash": "5f3d6ad60f29d6cb708414ec6887163d63bf197377ef5417d2483ff31ace6c3b",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\5f\\5f3d6ad60f29d6cb708414ec6887163d63bf197377ef5417d2483ff31ace6c3b"
+    },
+    "assets/app/33af8ee4e48eee54.jpg": {
+      "hash": "71d4af48d89fcde52e739855721f9dde0951a451396f4b35fced64771ab68513",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\71\\71d4af48d89fcde52e739855721f9dde0951a451396f4b35fced64771ab68513"
+    },
+    "assets/app/36ff4288edbad739.woff2": {
+      "hash": "9b6f5ff45b278c744b5f379a2c4ecbaf858a842b8eaf82ac8d21b699ca16c608",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\9b\\9b6f5ff45b278c744b5f379a2c4ecbaf858a842b8eaf82ac8d21b699ca16c608"
+    },
+    "assets/app/53006718ba891f67.woff2": {
+      "hash": "58a6b173d5ca1dec92166ea3c6cb1a84a4144556d10928ac14e8e6b40e4787bd",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\58\\58a6b173d5ca1dec92166ea3c6cb1a84a4144556d10928ac14e8e6b40e4787bd"
+    },
+    "assets/app/66ff110126e7470e.jpg": {
+      "hash": "f14f8310463f8b211ee09f91a919ab1813e91a0cc999639b084fc80d4a5d3cb6",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\f1\\f14f8310463f8b211ee09f91a919ab1813e91a0cc999639b084fc80d4a5d3cb6"
+    },
+    "assets/app/6c96ab4bf200da80.jpg": {
+      "hash": "020b5aaa9db2c20cb347b49783a2a0d80763fafc43093512dd547d8db1c89bb2",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\02\\020b5aaa9db2c20cb347b49783a2a0d80763fafc43093512dd547d8db1c89bb2"
+    },
+    "assets/app/6d1ad5a09dd477f8.jpg": {
+      "hash": "c1ef189542757d37e9a63c1715015d00764ea39736ab8abb3c234d7cd08bfe46",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\c1\\c1ef189542757d37e9a63c1715015d00764ea39736ab8abb3c234d7cd08bfe46"
+    },
+    "assets/app/86239f15bfd93700.jpg": {
+      "hash": "2bae593833f74fa1f5831ed9795c46306ccc56be58a702804244499f24714c65",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\2b\\2bae593833f74fa1f5831ed9795c46306ccc56be58a702804244499f24714c65"
+    },
+    "assets/app/8ad85539cc8b4928.jpg": {
+      "hash": "6f2a3ab62a0301ba0da8af2951dfd6b1f99e4d15339eae42f99bd1ccd4aed6fb",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\6f\\6f2a3ab62a0301ba0da8af2951dfd6b1f99e4d15339eae42f99bd1ccd4aed6fb"
+    },
+    "assets/app/8bad524df023dcab.jpg": {
+      "hash": "0185be5b7151b5052409f2307a13413cb096b5a19a007e9f06a7e8bfdcc56a74",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\01\\0185be5b7151b5052409f2307a13413cb096b5a19a007e9f06a7e8bfdcc56a74"
+    },
+    "assets/app/8f4272bf03195ba2.jpg": {
+      "hash": "3e22e628ac6fb051a6b323f6b4c86197e39227c584a55411c68d1d58ea26145a",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\3e\\3e22e628ac6fb051a6b323f6b4c86197e39227c584a55411c68d1d58ea26145a"
+    },
+    "assets/app/9506fd5d85ab9920.jpg": {
+      "hash": "868c73ea43ba1ac8c3ee360e671d7aa44b6423f8e9a63ae6754de2269cf8f21a",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\86\\868c73ea43ba1ac8c3ee360e671d7aa44b6423f8e9a63ae6754de2269cf8f21a"
+    },
+    "assets/app/a830ae7a97d8b6d6.jpg": {
+      "hash": "f75303eb8c41015a1b813d21c59a868941b20ebb399595b0098f406497709c41",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\f7\\f75303eb8c41015a1b813d21c59a868941b20ebb399595b0098f406497709c41"
+    },
+    "assets/app/bafa127eaceda167.jpg": {
+      "hash": "cbed538c489760c188eae0e7af4a17119ded59a70b0c2d7682d7561132881434",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\cb\\cbed538c489760c188eae0e7af4a17119ded59a70b0c2d7682d7561132881434"
+    },
+    "assets/app/be698955ef8eb1ff.jpg": {
+      "hash": "3286e49e524ea1a3461903e3dab016f8f5531c30fb8f0847e2653db6edddd010",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\32\\3286e49e524ea1a3461903e3dab016f8f5531c30fb8f0847e2653db6edddd010"
+    },
+    "assets/app/c82a3ac50e6fe185.jpg": {
+      "hash": "665d354ffd5e6510553e03643f79a854f75d7b90076aea28cea64083a0d6bf3f",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\66\\665d354ffd5e6510553e03643f79a854f75d7b90076aea28cea64083a0d6bf3f"
+    },
+    "assets/app/d636099ef310f3be.jpg": {
+      "hash": "fa5217da2ea7e4967e2ca8c0eec6f15a2da327caaa02173b0d060f17b463d2e0",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\fa\\fa5217da2ea7e4967e2ca8c0eec6f15a2da327caaa02173b0d060f17b463d2e0"
+    },
+    "assets/app/dff888c54adb0f96.jpg": {
+      "hash": "65f334c7f3213c03b983759ee48e5bf2565223dd4018a6ffd66b820a1378fd77",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\65\\65f334c7f3213c03b983759ee48e5bf2565223dd4018a6ffd66b820a1378fd77"
+    },
+    "assets/app/eb3bb234f5ae736c.jpg": {
+      "hash": "3cad23cd9439dde5bc16306b80f4af1625c33068d0b4a10fda53d823eaa8fe21",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\3c\\3cad23cd9439dde5bc16306b80f4af1625c33068d0b4a10fda53d823eaa8fe21"
+    },
+    "assets/app/fb14e072213d2177.jpg": {
+      "hash": "78b7205359f2e459ccd0155b4dcb0b0bee808195a928fa6f928eac49daa24175",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\78\\78b7205359f2e459ccd0155b4dcb0b0bee808195a928fa6f928eac49daa24175"
+    },
+    "assets/app/fd5268cea1613112.jpg": {
+      "hash": "c61e7b97f63de58de0cdfa32cf3dd4daa36b7c34676ea4f96272d0fd0546965b",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\c6\\c61e7b97f63de58de0cdfa32cf3dd4daa36b7c34676ea4f96272d0fd0546965b"
+    },
+    "assets/app/ff92d12abc76aaca.jpg": {
+      "hash": "6adf8e52b068ae01d31c7e163a6356c780b29bcd2b4507e6174f0f4be5899463",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\6a\\6adf8e52b068ae01d31c7e163a6356c780b29bcd2b4507e6174f0f4be5899463"
+    },
+    "assets/sfx/impact/impactSoft_medium_001.ogg": {
+      "hash": "7642a4fd43e547afe4f7adfadb3dabb681c0ff512f52c1674bae30a726841faf",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\76\\7642a4fd43e547afe4f7adfadb3dabb681c0ff512f52c1674bae30a726841faf"
+    },
+    "build.mjs": {
+      "hash": "029c2b55dd0fdeb2de4aa59db6dc6dda179d750c4e6d7c545584152b15eb9206",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\02\\029c2b55dd0fdeb2de4aa59db6dc6dda179d750c4e6d7c545584152b15eb9206"
+    },
+    "capture.mjs": {
+      "hash": "b50d8064f6834ce35bdf65656e2a95536dc4b4f5ddbb932197431fff1478c0e2",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\b5\\b50d8064f6834ce35bdf65656e2a95536dc4b4f5ddbb932197431fff1478c0e2"
+    },
+    "captured.json": {
+      "hash": "751c11af09e0f456f2468ff1710cad999089aee4845adabb32eb10ad1cd69efc",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\75\\751c11af09e0f456f2468ff1710cad999089aee4845adabb32eb10ad1cd69efc"
+    },
+    "hyperframes.json": {
+      "hash": "3af6ecb4d7f8c0cf28a50880f71291f27406c4548e5db2ea2d57430abd99e0e1",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\3a\\3af6ecb4d7f8c0cf28a50880f71291f27406c4548e5db2ea2d57430abd99e0e1"
+    },
+    "index.html": {
+      "hash": "571706a4fefcb7a916cebc7e15a16c9518b4ba2e110f66d9e9baea6ba46c1252",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\57\\571706a4fefcb7a916cebc7e15a16c9518b4ba2e110f66d9e9baea6ba46c1252"
+    },
+    "meta.json": {
+      "hash": "722940a6f7644b31bbd0e059004dad0fa571f4967ac4d79513ba74ed69ce2ef4",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\72\\722940a6f7644b31bbd0e059004dad0fa571f4967ac4d79513ba74ed69ce2ef4"
+    },
+    "package.json": {
+      "hash": "42c82c838e4bd9a7cf8a228a6fa56c0f22031b2849113276cb18dbdde21d0ee6",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\42\\42c82c838e4bd9a7cf8a228a6fa56c0f22031b2849113276cb18dbdde21d0ee6"
+    },
+    "assets/music/happy-beats-business-moves-vol-12-by-ende-dot-app.mp3": {
+      "hash": "5888d4bd2ba0119b87a94e502ae2cc401c08192945cc5e5c2f8e8a33aa47a0a1",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\58\\5888d4bd2ba0119b87a94e502ae2cc401c08192945cc5e5c2f8e8a33aa47a0a1"
+    },
+    "assets/app/hero.jpg": {
+      "hash": "046d4246d5f60480603dd30d7e70947bd84ee88f9f67925a90ca3fe17f828a89",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\04\\046d4246d5f60480603dd30d7e70947bd84ee88f9f67925a90ca3fe17f828a89"
+    },
+    "assets/sfx/ui/mouseclick1.ogg": {
+      "hash": "ece1210c62ccae6c9ea4f4c59466d9d453d6b357c7d4b1a6c31196e5e6fea1bf",
+      "content": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\ec\\ece1210c62ccae6c9ea4f4c59466d9d453d6b357c7d4b1a6c31196e5e6fea1bf"
+    }
+  },
+  "revisions": {
+    "4cc6f546-2373-42ed-9832-9113f444c30b": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1794574954435,
+      "endedAt": 1794574954464,
+      "files": {
+        "assets/app/hero.jpg": {
+          "before": null,
+          "after": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\04\\046d4246d5f60480603dd30d7e70947bd84ee88f9f67925a90ca3fe17f828a89"
+        },
+        "build.mjs": {
+          "before": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\7f\\7fec8ac2800df9f53d643d39c64c98d054b356da575114a75f9757efff5d1db2",
+          "after": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\eb\\ebb7c2aa78107a4275b93ff654a276b4b3c12935ce0f75d53792dd9aef1800eb"
+        },
+        "index.html": {
+          "before": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\f9\\f99dc58f4328bfd9d7d6b67a3bc4fbe7fbadfba43e3d8342acfd989024a37ee9",
+          "after": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\bf\\bfed542f84c81b6c76c6e19d5a59d28dc42b47a6644224c4d8b8e75f649047cc"
+        }
+      }
+    },
+    "fd57b30f-136a-4979-b405-16880f486168": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1794575195661,
+      "endedAt": 1794575195673,
+      "files": {
+        "assets/sfx/interface/click_003.ogg": {
+          "before": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\2f\\2fa929138bc3a0f432696588f66eac94b8f6d463905ec8808c6461ce4b054292",
+          "after": null
+        },
+        "assets/sfx/ui/mouseclick1.ogg": {
+          "before": null,
+          "after": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\ec\\ece1210c62ccae6c9ea4f4c59466d9d453d6b357c7d4b1a6c31196e5e6fea1bf"
+        },
+        "build.mjs": {
+          "before": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\eb\\ebb7c2aa78107a4275b93ff654a276b4b3c12935ce0f75d53792dd9aef1800eb",
+          "after": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\28\\28c6d3b7271607880efb4ffff02af59b62fa1b6bdd5d2728e5e47710f515af29"
+        },
+        "chk.json": {
+          "before": null,
+          "after": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\e3\\e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "index.html": {
+          "before": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\bf\\bfed542f84c81b6c76c6e19d5a59d28dc42b47a6644224c4d8b8e75f649047cc",
+          "after": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\38\\387c923e23d323643f119e1f6b67663c6cdbd3cee388878e0d921e24b81f9350"
+        }
+      }
+    },
+    "b26aec01-c3c8-4a46-b304-757841e9805c": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1794575263337,
+      "endedAt": 1794575263347,
+      "files": {
+        "build.mjs": {
+          "before": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\28\\28c6d3b7271607880efb4ffff02af59b62fa1b6bdd5d2728e5e47710f515af29",
+          "after": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\17\\175bcaa3addeddcfb021a335a9897e331b7ec84d902fa40eda7b4291054b4efc"
+        },
+        "index.html": {
+          "before": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\38\\387c923e23d323643f119e1f6b67663c6cdbd3cee388878e0d921e24b81f9350",
+          "after": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\20\\20bd6b9e7868a14b0cc65cf1f7bf13960eb5571d925402a018a212a4b24e07c9"
+        }
+      }
+    },
+    "4c25e58e-8fb9-41f1-811d-f80a242b2a91": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1794575329549,
+      "endedAt": 1794575329559,
+      "files": {
+        "build.mjs": {
+          "before": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\17\\175bcaa3addeddcfb021a335a9897e331b7ec84d902fa40eda7b4291054b4efc",
+          "after": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\92\\926f8de22f3a41704a6d1e19cf6f43ff30d1471b46342a6c1c3704c7d2cbccd5"
+        }
+      }
+    },
+    "90f13bc9-6c84-460a-94ed-72a1e654ac9f": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1794575390446,
+      "endedAt": 1794575390949,
+      "files": {
+        "build.mjs": {
+          "before": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\92\\926f8de22f3a41704a6d1e19cf6f43ff30d1471b46342a6c1c3704c7d2cbccd5",
+          "after": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\02\\029c2b55dd0fdeb2de4aa59db6dc6dda179d750c4e6d7c545584152b15eb9206"
+        },
+        "index.html": {
+          "before": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\20\\20bd6b9e7868a14b0cc65cf1f7bf13960eb5571d925402a018a212a4b24e07c9",
+          "after": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\57\\571706a4fefcb7a916cebc7e15a16c9518b4ba2e110f66d9e9baea6ba46c1252"
+        }
+      }
+    },
+    "0380abdc-b144-4b35-94eb-dcdf84a7f6a9": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1794575427140,
+      "endedAt": 1794575427142,
+      "files": {
+        "chk.json": {
+          "before": "C:\\Users\\admin\\.cache\\hyperframes\\history\\0749eaf8-7c9e-4357-9bff-64c9a17e93a6\\blobs\\e3\\e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "after": null
+        }
+      }
+    }
+  },
+  "checks": {
+    "latest": null,
+    "revisions": {
+      "4cc6f546-2373-42ed-9832-9113f444c30b": [
+        {
+          "id": "cf202879-b7df-49a7-b76f-a74bcae3269e",
+          "scope": "project",
+          "metadata": {
+            "ok": false,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 45000,
+              "cache": true,
+              "contrast": true,
+              "craft": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto",
+              "includeUnmounted": false
+            }
+          },
+          "createdAt": 1794575008583,
+          "contentHash": "73764afc26dc7231af55b912a42cb8524f9788ecb45227b236c5ce002d0c14b6",
+          "revision": "4cc6f546-2373-42ed-9832-9113f444c30b",
+          "inputFingerprint": "6b9cfd8e5077121a14795eb4c7a3e4d8d84d34174f5e523e8349323959c0dbbf",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision",
+          "status": "cleaned",
+          "cleanedAfterRender": "fb240aa0-9dc7-42d9-8328-5a09604fdffc"
+        },
+        {
+          "id": "a991f522-cdb0-47f0-a517-8a6a37e90545",
+          "scope": "project",
+          "metadata": {
+            "ok": false,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 45000,
+              "cache": true,
+              "contrast": true,
+              "craft": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto",
+              "includeUnmounted": false
+            }
+          },
+          "createdAt": 1794575074841,
+          "contentHash": "73764afc26dc7231af55b912a42cb8524f9788ecb45227b236c5ce002d0c14b6",
+          "revision": "4cc6f546-2373-42ed-9832-9113f444c30b",
+          "inputFingerprint": "6b9cfd8e5077121a14795eb4c7a3e4d8d84d34174f5e523e8349323959c0dbbf",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision",
+          "status": "cleaned",
+          "cleanedAfterRender": "fb240aa0-9dc7-42d9-8328-5a09604fdffc"
+        },
+        {
+          "id": "5fedba60-d67b-45fc-a333-506635c7b28a",
+          "scope": "project",
+          "metadata": {
+            "ok": false,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 45000,
+              "cache": true,
+              "contrast": true,
+              "craft": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto",
+              "includeUnmounted": false
+            }
+          },
+          "createdAt": 1794575144583,
+          "contentHash": "73764afc26dc7231af55b912a42cb8524f9788ecb45227b236c5ce002d0c14b6",
+          "revision": "4cc6f546-2373-42ed-9832-9113f444c30b",
+          "inputFingerprint": "6b9cfd8e5077121a14795eb4c7a3e4d8d84d34174f5e523e8349323959c0dbbf",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision",
+          "status": "cleaned",
+          "cleanedAfterRender": "fb240aa0-9dc7-42d9-8328-5a09604fdffc"
+        }
+      ],
+      "fd57b30f-136a-4979-b405-16880f486168": [
+        {
+          "id": "ada7ceab-7d9d-4f7d-ba67-2c916b678e8c",
+          "scope": "project",
+          "metadata": {
+            "ok": false,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 45000,
+              "cache": true,
+              "contrast": true,
+              "craft": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto",
+              "includeUnmounted": false
+            }
+          },
+          "createdAt": 1794575240243,
+          "contentHash": "206b8cd08a6c6f7f439cac39f2a9e32227a4ff6129597b29c581b5e414c9c72c",
+          "revision": "fd57b30f-136a-4979-b405-16880f486168",
+          "inputFingerprint": "9299a569e976c697a84635f8e6c2a23d4fdfffc3f28060604e33e55eb50ed20c",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision",
+          "status": "cleaned",
+          "cleanedAfterRender": "fb240aa0-9dc7-42d9-8328-5a09604fdffc"
+        }
+      ],
+      "b26aec01-c3c8-4a46-b304-757841e9805c": [
+        {
+          "id": "9fc806b6-9d6f-4d0f-a3fa-6866d46a881f",
+          "scope": "project",
+          "metadata": {
+            "ok": false,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 45000,
+              "cache": true,
+              "contrast": true,
+              "craft": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto",
+              "includeUnmounted": false
+            }
+          },
+          "createdAt": 1794575307002,
+          "contentHash": "23f933d6c5459c54f211c4bf5af10a1b03fb01b800a85c10c647c9e1dc22a68c",
+          "revision": "b26aec01-c3c8-4a46-b304-757841e9805c",
+          "inputFingerprint": "79853c1c59d73d240b884e12f63c4e04ca4f1d8a6973a9eb63f119f7aadbbde4",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision",
+          "status": "cleaned",
+          "cleanedAfterRender": "fb240aa0-9dc7-42d9-8328-5a09604fdffc"
+        }
+      ],
+      "4c25e58e-8fb9-41f1-811d-f80a242b2a91": [
+        {
+          "id": "7d256f43-aab7-4278-b010-5879ea40f616",
+          "scope": "project",
+          "metadata": {
+            "ok": false,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 45000,
+              "cache": true,
+              "contrast": true,
+              "craft": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto",
+              "includeUnmounted": false
+            }
+          },
+          "createdAt": 1794575374683,
+          "contentHash": "23f933d6c5459c54f211c4bf5af10a1b03fb01b800a85c10c647c9e1dc22a68c",
+          "revision": "4c25e58e-8fb9-41f1-811d-f80a242b2a91",
+          "inputFingerprint": "da8f362001de31ccf6bdbe9ad690e595b32a79385319b4a4f5cef5c4b4bc2d02",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision",
+          "status": "cleaned",
+          "cleanedAfterRender": "fb240aa0-9dc7-42d9-8328-5a09604fdffc"
+        }
+      ],
+      "90f13bc9-6c84-460a-94ed-72a1e654ac9f": [
+        {
+          "id": "d60467e3-609b-4ba6-844e-a04c766e6125",
+          "scope": "project",
+          "metadata": {
+            "ok": true,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 45000,
+              "cache": true,
+              "contrast": true,
+              "craft": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto",
+              "includeUnmounted": false
+            }
+          },
+          "createdAt": 1794575417752,
+          "contentHash": "6a8a9b9873c7afaece2221a7e6ea4c6d4f41f9ab95c803ffd039f8694292c223",
+          "revision": "90f13bc9-6c84-460a-94ed-72a1e654ac9f",
+          "inputFingerprint": "91fa12c66a4c00803c1a3c608e4351016a1d14e0090381bb383b62e5149eeb5b",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision",
+          "status": "cleaned",
+          "cleanedAfterRender": "fb240aa0-9dc7-42d9-8328-5a09604fdffc"
+        }
+      ]
+    },
+    "unversioned": []
+  },
+  "snapshots": {
+    "latest": {
+      "revision": "0380abdc-b144-4b35-94eb-dcdf84a7f6a9",
+      "id": "c82a26d5-2139-45d6-83e5-022c7d7a5c35-8"
+    },
+    "revisions": {
+      "0380abdc-b144-4b35-94eb-dcdf84a7f6a9": [
+        {
+          "scope": "full",
+          "id": "c82a26d5-2139-45d6-83e5-022c7d7a5c35-0",
+          "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\d9b19e46-0898-44c6-b5c4-f33b695bd081\\frame-00-at-2s.png",
+          "time": 2,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794575433776,
+          "contentHash": "37e09cf763399af0fc2c581ab6f3aac7b83f2beaac7e678edb6dc8045aaac50b",
+          "revision": "0380abdc-b144-4b35-94eb-dcdf84a7f6a9",
+          "inputFingerprint": "a7c44f9c977940ede6a5f05019db6a90d5d549b27f5ef50bcfa41afa721deece",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "scope": "full",
+          "id": "c82a26d5-2139-45d6-83e5-022c7d7a5c35-1",
+          "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\d9b19e46-0898-44c6-b5c4-f33b695bd081\\frame-01-at-5.2s.png",
+          "time": 5.2,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794575433777,
+          "contentHash": "2568c02903babd8708261bcbbfc87b5eedce117a3efe56291065f87132bd626b",
+          "revision": "0380abdc-b144-4b35-94eb-dcdf84a7f6a9",
+          "inputFingerprint": "a7c44f9c977940ede6a5f05019db6a90d5d549b27f5ef50bcfa41afa721deece",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "scope": "full",
+          "id": "c82a26d5-2139-45d6-83e5-022c7d7a5c35-2",
+          "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\d9b19e46-0898-44c6-b5c4-f33b695bd081\\frame-02-at-8.3s.png",
+          "time": 8.3,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794575433777,
+          "contentHash": "cff2795a58b0b82e8c2c1dff67a3d9993f7bf170a5e3fd20e220e189ee7a6392",
+          "revision": "0380abdc-b144-4b35-94eb-dcdf84a7f6a9",
+          "inputFingerprint": "a7c44f9c977940ede6a5f05019db6a90d5d549b27f5ef50bcfa41afa721deece",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "scope": "full",
+          "id": "c82a26d5-2139-45d6-83e5-022c7d7a5c35-3",
+          "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\d9b19e46-0898-44c6-b5c4-f33b695bd081\\frame-03-at-11.6s.png",
+          "time": 11.6,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794575433778,
+          "contentHash": "bb83ba70d5adc76554eab455e94ddd2dd3d9d896cc72fe3e1118038037e155cd",
+          "revision": "0380abdc-b144-4b35-94eb-dcdf84a7f6a9",
+          "inputFingerprint": "a7c44f9c977940ede6a5f05019db6a90d5d549b27f5ef50bcfa41afa721deece",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "scope": "full",
+          "id": "c82a26d5-2139-45d6-83e5-022c7d7a5c35-4",
+          "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\d9b19e46-0898-44c6-b5c4-f33b695bd081\\frame-04-at-13.8s.png",
+          "time": 13.8,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794575433778,
+          "contentHash": "21828403ee38af9faacb663148eebff2d4fadc9ea2dca369b659ca5a760b35ba",
+          "revision": "0380abdc-b144-4b35-94eb-dcdf84a7f6a9",
+          "inputFingerprint": "a7c44f9c977940ede6a5f05019db6a90d5d549b27f5ef50bcfa41afa721deece",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "scope": "full",
+          "id": "c82a26d5-2139-45d6-83e5-022c7d7a5c35-5",
+          "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\d9b19e46-0898-44c6-b5c4-f33b695bd081\\frame-05-at-16.3s.png",
+          "time": 16.3,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794575433779,
+          "contentHash": "c2522c36347e170767dac657703ead6579eef6d1be15ce59831e4018224068a9",
+          "revision": "0380abdc-b144-4b35-94eb-dcdf84a7f6a9",
+          "inputFingerprint": "a7c44f9c977940ede6a5f05019db6a90d5d549b27f5ef50bcfa41afa721deece",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "scope": "full",
+          "id": "c82a26d5-2139-45d6-83e5-022c7d7a5c35-6",
+          "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\d9b19e46-0898-44c6-b5c4-f33b695bd081\\frame-06-at-18.2s.png",
+          "time": 18.2,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794575433780,
+          "contentHash": "ea80c10950de30083f2879930fc850d87b901cd30cfab7de17129a13ba2338c7",
+          "revision": "0380abdc-b144-4b35-94eb-dcdf84a7f6a9",
+          "inputFingerprint": "a7c44f9c977940ede6a5f05019db6a90d5d549b27f5ef50bcfa41afa721deece",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "scope": "full",
+          "id": "c82a26d5-2139-45d6-83e5-022c7d7a5c35-7",
+          "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\d9b19e46-0898-44c6-b5c4-f33b695bd081\\frame-07-at-19.6s.png",
+          "time": 19.6,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794575433780,
+          "contentHash": "39e49afc8446bc71cd283a2a0d2fd64da86920271a6d4c7de9fbbc538fbf634a",
+          "revision": "0380abdc-b144-4b35-94eb-dcdf84a7f6a9",
+          "inputFingerprint": "a7c44f9c977940ede6a5f05019db6a90d5d549b27f5ef50bcfa41afa721deece",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "scope": "full",
+          "id": "c82a26d5-2139-45d6-83e5-022c7d7a5c35-8",
+          "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\d9b19e46-0898-44c6-b5c4-f33b695bd081\\frame-08-at-21.75s.png",
+          "time": 21.75,
+          "metadata": {
+            "width": 1920,
+            "height": 1080,
+            "zoomScale": 1,
+            "browserGpuMode": "auto",
+            "warnings": [],
+            "partial": false
+          },
+          "createdAt": 1794575433781,
+          "contentHash": "b6b5b26c72ed9cb02328141e6a3052cc0c0e7750f365e29a10662e2ad073cddd",
+          "revision": "0380abdc-b144-4b35-94eb-dcdf84a7f6a9",
+          "inputFingerprint": "a7c44f9c977940ede6a5f05019db6a90d5d549b27f5ef50bcfa41afa721deece",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        }
+      ]
+    },
+    "unversioned": [
+      {
+        "scope": "full",
+        "id": "a93e3ddc-e19b-4c6c-9357-e13f6dcbf877-0",
+        "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\361c5410-3fa3-4c6b-b93d-00d4d09c7a7c\\frame-00-at-1.5s.png",
+        "time": 1.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [
+            "1 image(s) failed to load at 1.5s, so the frame may be missing them: http://127.0.0.1:55329/76402941-japan-wallpaper.jpg"
+          ],
+          "partial": true
+        },
+        "createdAt": 1794574928882,
+        "contentHash": "c46b5454185e8daf0e785dfcf4d3e93492a872a6dfeebd05c3a5715f36d4c327",
+        "revision": null,
+        "inputFingerprint": "753a246eae3ff4ac7e1f0199c840f3d98f5e5d39686adc4bf68ce5512578a754",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      },
+      {
+        "scope": "full",
+        "id": "a93e3ddc-e19b-4c6c-9357-e13f6dcbf877-1",
+        "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\361c5410-3fa3-4c6b-b93d-00d4d09c7a7c\\frame-01-at-4.5s.png",
+        "time": 4.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [
+            "1 image(s) failed to load at 1.5s, so the frame may be missing them: http://127.0.0.1:55329/76402941-japan-wallpaper.jpg"
+          ],
+          "partial": true
+        },
+        "createdAt": 1794574928882,
+        "contentHash": "9cacb6d2a6334350a7740e65dbf5aa683a0730722113574118a8ed8ae051a9cd",
+        "revision": null,
+        "inputFingerprint": "753a246eae3ff4ac7e1f0199c840f3d98f5e5d39686adc4bf68ce5512578a754",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      },
+      {
+        "scope": "full",
+        "id": "a93e3ddc-e19b-4c6c-9357-e13f6dcbf877-2",
+        "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\361c5410-3fa3-4c6b-b93d-00d4d09c7a7c\\frame-02-at-7.6s.png",
+        "time": 7.6,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [
+            "1 image(s) failed to load at 1.5s, so the frame may be missing them: http://127.0.0.1:55329/76402941-japan-wallpaper.jpg"
+          ],
+          "partial": true
+        },
+        "createdAt": 1794574928882,
+        "contentHash": "0819c7532c5058c2431e826a0b515a601eadfd1feac046d557a9cfb95ccf4ed4",
+        "revision": null,
+        "inputFingerprint": "753a246eae3ff4ac7e1f0199c840f3d98f5e5d39686adc4bf68ce5512578a754",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      },
+      {
+        "scope": "full",
+        "id": "a93e3ddc-e19b-4c6c-9357-e13f6dcbf877-3",
+        "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\361c5410-3fa3-4c6b-b93d-00d4d09c7a7c\\frame-03-at-10.5s.png",
+        "time": 10.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [
+            "1 image(s) failed to load at 1.5s, so the frame may be missing them: http://127.0.0.1:55329/76402941-japan-wallpaper.jpg"
+          ],
+          "partial": true
+        },
+        "createdAt": 1794574928882,
+        "contentHash": "7b72557490cdec0051f46a4b907582ab2c43d083662adcb202df7bfa5a388f23",
+        "revision": null,
+        "inputFingerprint": "753a246eae3ff4ac7e1f0199c840f3d98f5e5d39686adc4bf68ce5512578a754",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      },
+      {
+        "scope": "full",
+        "id": "a93e3ddc-e19b-4c6c-9357-e13f6dcbf877-4",
+        "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\361c5410-3fa3-4c6b-b93d-00d4d09c7a7c\\frame-04-at-12.3s.png",
+        "time": 12.3,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [
+            "1 image(s) failed to load at 1.5s, so the frame may be missing them: http://127.0.0.1:55329/76402941-japan-wallpaper.jpg"
+          ],
+          "partial": true
+        },
+        "createdAt": 1794574928883,
+        "contentHash": "7a618e2fbe24701efa0cabdc4fe9b18386c530c2ed918424810786940f79177e",
+        "revision": null,
+        "inputFingerprint": "753a246eae3ff4ac7e1f0199c840f3d98f5e5d39686adc4bf68ce5512578a754",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      },
+      {
+        "scope": "full",
+        "id": "a93e3ddc-e19b-4c6c-9357-e13f6dcbf877-5",
+        "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\361c5410-3fa3-4c6b-b93d-00d4d09c7a7c\\frame-05-at-14.5s.png",
+        "time": 14.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [
+            "1 image(s) failed to load at 1.5s, so the frame may be missing them: http://127.0.0.1:55329/76402941-japan-wallpaper.jpg"
+          ],
+          "partial": true
+        },
+        "createdAt": 1794574928883,
+        "contentHash": "0958081655e5c32876a631f9ec3a962009fd6a3966f69fcb082f46bb8d6f5352",
+        "revision": null,
+        "inputFingerprint": "753a246eae3ff4ac7e1f0199c840f3d98f5e5d39686adc4bf68ce5512578a754",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      },
+      {
+        "scope": "full",
+        "id": "a93e3ddc-e19b-4c6c-9357-e13f6dcbf877-6",
+        "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\361c5410-3fa3-4c6b-b93d-00d4d09c7a7c\\frame-06-at-17.8s.png",
+        "time": 17.8,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [
+            "1 image(s) failed to load at 1.5s, so the frame may be missing them: http://127.0.0.1:55329/76402941-japan-wallpaper.jpg"
+          ],
+          "partial": true
+        },
+        "createdAt": 1794574928883,
+        "contentHash": "ee3004e4b24ced3cf845525892b311f3e2780671ba50d8e194400d0c44481215",
+        "revision": null,
+        "inputFingerprint": "753a246eae3ff4ac7e1f0199c840f3d98f5e5d39686adc4bf68ce5512578a754",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      },
+      {
+        "scope": "full",
+        "id": "a93e3ddc-e19b-4c6c-9357-e13f6dcbf877-7",
+        "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\361c5410-3fa3-4c6b-b93d-00d4d09c7a7c\\frame-07-at-20.5s.png",
+        "time": 20.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [
+            "1 image(s) failed to load at 1.5s, so the frame may be missing them: http://127.0.0.1:55329/76402941-japan-wallpaper.jpg"
+          ],
+          "partial": true
+        },
+        "createdAt": 1794574928883,
+        "contentHash": "b6b5b26c72ed9cb02328141e6a3052cc0c0e7750f365e29a10662e2ad073cddd",
+        "revision": null,
+        "inputFingerprint": "753a246eae3ff4ac7e1f0199c840f3d98f5e5d39686adc4bf68ce5512578a754",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      },
+      {
+        "scope": "full",
+        "id": "a93e3ddc-e19b-4c6c-9357-e13f6dcbf877-8",
+        "image": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\composition\\.hyperframes\\artifacts\\snapshots\\361c5410-3fa3-4c6b-b93d-00d4d09c7a7c\\frame-08-at-21.75s.png",
+        "time": 21.75,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [
+            "1 image(s) failed to load at 1.5s, so the frame may be missing them: http://127.0.0.1:55329/76402941-japan-wallpaper.jpg"
+          ],
+          "partial": true
+        },
+        "createdAt": 1794574928884,
+        "contentHash": "b6b5b26c72ed9cb02328141e6a3052cc0c0e7750f365e29a10662e2ad073cddd",
+        "revision": null,
+        "inputFingerprint": "753a246eae3ff4ac7e1f0199c840f3d98f5e5d39686adc4bf68ce5512578a754",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      }
+    ]
+  },
+  "renders": {
+    "latest": {
+      "id": "fb240aa0-9dc7-42d9-8328-5a09604fdffc",
+      "completedAt": 1794575491264,
+      "output": "C:\\Users\\admin\\Documents\\JapanIterinary\\brag-output\\brag.mp4",
+      "status": "completed_with_warnings",
+      "revision": "0380abdc-b144-4b35-94eb-dcdf84a7f6a9"
+    },
+    "retainedRevisions": [
+      "0380abdc-b144-4b35-94eb-dcdf84a7f6a9"
+    ]
+  },
+  "pendingArtifactCleanup": []
+}

@@ -23,6 +23,7 @@ import type { StayLodging } from "@/lib/tripPayload";
 import { bookingLinksForArea, recommendStays } from "@/lib/lodging";
 import type { TripPayload } from "@/lib/tripPayload";
 import TripChecklist from "@/components/TripChecklist";
+import { thumbUrl } from "@/lib/image";
 
 /** A place's photo, falling back to a plain tile when there is no image or it fails to load. */
 function PlaceThumb({ place, className }: { place: Place; className: string }) {
@@ -38,7 +39,8 @@ function PlaceThumb({ place, className }: { place: Place; className: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={place.imageUrl}
+      src={thumbUrl(place.imageUrl, 500)}
+      loading="lazy"
       alt={place.name}
       className={`${className} object-cover`}
       onError={() => setError(true)}

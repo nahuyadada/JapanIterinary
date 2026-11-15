@@ -1,0 +1,3 @@
+Built a Japan trip planner: pick from 152 places across 14 regions, set your dates, and get a route-aware, day-by-day itinerary with a map, a timed day plan and a list of what to book ahead. Every UI shot in this video is the real app.
+
+Music: Sascha Ende, ende.app (CC BY 4.0)

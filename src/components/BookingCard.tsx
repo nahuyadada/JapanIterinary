@@ -1,19 +1,10 @@
 import { formatBookingDate, STATUS_DISPLAY, type ResolvedBooking } from "@/lib/reservations";
-import { formatRange } from "@/lib/duration";
 import BookingBadge from "@/components/BookingBadge";
-
-function YesNo({ value }: { value: boolean }) {
-  return (
-    <span className={value ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"}>
-      {value ? "Yes" : "No"}
-    </span>
-  );
-}
 
 /** One label/value row of the card. */
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[minmax(0,9rem)_1fr] gap-2 py-1">
+    <div className="grid grid-cols-[minmax(0,7rem)_1fr] gap-2 py-1">
       <dt className="text-gray-500 dark:text-gray-400">{label}</dt>
       <dd className="text-gray-900 dark:text-gray-100">{children}</dd>
     </div>
@@ -35,48 +26,20 @@ export default function BookingCard({ booking: b }: { booking: ResolvedBooking }
         </span>
       </div>
 
-      {b.notices.length > 0 && (
-        <ul className="grid gap-1">
-          {b.notices.map((notice) => (
-            <li
-              key={notice}
-              className="text-xs text-gray-700 dark:text-gray-200 flex gap-1.5 items-start"
-            >
-              <span aria-hidden="true" className="text-gray-400 dark:text-gray-500">
-                •
-              </span>
-              {notice}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <dl className="text-xs divide-y divide-gray-200 dark:divide-neutral-700">
-        <Field label="Reservation required">
-          <YesNo value={b.reservationRequired} />
-        </Field>
-        <Field label="Advance ticket required">
-          <YesNo value={b.advanceTicketRequired} />
-        </Field>
-        <Field label="Walk-ins allowed">
-          <YesNo value={b.walkInAvailable} />
-        </Field>
-        {b.timeSlotRequired && <Field label="Time slot">Entry is tied to a booked time slot</Field>}
-        {b.recommendedBookingTime && (
-          <Field label="Recommended booking time">{b.recommendedBookingTime}</Field>
-        )}
+      <dl className="text-xs grid sm:grid-cols-2 gap-x-6">
+        {b.bookByDate && <Field label="Book by">{formatBookingDate(b.bookByDate)}</Field>}
         {b.bookingOpenDate && (
           <Field label="Booking opens">{formatBookingDate(b.bookingOpenDate)}</Field>
         )}
-        {b.bookByDate && <Field label="Book by">{formatBookingDate(b.bookByDate)}</Field>}
         {b.bookingDeadline && (
-          <Field label="Booking deadline">{formatBookingDate(b.bookingDeadline)}</Field>
+          <Field label="Booking closes">{formatBookingDate(b.bookingDeadline)}</Field>
         )}
-        {b.ticketPrice && <Field label="Ticket price">{b.ticketPrice}</Field>}
-        <Field label="Opening hours">{b.openingHours}</Field>
-        <Field label="Estimated visit">{formatRange(b.estimatedVisitDuration)}</Field>
-        {b.notes && <Field label="Notes">{b.notes}</Field>}
+        {b.timeSlotRequired && <Field label="Entry">Timed slot</Field>}
+        {b.ticketPrice && <Field label="Price">{b.ticketPrice}</Field>}
+        <Field label="Hours">{b.openingHours}</Field>
       </dl>
+
+      {b.notes && <p className="text-xs text-gray-600">{b.notes}</p>}
 
       {b.officialBookingUrl && (
         <a
@@ -90,8 +53,7 @@ export default function BookingCard({ booking: b }: { booking: ResolvedBooking }
       )}
 
       <p className="text-[11px] text-gray-400 dark:text-gray-500">
-        Prices, hours, and booking windows are approximate and change — confirm on the official site
-        before you book.
+        Approximate — confirm on the official site before you book.
       </p>
     </div>
   );

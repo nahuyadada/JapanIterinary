@@ -1,11 +1,13 @@
 "use client";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Day } from "@/lib/itinerary";
 import type { StayRecommendation } from "@/lib/lodging";
 import { stayKey } from "@/lib/guide";
 import type { StayLodging } from "@/lib/tripPayload";
+import { TILE_ATTRIBUTION, TILE_URL } from "@/lib/mapTiles";
 
 const DAY_COLORS = ["#e11d48", "#2563eb", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#65a30d"];
 
@@ -24,6 +26,18 @@ const lodgingIcon = (color: string) =>
     iconSize: [26, 26],
     iconAnchor: [13, 26],
   });
+
+/** Keeps every pin in view as the itinerary changes, instead of a fixed country-wide zoom. */
+function FitToPins({ points }: { points: [number, number][] }) {
+  const map = useMap();
+  const key = points.map((p) => p.join(",")).join("|");
+  useEffect(() => {
+    if (points.length === 0) return;
+    map.fitBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: 13 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, key]);
+  return null;
+}
 
 export default function ItineraryMap({
   days,
@@ -90,9 +104,12 @@ export default function ItineraryMap({
 
   return (
     <MapContainer center={center} zoom={markers.length ? 6 : 5} className="h-72 sm:h-96 w-full rounded-xl z-0">
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+      <FitToPins
+        points={[
+          ...markers.map((m): [number, number] => [m.place.lat, m.place.lng]),
+          ...lodgingMarkers.map((m): [number, number] => [m.lat, m.lng]),
+        ]}
       />
       {markers.map(({ place, dayIndex }) => (
         <Marker

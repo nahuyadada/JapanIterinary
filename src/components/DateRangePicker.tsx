@@ -1,5 +1,6 @@
 "use client";
 import { tripDays } from "@/lib/itinerary";
+import { toISODate } from "@/lib/lodging";
 
 export default function DateRangePicker({
   start,
@@ -24,7 +25,11 @@ export default function DateRangePicker({
           <input
             type="date"
             value={start}
-            onChange={(e) => onStart(e.target.value)}
+            min={toISODate(new Date())}
+            onChange={(e) => {
+              onStart(e.target.value);
+              if (end && e.target.value > end) onEnd("");
+            }}
             className="border border-gray-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-neutral-900"
           />
         </label>

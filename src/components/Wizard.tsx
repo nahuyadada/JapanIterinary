@@ -7,6 +7,7 @@ import type { Region, Category, Place } from "@/data/places";
 import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
 import { recommendStays, toISODate } from "@/lib/lodging";
 import { suggestForItinerary } from "@/lib/suggestions";
+import { dayEstimate } from "@/lib/duration";
 import { stayKey } from "@/lib/guide";
 import {
   buildPayload,
@@ -53,6 +54,9 @@ const STEPS: { key: Step; label: string }[] = [
   { key: "itinerary", label: "Your itinerary" },
 ];
 
+/** Places shown per region before "Show all", so 150+ cards don't become one endless scroll. */
+const REGION_PREVIEW = 6;
+
 const selectClasses =
   "border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400";
 
@@ -84,6 +88,9 @@ export default function Wizard() {
 
   const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedOnly, setSelectedOnly] = useState(false);
+  const [expandedRegions, setExpandedRegions] = useState<Region[]>([]);
+  const [trayOpen, setTrayOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   // Restore persisted trip state after mount.
@@ -361,7 +368,11 @@ export default function Wizard() {
 
 
   function startOver() {
+    if (!window.confirm("Start over? This clears your places, dates and stays.")) return;
     setSelectedIds([]);
+    setCustomPlaces([]);
+    setSelectedOnly(false);
+    setExpandedRegions([]);
     setStart("");
     setEnd("");
     setStartCity("");
@@ -386,6 +397,7 @@ export default function Wizard() {
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
   const visiblePlaces = PLACES.filter((p) => {
+    if (selectedOnly && !selectedIds.includes(p.id)) return false;
     if (regionFilter !== "all" && p.region !== regionFilter) return false;
     if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
     if (normalizedQuery) {
@@ -401,7 +413,21 @@ export default function Wizard() {
     places: visiblePlaces.filter((p) => p.region === region),
   })).filter((g) => g.places.length > 0);
 
+  // With a search or filter on, every match is shown; the per-region preview only trims
+  // the unfiltered catalog.
+  const filtersActive =
+    regionFilter !== "all" || categoryFilter !== "all" || normalizedQuery !== "" || selectedOnly;
+
   const activeIndex = STEPS.findIndex((x) => x.key === step);
+
+  const canOpen: Record<Step, boolean> = {
+    select: true,
+    dates: selectedIds.length > 0,
+    itinerary: selectedIds.length > 0 && datesValid,
+  };
+
+  const overbookedDays = days.filter((d) => dayEstimate(d).verdict === "packed").length;
+  const emptyDays = days.filter((d) => d.places.length === 0).length;
 
   /**
    * Bring the wizard into view on every step change. Without this, advancing from
@@ -426,73 +452,145 @@ export default function Wizard() {
       <ol className="flex flex-wrap gap-2">
         {STEPS.map((s, i) => {
           const state = i === activeIndex ? "active" : i < activeIndex ? "done" : "todo";
+          const reachable = canOpen[s.key] && state !== "active";
           return (
-            <li
-              key={s.key}
-              className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-full border ${
-                state === "active"
-                  ? "border-red-500 bg-red-50 text-red-700 font-semibold"
-                  : state === "done"
-                  ? "border-green-300 bg-green-50 text-green-700"
-                  : "border-gray-200 text-gray-400"
-              }`}
-            >
-              <span
-                className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
+            <li key={s.key}>
+              <button
+                type="button"
+                disabled={!reachable}
+                onClick={() => setStep(s.key)}
+                aria-current={state === "active" ? "step" : undefined}
+                className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-full border transition-colors ${
                   state === "active"
-                    ? "bg-red-500 text-white"
+                    ? "border-red-500 bg-red-50 text-red-700 font-semibold"
                     : state === "done"
-                    ? "bg-green-500 text-white"
-                    : "bg-white border border-gray-300 text-gray-500"
+                    ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100 cursor-pointer"
+                    : reachable
+                    ? "border-gray-300 text-gray-600 hover:border-red-300 hover:text-red-600 cursor-pointer"
+                    : "border-gray-200 text-gray-400 cursor-not-allowed"
                 }`}
               >
-                {i + 1}
-              </span>
-              {s.label}
+                <span
+                  className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
+                    state === "active"
+                      ? "bg-red-500 text-white"
+                      : state === "done"
+                      ? "bg-green-500 text-white"
+                      : "bg-white border border-gray-300 text-gray-500"
+                  }`}
+                >
+                  {state === "done" ? "✓" : i + 1}
+                </span>
+                {s.label}
+              </button>
             </li>
           );
         })}
       </ol>
 
       {step === "select" && (
-        <div className="grid gap-4">
+        <div className="grid gap-5">
           <CatalogFilters
             region={regionFilter}
             category={categoryFilter}
             query={searchQuery}
+            selectedOnly={selectedOnly}
+            selectedCount={selectedIds.length}
+            resultCount={visiblePlaces.length}
             onRegion={setRegionFilter}
             onCategory={setCategoryFilter}
             onQuery={setSearchQuery}
+            onSelectedOnly={setSelectedOnly}
           />
-          {visibleByRegion.length === 0 && <p className="text-gray-500">No places match your search or filters.</p>}
-          {visibleByRegion.map(({ region, places }) => (
-            <section key={region} className="grid gap-3">
-              <h3 className="text-lg font-semibold text-gray-800">{region}</h3>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {places.map((place, i) => (
-                  <PlaceCard
-                    key={place.id}
-                    place={place}
-                    selected={selectedIds.includes(place.id)}
-                    onToggle={togglePlace}
-                    lastInRow={i % 3 === 2}
-                  />
+          {visibleByRegion.length === 0 && (
+            <p className="text-gray-500 py-8 text-center">No places match your search or filters.</p>
+          )}
+          {visibleByRegion.map(({ region, places }) => {
+            const showAll = filtersActive || expandedRegions.includes(region) || places.length <= REGION_PREVIEW;
+            const shown = showAll ? places : places.slice(0, REGION_PREVIEW);
+            const picked = places.filter((p) => selectedIds.includes(p.id)).length;
+            return (
+              <section key={region} className="grid gap-3">
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <h3 className="text-lg font-semibold text-gray-800">{region}</h3>
+                  <span className="text-sm text-gray-400">
+                    {places.length} place{places.length === 1 ? "" : "s"}
+                  </span>
+                  {picked > 0 && (
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
+                      {picked} picked
+                    </span>
+                  )}
+                </div>
+                <div className="place-grid grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {shown.map((place) => (
+                    <PlaceCard
+                      key={place.id}
+                      place={place}
+                      selected={selectedIds.includes(place.id)}
+                      onToggle={togglePlace}
+                    />
+                  ))}
+                </div>
+                {!filtersActive && places.length > REGION_PREVIEW && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedRegions((prev) =>
+                        prev.includes(region) ? prev.filter((r) => r !== region) : [...prev, region]
+                      )
+                    }
+                    className="justify-self-start text-sm font-medium text-red-600 hover:text-red-700 hover:underline"
+                  >
+                    {showAll ? "Show fewer" : `Show all ${places.length} in ${region}`}
+                  </button>
+                )}
+              </section>
+            );
+          })}
+          <div className="sticky bottom-0 z-30 -mx-5 sm:-mx-8 px-5 sm:px-8 bg-white/95 backdrop-blur border-t border-gray-200 py-3 grid gap-3 rounded-b-2xl">
+            {trayOpen && selectedPlaces.length > 0 && (
+              <ul className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                {selectedPlaces.map((p) => (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      onClick={() => removePlace(p.id)}
+                      aria-label={`Remove ${p.name}`}
+                      className="text-xs pl-3 pr-2 py-1 rounded-full bg-red-50 border border-red-200 text-red-800 hover:bg-red-100 inline-flex items-center gap-1.5"
+                    >
+                      {p.name} <span aria-hidden>×</span>
+                    </button>
+                  </li>
                 ))}
-              </div>
-            </section>
-          ))}
-          <div className="sticky bottom-0 -mx-5 sm:-mx-8 px-5 sm:px-8 bg-white/90 backdrop-blur border-t border-gray-200 py-3 flex items-center justify-between rounded-b-2xl">
-            <span className="text-sm text-gray-600">
-              {selectedIds.length} place{selectedIds.length === 1 ? "" : "s"} selected
-            </span>
-            <button
-              type="button"
-              disabled={selectedIds.length === 0}
-              onClick={() => setStep("dates")}
-              className="px-6 py-2.5 rounded-full bg-red-500 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-600 transition-colors"
-            >
-              Next: pick dates
-            </button>
+              </ul>
+            )}
+            <div className="flex items-center justify-between gap-3">
+              {selectedIds.length === 0 ? (
+                <span className="text-sm text-gray-500">Tap places to add them to your trip</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setTrayOpen((v) => !v)}
+                  aria-expanded={trayOpen}
+                  className="text-sm text-gray-700 hover:text-red-600 inline-flex items-center gap-1.5"
+                >
+                  <span className="font-semibold">{selectedIds.length}</span> place
+                  {selectedIds.length === 1 ? "" : "s"} selected
+                  <span className="text-gray-400" aria-hidden>
+                    {trayOpen ? "▼" : "▲"}
+                  </span>
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={selectedIds.length === 0}
+                onClick={() => setStep("dates")}
+                className="px-6 py-2.5 rounded-full bg-red-500 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-600 transition-colors"
+              >
+                Next: pick dates
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -504,6 +602,22 @@ export default function Wizard() {
             {selectedIds.length === 1 ? "" : "s"} across the trip.
           </p>
           <DateRangePicker start={start} end={end} onStart={setStart} onEnd={setEnd} />
+          {datesValid &&
+            (overbookedDays > 0 ? (
+              <p className="text-sm rounded-xl border border-amber-200 bg-amber-50 text-amber-800 px-4 py-3">
+                ⚠️ {overbookedDays} of {days.length} day{days.length === 1 ? "" : "s"} would be
+                overbooked with your {selectedPlaces.length} places. Add a few days or drop some
+                places for a calmer trip.
+              </p>
+            ) : (
+              <p className="text-sm rounded-xl border border-green-200 bg-green-50 text-green-800 px-4 py-3">
+                ✓ Your {selectedPlaces.length} place{selectedPlaces.length === 1 ? "" : "s"} fit
+                comfortably
+                {emptyDays > 0
+                  ? ` — with ${emptyDays} free day${emptyDays === 1 ? "" : "s"} to spare.`
+                  : "."}
+              </p>
+            ))}
           <label className="flex flex-col text-sm text-gray-600 gap-1 max-w-[10rem]">
             Travelers (adults)
             <input
@@ -729,6 +843,31 @@ export default function Wizard() {
             </p>
           )}
 
+          {days.length > 1 && (
+            <nav
+              aria-label="Jump to day"
+              className="sticky top-[73px] z-30 -mx-5 sm:-mx-8 px-5 sm:px-8 py-2 bg-white/95 backdrop-blur border-y border-gray-100 flex gap-2 overflow-x-auto"
+            >
+              {days.map((d) => (
+                <button
+                  key={d.dayIndex}
+                  type="button"
+                  onClick={() =>
+                    document
+                      .getElementById(`day-${d.dayIndex + 1}`)
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }
+                  className="shrink-0 text-xs px-3 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:border-red-300 hover:text-red-600 transition-colors"
+                >
+                  <span className="font-semibold">Day {d.dayIndex + 1}</span>{" "}
+                  <span className="text-gray-400">
+                    {d.date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  </span>
+                </button>
+              ))}
+            </nav>
+          )}
+
           <ItineraryMap
             days={days}
             stayRecommendations={stayRecommendations}
@@ -736,6 +875,10 @@ export default function Wizard() {
           />
 
           <TripChecklist days={days} />
+
+          <p className="text-xs text-gray-500 -mb-2">
+            Times and travel are estimates — tap a hop or Directions for live routes.
+          </p>
 
           {cityBlocks.map(({ rec, stayDays }) => (
             <CityPlan

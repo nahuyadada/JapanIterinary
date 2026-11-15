@@ -1,18 +1,17 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { Day } from "@/lib/itinerary";
 import {
+  formatBookingDate,
   noBookingNeededCount,
   tripChecklist,
-  PRIORITY_LABELS,
   type BookingPriority,
 } from "@/lib/reservations";
-import BookingBadge from "@/components/BookingBadge";
 
-const PRIORITY_CLASSES: Record<BookingPriority, string> = {
-  high: "text-red-700 dark:text-red-400",
-  medium: "text-amber-700 dark:text-amber-400",
-  low: "text-gray-500 dark:text-gray-400",
+const PRIORITY: Record<BookingPriority, { label: string; cls: string }> = {
+  high: { label: "Book first", cls: "bg-red-50 text-red-700 border-red-200" },
+  medium: { label: "Book soon", cls: "bg-amber-50 text-amber-700 border-amber-200" },
+  low: { label: "Optional", cls: "bg-gray-50 text-gray-600 border-gray-200" },
 };
 
 function shortDate(d: Date): string {
@@ -20,77 +19,95 @@ function shortDate(d: Date): string {
 }
 
 /**
- * "Things to Book Before Your Trip" — the actionable subset of the itinerary. Places
- * that need nothing are counted rather than listed, so this stays a to-do list while
- * still confirming nothing was overlooked.
+ * What to book before the trip, as a to-do list. It opens as a one-line summary; each
+ * item shows only what to do and by when, with the full reminders behind "More".
  *
  * Derived straight from `days`, so it re-computes whenever the itinerary changes.
  */
 export default function TripChecklist({ days }: { days: Day[] }) {
   const items = useMemo(() => tripChecklist(days), [days]);
   const noneNeeded = useMemo(() => noBookingNeededCount(days), [days]);
+  const [open, setOpen] = useState(false);
 
   if (items.length === 0 && noneNeeded === 0) return null;
 
-  return (
-    <section className="rounded-2xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden">
-      <header className="px-4 py-3 border-b border-gray-100 dark:border-neutral-800">
-        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-          Things to Book Before Your Trip
-        </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {items.length === 0
-            ? "Nothing on this itinerary needs booking ahead."
-            : `${items.length} ${
-                items.length === 1 ? "place needs" : "places need"
-              } a reservation or advance ticket.`}
-        </p>
-      </header>
+  if (items.length === 0) {
+    return (
+      <p className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+        ✓ Nothing to book ahead — every place on this trip takes walk-ins.
+      </p>
+    );
+  }
 
-      {items.length > 0 && (
-        <ol className="divide-y divide-gray-100 dark:divide-neutral-800">
+  return (
+    <section className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+      >
+        <span className="text-xl" aria-hidden>
+          🎟️
+        </span>
+        <span className="font-semibold text-gray-900">Book before you go</span>
+        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-500 text-white">
+          {items.length} to book
+        </span>
+        {noneNeeded > 0 && <span className="text-xs text-gray-500">{noneNeeded} walk-in</span>}
+        <span className="ml-auto text-sm font-medium text-red-600">{open ? "Hide" : "Show"}</span>
+      </button>
+
+      {open && (
+        <ol className="divide-y divide-gray-100 border-t border-gray-100">
           {items.map(({ booking, action }) => (
-            <li key={booking.place.id} className="px-4 py-3 grid gap-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <BookingBadge status={booking.status} />
-                <p className="font-medium text-gray-900 dark:text-gray-100">{booking.place.name}</p>
-                <span className="text-xs text-gray-400 dark:text-gray-500">
-                  Visiting {shortDate(booking.visitDate)}
-                </span>
+            <li key={booking.place.id} className="px-4 py-3 flex flex-wrap items-start gap-x-4 gap-y-2">
+              <div className="min-w-0 flex-1 basis-64 grid gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-medium text-gray-900">{booking.place.name}</p>
+                  <span
+                    className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${PRIORITY[booking.bookingPriority].cls}`}
+                  >
+                    {PRIORITY[booking.bookingPriority].label}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600">
+                  {action}
+                  {booking.bookByDate && (
+                    <>
+                      {" · by "}
+                      <span className="font-medium text-gray-900">{formatBookingDate(booking.bookByDate)}</span>
+                    </>
+                  )}
+                  <span className="text-gray-400"> · visiting {shortDate(booking.visitDate)}</span>
+                </p>
+                {booking.notices.length > 0 && (
+                  <details className="group">
+                    <summary className="cursor-pointer list-none w-fit text-xs font-medium text-gray-500 hover:text-red-600">
+                      <span className="group-open:hidden">More</span>
+                      <span className="hidden group-open:inline">Less</span>
+                    </summary>
+                    <ul className="mt-1.5 grid gap-0.5 list-disc list-inside text-xs text-gray-500">
+                      {booking.notices.map((notice) => (
+                        <li key={notice}>{notice}</li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
               </div>
-              <p className="text-sm text-gray-700 dark:text-gray-200">{action}</p>
-              <p className={`text-xs font-medium ${PRIORITY_CLASSES[booking.bookingPriority]}`}>
-                {PRIORITY_LABELS[booking.bookingPriority]}
-              </p>
-              {booking.notices.length > 0 && (
-                <ul className="grid gap-0.5">
-                  {booking.notices.map((notice) => (
-                    <li key={notice} className="text-xs text-gray-500 dark:text-gray-400">
-                      {notice}
-                    </li>
-                  ))}
-                </ul>
-              )}
               {booking.officialBookingUrl && (
                 <a
                   href={booking.officialBookingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="justify-self-start text-xs px-3 py-1.5 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+                  className="shrink-0 text-sm px-4 py-2 rounded-full bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
                 >
-                  Book on the official site ↗
+                  Book ↗
                 </a>
               )}
             </li>
           ))}
         </ol>
-      )}
-
-      {noneNeeded > 0 && (
-        <p className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-neutral-800">
-          <span aria-hidden="true">🟢</span> {noneNeeded} other{" "}
-          {noneNeeded === 1 ? "place needs" : "places need"} no booking — walk in whenever you like.
-        </p>
       )}
     </section>
   );

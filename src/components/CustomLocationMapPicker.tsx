@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { TILE_ATTRIBUTION, TILE_URL } from "@/lib/mapTiles";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -92,10 +93,7 @@ export default function CustomLocationMapPicker({
       </div>
       <div className="h-52 w-full rounded-xl overflow-hidden border border-gray-300 dark:border-neutral-700 relative z-0">
         <MapContainer center={position} zoom={13} className="h-full w-full">
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          />
+          <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
           <MapEventsAndMarker position={position} onChange={onChange} />
         </MapContainer>
       </div>
