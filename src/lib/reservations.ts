@@ -15,20 +15,20 @@ const MS_PER_DAY = 86_400_000;
 
 export type BookingPriority = "high" | "medium" | "low";
 
-/** Display metadata per status. `dot` is the traffic-light marker. */
+/** Display metadata per status. `dot` is the traffic-light marker colour (a Tailwind background class). */
 export const STATUS_DISPLAY: Record<BookingStatus, { dot: string; label: string; blurb: string }> = {
   none: {
-    dot: "🟢",
+    dot: "bg-green-500",
     label: "No reservation needed",
     blurb: "Walk-ins are generally available.",
   },
   recommended: {
-    dot: "🟡",
+    dot: "bg-amber-500",
     label: "Reservation recommended",
     blurb: "Walk-ins may be available, but entry slots can sell out in busy periods.",
   },
   required: {
-    dot: "🔴",
+    dot: "bg-red-500",
     label: "Reservation required",
     blurb: "You must reserve or buy tickets before visiting.",
   },
@@ -121,16 +121,16 @@ function buildNotices(
         meta.opens?.kind === "daysBefore" ? `, ${meta.opens.days} days before your visit` : "";
       out.push(`Reservations open ${formatBookingDate(r.bookingOpenDate)}${lead}.`);
     } else {
-      out.push("Booking is open now — reserve your slot.");
+      out.push("Booking is open now. Reserve your slot.");
     }
   }
 
   if (r.bookByDate) {
     if (daysBetween(today, r.bookByDate) >= 0) {
-      const lead = r.recommendedBookingTime ? `${r.recommendedBookingTime} — ` : "";
+      const lead = r.recommendedBookingTime ? `${r.recommendedBookingTime}: ` : "";
       out.push(`${lead}book by ${formatBookingDate(r.bookByDate)}.`);
     } else if (r.status === "required") {
-      out.push("The recommended booking window has already passed — book as soon as you can.");
+      out.push("The recommended booking window has already passed. Book as soon as you can.");
     }
   }
 

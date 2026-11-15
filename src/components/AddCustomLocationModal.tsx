@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import Icon from "@/components/Icon";
 import { REGIONS, CATEGORIES, CATEGORY_LABELS, type Category, type Place, type Region } from "@/data/places";
 
 const CustomLocationMapPicker = dynamic(
@@ -86,18 +87,19 @@ export default function AddCustomLocationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-neutral-800 shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 shadow-lg overflow-hidden max-h-[90vh] flex flex-col">
         <header className="px-5 py-4 border-b border-gray-100 dark:border-neutral-800 flex items-center justify-between shrink-0">
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            <span>📍</span> Add Custom Location
+            <Icon name="pin" className="w-4 h-4 text-gray-500" />
+            Add custom location
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg p-1"
+            className="w-9 h-9 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-neutral-800"
             aria-label="Close"
           >
-            ✕
+            <Icon name="x" className="w-5 h-5" />
           </button>
         </header>
 

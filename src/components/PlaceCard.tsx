@@ -3,16 +3,17 @@ import { useState } from "react";
 import type { Place } from "@/data/places";
 import { CATEGORY_LABELS } from "@/data/places";
 import { thumbUrl } from "@/lib/image";
+import Icon, { type IconName } from "@/components/Icon";
 
-export const CATEGORY_EMOJI: Record<Place["category"], string> = {
-  "temple-shrine": "⛩",
-  scenic: "🏞",
-  food: "🍜",
-  nightlife: "🌃",
-  activity: "🎢",
-  shopping: "🛍",
-  nature: "🌲",
-  landmark: "🗼",
+export const CATEGORY_ICON: Record<Place["category"], IconName> = {
+  "temple-shrine": "temple-shrine",
+  scenic: "scenic",
+  food: "food",
+  nightlife: "nightlife",
+  activity: "activity",
+  shopping: "shopping",
+  nature: "nature",
+  landmark: "landmark",
 };
 
 export default function PlaceCard({
@@ -42,10 +43,10 @@ export default function PlaceCard({
         className={`text-left border rounded-xl transition h-full w-full flex overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${
           selected
             ? "border-red-500 bg-red-50 ring-2 ring-red-200"
-            : "border-gray-200 bg-white hover:border-red-300 hover:shadow-md"
+            : "border-gray-200 bg-white hover:border-red-300"
         }`}
       >
-        <span className="relative shrink-0 w-24 sm:w-28 self-stretch min-h-[7rem] bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center text-3xl">
+        <span className="relative shrink-0 w-24 sm:w-28 self-stretch min-h-[7rem] bg-gray-100 text-gray-400 flex items-center justify-center">
           {showImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -57,21 +58,21 @@ export default function PlaceCard({
               onError={() => setImgError(true)}
             />
           ) : (
-            <span aria-hidden>{CATEGORY_EMOJI[place.category]}</span>
+            <Icon name={CATEGORY_ICON[place.category]} className="w-8 h-8" />
           )}
           <span
-            className={`absolute top-2 left-2 w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow ${
+            className={`absolute top-2 left-2 w-6 h-6 rounded-full border-2 flex items-center justify-center shadow-sm ${
               selected ? "bg-red-500 border-white text-white" : "bg-white/85 border-white text-transparent"
             }`}
             aria-hidden
           >
-            ✓
+            <Icon name="check" className="w-3.5 h-3.5" />
           </span>
         </span>
         <span className="min-w-0 flex-1 p-3 pr-9 flex flex-col gap-1">
           <span className="font-semibold text-gray-900 leading-snug">{place.name}</span>
           <span className="text-xs text-gray-500">
-            {place.city} · {CATEGORY_EMOJI[place.category]} {CATEGORY_LABELS[place.category]}
+            {place.city} · {CATEGORY_LABELS[place.category]}
           </span>
           <span className="text-sm text-gray-600 line-clamp-2">{place.description}</span>
         </span>
@@ -93,7 +94,7 @@ export default function PlaceCard({
       {previewOpen && (
         <div
           role="tooltip"
-          className="place-popover absolute z-40 w-64 rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden"
+          className="place-popover absolute z-40 w-64 rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden"
         >
           {showImage ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -104,8 +105,8 @@ export default function PlaceCard({
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className="w-full h-36 flex items-center justify-center text-4xl bg-gradient-to-br from-red-100 to-pink-100">
-              {CATEGORY_EMOJI[place.category]}
+            <div className="w-full h-36 flex items-center justify-center bg-gray-100 text-gray-400">
+              <Icon name={CATEGORY_ICON[place.category]} className="w-10 h-10" />
             </div>
           )}
           <div className="p-3 grid gap-1.5">

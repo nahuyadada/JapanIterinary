@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { GeocodeResult } from "@/lib/geocode";
 import type { StayLodging } from "@/lib/tripPayload";
+import Icon from "@/components/Icon";
 
 // Leaflet touches `window` on import, so the picker can only load in the browser. Mirrors
 // how AddCustomLocationModal pulls in the same component.
@@ -133,27 +134,31 @@ export default function StayLodgingPicker({
   // Resolved and not being edited: show what we have, and how we got it.
   if (value && !editing) {
     return (
-      <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50/70 dark:bg-red-950/20 p-3 grid gap-2">
+      <div className="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-3 grid gap-2">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
               You&apos;re staying at
             </p>
             <p className="font-medium text-gray-900 dark:text-gray-100 break-words">{value.name}</p>
             {value.address && (
               <p className="text-xs text-gray-600 dark:text-gray-300 break-words">{value.address}</p>
             )}
-            <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-              {value.source === "geocoded" && "📍 Matched on the map — directions start here."}
-              {value.source === "pinned" && "🎯 Pin you placed — directions start here."}
-              {!value.source && "✏️ Name only — Google Maps will look it up for directions."}
+            <p className="mt-1 flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
+              <Icon
+                name={value.source === "geocoded" ? "pin" : value.source === "pinned" ? "crosshair" : "pencil"}
+                className="w-3.5 h-3.5"
+              />
+              {value.source === "geocoded" && "Matched on the map. Directions start here."}
+              {value.source === "pinned" && "Pin you placed. Directions start here."}
+              {!value.source && "Name only. Google Maps will look it up for directions."}
             </p>
           </div>
           <div className="flex shrink-0 gap-1">
             <button
               type="button"
               onClick={startEditing}
-              className="text-xs px-2.5 py-1.5 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-neutral-800 transition-colors"
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors"
             >
               Change
             </button>
@@ -163,7 +168,7 @@ export default function StayLodgingPicker({
                 onChange(null);
                 reset();
               }}
-              className="text-xs px-2.5 py-1.5 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-neutral-800 transition-colors"
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors"
             >
               Clear
             </button>
@@ -178,9 +183,10 @@ export default function StayLodgingPicker({
       <button
         type="button"
         onClick={startEditing}
-        className="justify-self-start text-sm px-3.5 py-2 rounded-full border border-dashed border-gray-400 dark:border-neutral-600 text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-neutral-800 transition-colors"
+        className="justify-self-start inline-flex items-center gap-1.5 text-sm px-3.5 py-2 rounded-lg border border-dashed border-gray-400 dark:border-neutral-600 text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-neutral-800 transition-colors"
       >
-        ＋ I already booked a place in {region}
+        <Icon name="plus" />
+        I already booked a place in {region}
       </button>
     );
   }
@@ -244,7 +250,7 @@ export default function StayLodgingPicker({
 
       {results !== null && results.length === 0 && (
         <p role="status" className="text-xs text-gray-600 dark:text-gray-300">
-          No matches for that name. Small guesthouses often aren&apos;t on the map — place a pin
+          No matches for that name. Small guesthouses often aren&apos;t on the map, so place a pin
           instead.
         </p>
       )}

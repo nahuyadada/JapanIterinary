@@ -44,7 +44,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const payload = parsePayload(body);
   if (!payload) {
-    return error("That trip is missing something we need — pick your places and dates again.", 400);
+    return error("That trip is missing something we need. Pick your places and dates again.", 400);
   }
 
   if (process.env.DATABASE_URL) {

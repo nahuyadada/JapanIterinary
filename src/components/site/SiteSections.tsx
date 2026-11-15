@@ -1,43 +1,37 @@
 import Image from "next/image";
+import Icon, { type IconName } from "@/components/Icon";
 
 /* ---------------------------------- Why Japan --------------------------------- */
 
 const REASONS = [
   {
-    emoji: "🏯",
-    title: "Rich History",
-    body: "Explore thousands of years of preserved culture, from ancient temples to traditional arts.",
+    title: "History",
+    body: "Temples, shrines, castles and old merchant streets, many of them still in everyday use.",
   },
   {
-    emoji: "🌸",
-    title: "Natural Beauty",
-    body: "From cherry blossoms to autumn leaves, experience Japan's stunning seasonal transformations.",
+    title: "Seasons",
+    body: "Cherry blossoms in spring, red maples in autumn, and snow across the north in winter.",
   },
   {
-    emoji: "🍜",
-    title: "Culinary Excellence",
-    body: "Discover the art of Japanese cuisine, from street food to Michelin-starred restaurants.",
+    title: "Food",
+    body: "Ramen, sushi and regional dishes, from station counters and street stalls to sit-down restaurants.",
   },
 ];
 
 export function WhyJapan() {
   return (
-    <section id="about" className="py-20 bg-gradient-to-br from-pink-50 to-red-50">
+    <section id="about" className="py-20 bg-gray-50">
       <div className="max-w-6xl mx-auto px-4">
         <div className="max-w-2xl mb-12">
           <h2 className="text-4xl md:text-5xl mb-6 text-gray-900">Why Japan?</h2>
           <p className="text-lg text-gray-600">
-            Japan offers an extraordinary journey through time, where ancient temples stand alongside
-            futuristic skyscrapers, and traditional tea ceremonies coexist with cutting-edge
-            technology.
+            Old temples and dense modern cities sit close together, and the rail network makes it
+            practical to see several regions in a single trip.
           </p>
         </div>
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-6">
           {REASONS.map((r) => (
-            <div key={r.title} className="bg-white rounded-2xl p-8 shadow-sm">
-              <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mb-4">
-                <span className="text-white text-xl">{r.emoji}</span>
-              </div>
+            <div key={r.title} className="bg-white rounded-xl p-6 border border-gray-200">
               <h3 className="text-xl mb-2 text-gray-900">{r.title}</h3>
               <p className="text-gray-600">{r.body}</p>
             </div>
@@ -78,29 +72,27 @@ export function PopularDestinations() {
         <div className="max-w-2xl mb-12">
           <h2 className="text-4xl md:text-5xl mb-6 text-gray-900">Popular Destinations</h2>
           <p className="text-lg text-gray-600">
-            Discover the most captivating cities and regions that showcase Japan&apos;s diverse beauty
-            and culture.
+            The three cities most first trips are built around.
           </p>
         </div>
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-6">
           {DESTINATIONS.map((d) => (
-            <a key={d.name} href="#plan" className="group cursor-pointer block">
-              <div className="relative overflow-hidden rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+            <a key={d.name} href="#plan" className="group block">
+              <div className="relative overflow-hidden rounded-xl border border-gray-200">
                 <Image
                   src={d.image}
                   alt={d.name}
                   width={800}
                   height={256}
                   unoptimized
-                  className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
+                  className="w-full h-64 object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                   <h3 className="text-2xl mb-2">{d.name}</h3>
                   <p className="text-white/90">{d.tagline}</p>
-                  <span className="mt-4 inline-flex items-center gap-2 text-sm bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-                    Plan a trip
-                    <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  <span className="mt-3 inline-block text-sm underline-offset-4 group-hover:underline">
+                    Plan a trip →
                   </span>
                 </div>
               </div>
@@ -117,13 +109,13 @@ export function PopularDestinations() {
 const TRADITIONS = [
   {
     title: "Tea Ceremony",
-    tagline: "The art of mindful preparation",
+    tagline: "A set way of preparing and serving matcha, often offered to visitors in Kyoto.",
     image:
       "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
   },
   {
     title: "Cherry Blossom Viewing",
-    tagline: "Celebrating the beauty of impermanence",
+    tagline: "Hanami: picnics under the blossoms, around late March to early April in Tokyo and Kyoto.",
     image:
       "https://images.unsplash.com/photo-1522383225653-ed111181a951?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
   },
@@ -131,21 +123,17 @@ const TRADITIONS = [
 
 export function CultureSection() {
   return (
-    <section id="culture" className="py-20 bg-gradient-to-br from-red-50 to-pink-50">
+    <section id="culture" className="py-20 bg-white">
       <div className="max-w-6xl mx-auto px-4">
         <div className="max-w-2xl mb-12">
           <h2 className="text-4xl md:text-5xl mb-6 text-gray-900">Culture &amp; Traditions</h2>
           <p className="text-lg text-gray-600">
-            Immerse yourself in the rich tapestry of Japanese culture, where every tradition tells a
-            story of centuries-old wisdom.
+            Two traditions worth planning a day around.
           </p>
         </div>
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-6">
           {TRADITIONS.map((t) => (
-            <div
-              key={t.title}
-              className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
-            >
+            <div key={t.title} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div className="relative h-64 overflow-hidden">
                 <Image
                   src={t.image}
@@ -153,9 +141,8 @@ export function CultureSection() {
                   width={800}
                   height={256}
                   unoptimized
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl mb-3 text-gray-900">{t.title}</h3>
@@ -171,57 +158,56 @@ export function CultureSection() {
 
 /* -------------------------------- Travel Tips -------------------------------- */
 
-const TIPS = [
+const TIPS: { icon: IconName; title: string; body: string }[] = [
   {
-    emoji: "🎫",
+    icon: "ticket",
     title: "JR Pass",
-    body: "Get a Japan Rail Pass for unlimited travel on JR trains, including most shinkansen (bullet trains).",
+    body: "A Japan Rail Pass covers JR trains, including most shinkansen. Check whether it pays off for your route before buying.",
   },
   {
-    emoji: "💴",
-    title: "Cash Culture",
-    body: "Japan is still largely cash-based. Always carry yen, as many places don't accept cards.",
+    icon: "yen",
+    title: "Carry some cash",
+    body: "Cards are widely accepted in cities, but small shops, shrines and rural places are often cash only.",
   },
   {
-    emoji: "🙇",
+    icon: "etiquette",
     title: "Etiquette",
-    body: "Bow when greeting, remove shoes indoors, and don't eat while walking on the street.",
+    body: "Bow when greeting, take your shoes off where asked, and avoid eating while walking.",
   },
   {
-    emoji: "📱",
-    title: "Pocket WiFi",
-    body: "Rent a pocket WiFi device or get a SIM card to stay connected throughout your journey.",
+    icon: "phone",
+    title: "Staying connected",
+    body: "Rent a pocket WiFi or buy a SIM or eSIM so maps and directions work everywhere.",
   },
   {
-    emoji: "🌸",
-    title: "Seasonal Timing",
-    body: "Spring (cherry blossoms) and autumn (fall colors) are the most popular but crowded seasons.",
+    icon: "blossom",
+    title: "When to go",
+    body: "Spring (cherry blossoms) and autumn (fall colours) are the most popular seasons, and the most crowded.",
   },
   {
-    emoji: "🍜",
-    title: "Food Adventures",
-    body: "Don't miss trying ramen, sushi, tempura, and regional specialties. Look for places with queues!",
+    icon: "food",
+    title: "Food",
+    body: "Try ramen, sushi, tempura and each region's specialities. A queue outside is usually a good sign.",
   },
 ];
 
 export function TravelTips() {
   return (
-    <section id="tips" className="py-20 bg-white">
+    <section id="tips" className="py-20 bg-gray-50">
       <div className="max-w-6xl mx-auto px-4">
         <div className="max-w-2xl mb-12">
           <h2 className="text-4xl md:text-5xl mb-6 text-gray-900">Travel Tips</h2>
           <p className="text-lg text-gray-600">
-            Essential advice to make your Japanese adventure smooth and memorable.
+            Practical things to sort out before you go.
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {TIPS.map((t) => (
-            <div
-              key={t.title}
-              className="bg-gradient-to-br from-red-50 to-pink-50 p-6 rounded-2xl hover:shadow-lg transition-all duration-300"
-            >
-              <div className="text-4xl mb-4">{t.emoji}</div>
-              <h3 className="text-xl mb-3 text-gray-900">{t.title}</h3>
+            <div key={t.title} className="bg-white p-6 rounded-xl border border-gray-200">
+              <h3 className="flex items-center gap-2 text-xl mb-3 text-gray-900">
+                <Icon name={t.icon} className="w-5 h-5 text-gray-400" />
+                {t.title}
+              </h3>
               <p className="text-gray-600">{t.body}</p>
             </div>
           ))}
@@ -240,17 +226,13 @@ export function SiteFooter() {
         <div>
           <h3 className="text-xl mb-3">Trip to Japan</h3>
           <p className="text-white/70">
-            Your gateway to discovering the wonders of Japan. Let us help you create unforgettable
-            memories.
+            A trip planner for Japan. Pick places, set your dates, and get a day-by-day plan you can
+            share and follow on your phone.
           </p>
         </div>
         <div>
-          <h4 className="mb-3 text-white/90">Contact Info</h4>
-          <ul className="grid gap-2 text-white/70 text-sm">
-            <li>📧 info@triptojapan.com</li>
-            <li>📞 +1 (555) 123-4567</li>
-            <li>📍 123 Travel Street, Adventure City, AC 12345</li>
-          </ul>
+          <h4 className="mb-3 text-white/90">Contact</h4>
+          <p className="text-white/70 text-sm">info@triptojapan.com</p>
         </div>
         <div>
           <h4 className="mb-3 text-white/90">Explore</h4>
@@ -279,7 +261,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="max-w-6xl mx-auto px-4 mt-10 pt-6 border-t border-white/10 text-center text-white/50 text-sm">
-        © 2025 Trip to Japan. All rights reserved. | Designed with ❤️ for Japan lovers
+        © {new Date().getFullYear()} Trip to Japan
       </div>
     </footer>
   );

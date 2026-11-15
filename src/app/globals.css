@@ -37,6 +37,14 @@ button {
   color-scheme: light only;
 }
 
+/* In the base layer so `outline-none` / ring utilities on a control still win. */
+@layer base {
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid #f87171;
+    outline-offset: 2px;
+  }
+}
+
 /* Catalog hover preview: beside the card, flipped inward on the last column so it is
    never clipped, and below the card when the grid is a single column. */
 .place-popover {

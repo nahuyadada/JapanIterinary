@@ -1,10 +1,11 @@
 "use client";
 import { REGIONS, CATEGORIES, CATEGORY_LABELS } from "@/data/places";
 import type { Region, Category } from "@/data/places";
-import { CATEGORY_EMOJI } from "@/components/PlaceCard";
+import { CATEGORY_ICON } from "@/components/PlaceCard";
+import Icon from "@/components/Icon";
 
 const chip = (active: boolean) =>
-  `shrink-0 text-sm px-3 py-1.5 rounded-full border transition-colors ${
+  `shrink-0 inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition-colors ${
     active
       ? "border-red-500 bg-red-500 text-white"
       : "border-gray-300 bg-white text-gray-700 hover:border-red-300 hover:text-red-600"
@@ -39,8 +40,8 @@ export default function CatalogFilters({
     <div className="grid gap-3">
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[14rem]">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden>
-            🔍
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <Icon name="search" />
           </span>
           <input
             type="search"
@@ -48,14 +49,14 @@ export default function CatalogFilters({
             onChange={(e) => onQuery(e.target.value)}
             placeholder="Search places, activities, food, shopping..."
             aria-label="Search places"
-            className="w-full border border-gray-300 rounded-full pl-9 pr-4 py-2.5 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
+            className="w-full border border-gray-300 rounded-lg pl-9 pr-4 py-2.5 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
           />
         </div>
         <select
           value={region}
           onChange={(e) => onRegion(e.target.value as Region | "all")}
           aria-label="Region"
-          className="border border-gray-300 rounded-full px-4 py-2.5 text-sm text-gray-900 bg-white max-w-full focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
+          className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 bg-white max-w-full focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
         >
           <option value="all">All regions</option>
           {REGIONS.map((r) => (
@@ -78,7 +79,8 @@ export default function CatalogFilters({
             onClick={() => onCategory(category === c ? "all" : c)}
             className={chip(category === c)}
           >
-            {CATEGORY_EMOJI[c]} {CATEGORY_LABELS[c]}
+            <Icon name={CATEGORY_ICON[c]} />
+            {CATEGORY_LABELS[c]}
           </button>
         ))}
       </div>

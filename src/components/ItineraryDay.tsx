@@ -51,6 +51,26 @@ export default function ItineraryDay({
     });
   });
 
+  if (day.places.length === 0) {
+    return (
+      <section
+        id={`day-${day.dayIndex + 1}`}
+        className="scroll-mt-14 flex items-center gap-3 px-4 py-2 border border-gray-200 rounded-xl bg-white"
+      >
+        <span
+          className="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center"
+          style={{ background: color }}
+        >
+          {day.dayIndex + 1}
+        </span>
+        <h3 className="text-sm font-medium text-gray-700">
+          Day {day.dayIndex + 1} <span className="font-normal text-gray-500">· {dateLabel}</span>
+        </h3>
+        <span className="ml-auto text-xs text-gray-400">Free day</span>
+      </section>
+    );
+  }
+
   return (
     <section
       id={`day-${day.dayIndex + 1}`}
@@ -66,40 +86,34 @@ export default function ItineraryDay({
         <h3 className="font-semibold text-gray-900">
           Day {day.dayIndex + 1} <span className="font-normal text-gray-500">· {dateLabel}</span>
         </h3>
-        {day.places.length > 0 && (
-          <span className="ml-auto flex items-center gap-2 text-xs">
-            <span className="text-gray-500">
-              {formatHours(est.minHours)}–{formatHours(est.maxHours)}h
-            </span>
-            <span className={`px-2.5 py-1 rounded-full border font-medium ${VERDICT[est.verdict].cls}`}>
-              {VERDICT[est.verdict].label}
-            </span>
+        <span className="ml-auto flex items-center gap-2 text-xs">
+          <span className="text-gray-500">
+            {formatHours(est.minHours)}–{formatHours(est.maxHours)}h
           </span>
-        )}
+          <span className={`px-2.5 py-1 rounded-full border font-medium ${VERDICT[est.verdict].cls}`}>
+            {VERDICT[est.verdict].label}
+          </span>
+        </span>
       </header>
-      {day.places.length === 0 ? (
-        <p className="px-4 py-5 text-sm text-gray-400">Free day — move a place here or add one below.</p>
-      ) : (
-        <ul className="divide-y divide-gray-100">
-          {day.places.map((place) => {
-            const t = timing.get(place.id);
-            return (
-              <ItineraryPlaceRow
-                key={place.id}
-                place={place}
-                visitDate={day.date}
-                dayIndex={day.dayIndex}
-                dayCount={dayCount}
-                onRemove={onRemove}
-                onMove={onMove}
-                pinned={Boolean(fixedDates?.[place.id])}
-                time={schedule.length > 0 ? (t?.time ?? "") : undefined}
-                travel={t?.travel && { minutes: t.travel.minutes, mode: t.travel.mode, url: t.travel.url }}
-              />
-            );
-          })}
-        </ul>
-      )}
+      <ul className="divide-y divide-gray-100">
+        {day.places.map((place) => {
+          const t = timing.get(place.id);
+          return (
+            <ItineraryPlaceRow
+              key={place.id}
+              place={place}
+              visitDate={day.date}
+              dayIndex={day.dayIndex}
+              dayCount={dayCount}
+              onRemove={onRemove}
+              onMove={onMove}
+              pinned={Boolean(fixedDates?.[place.id])}
+              time={schedule.length > 0 ? (t?.time ?? "") : undefined}
+              travel={t?.travel && { minutes: t.travel.minutes, mode: t.travel.mode, url: t.travel.url }}
+            />
+          );
+        })}
+      </ul>
     </section>
   );
 }

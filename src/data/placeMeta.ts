@@ -198,7 +198,7 @@ export function placePopularity(id: string): number {
 
 /** Typical, approximate opening hours as a display string. */
 export function placeHours(id: string): string {
-  return PLACE_META[id]?.hours ?? "Hours vary — check ahead";
+  return PLACE_META[id]?.hours ?? "Hours vary, check ahead";
 }
 
 /** Curated typical visit-duration range [minHours, maxHours], or null if none. */

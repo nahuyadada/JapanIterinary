@@ -46,14 +46,14 @@ export default function BookingCard({ booking: b }: { booking: ResolvedBooking }
           href={b.officialBookingUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="justify-self-start text-xs px-3 py-1.5 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+          className="justify-self-start text-xs px-3 py-1.5 rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
         >
           Book on the official site ↗
         </a>
       )}
 
       <p className="text-[11px] text-gray-400 dark:text-gray-500">
-        Approximate — confirm on the official site before you book.
+        Approximate. Confirm on the official site before you book.
       </p>
     </div>
   );

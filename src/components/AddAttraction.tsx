@@ -5,6 +5,7 @@ import { durationRangeFor, formatRange } from "@/lib/duration";
 import { placeHours } from "@/data/placeMeta";
 import type { StaySuggestion } from "@/lib/suggestions";
 import AddCustomLocationModal from "@/components/AddCustomLocationModal";
+import Icon from "@/components/Icon";
 
 export default function AddAttraction({
   group,
@@ -32,13 +33,14 @@ export default function AddAttraction({
             aria-expanded={open}
             className="flex-1 flex items-center justify-between gap-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 transition-colors"
           >
-            <span>
-              ＋ Add suggested attraction
+            <span className="inline-flex flex-wrap items-center gap-x-1.5">
+              <Icon name="plus" />
+              Add suggested attraction
               <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
                 {group.suggestions.length} nearby · ≈{Math.round(group.freeHours)}h free
               </span>
             </span>
-            <span className="text-gray-400">{open ? "▲" : "▼"}</span>
+            <Icon name="chevronDown" className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
           </button>
         ) : (
           <span className="text-xs text-gray-500">Need a specific spot?</span>
@@ -48,9 +50,10 @@ export default function AddAttraction({
           <button
             type="button"
             onClick={() => setShowCustomModal(true)}
-            className="text-xs px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition-colors font-medium flex items-center gap-1"
+            className="text-xs px-3 py-1.5 rounded-lg bg-white dark:bg-neutral-900 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 transition-colors font-medium flex items-center gap-1"
           >
-            <span>📍</span> Add custom spot with time
+            <Icon name="pin" className="w-3.5 h-3.5" />
+            Add custom spot with time
           </button>
         )}
       </div>
@@ -69,9 +72,10 @@ export default function AddAttraction({
               <button
                 type="button"
                 onClick={() => onAdd(p.id)}
-                className="shrink-0 text-xs px-3 py-1.5 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+                className="shrink-0 inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg border border-red-300 text-red-700 hover:bg-red-50 transition-colors"
               >
-                + Add
+                <Icon name="plus" className="w-3.5 h-3.5" />
+                Add
               </button>
             </li>
           ))}

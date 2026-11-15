@@ -8,6 +8,7 @@ import type { StaySuggestion } from "@/lib/suggestions";
 import ItineraryDay from "@/components/ItineraryDay";
 import AddAttraction from "@/components/AddAttraction";
 import StayLodgingPicker from "@/components/StayLodgingPicker";
+import Icon from "@/components/Icon";
 import type { StayLodging } from "@/lib/tripPayload";
 
 import type { Place } from "@/data/places";
@@ -72,7 +73,7 @@ export default function CityPlan({
   const dayLabel = firstDay === lastDay ? `Day ${firstDay}` : `Days ${firstDay}–${lastDay}`;
 
   return (
-    <section className="grid gap-4 rounded-2xl border border-gray-200 p-4 sm:p-5 bg-gray-50/60">
+    <section className="grid gap-4 rounded-xl border border-gray-200 p-4 sm:p-5 bg-gray-50/60">
       <header className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <h3 className="text-xl font-semibold text-gray-900">{stay.region}</h3>
         <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-600">
@@ -91,8 +92,8 @@ export default function CityPlan({
               const links = bookingLinksForArea(area, stay.checkIn, stay.checkOut, adults);
               return (
                 <li key={area.id} className="px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-                  <span className="text-xl" aria-hidden>
-                    🏨
+                  <span className="w-9 h-9 shrink-0 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
+                    <Icon name="bed" className="w-5 h-5" />
                   </span>
                   <div className="min-w-0 flex-1 basis-56">
                     <p className="text-sm text-gray-500">
@@ -110,7 +111,7 @@ export default function CityPlan({
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs px-3 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:border-red-300 hover:text-red-600 transition-colors font-medium"
+                        className="text-xs px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:border-gray-400 hover:text-gray-900 transition-colors font-medium"
                       >
                         {link.label} ↗
                       </a>
@@ -125,8 +126,12 @@ export default function CityPlan({
               type="button"
               onClick={() => setShowAllAreas((v) => !v)}
               aria-expanded={showAllAreas}
-              className="w-full text-left px-4 py-2 border-t border-gray-100 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
+              className="w-full flex items-center gap-1.5 text-left px-4 py-2 border-t border-gray-100 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
             >
+              <Icon
+                name="chevronDown"
+                className={`w-3.5 h-3.5 transition-transform ${showAllAreas ? "rotate-180" : ""}`}
+              />
               {showAllAreas
                 ? "Show top pick only"
                 : `Compare ${areas.length - 1} more area${areas.length === 2 ? "" : "s"}`}

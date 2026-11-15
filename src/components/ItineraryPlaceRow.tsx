@@ -7,9 +7,20 @@ import { directionsUrl, type TransportMode } from "@/lib/navigation";
 import { thumbUrl } from "@/lib/image";
 import BookingBadge from "@/components/BookingBadge";
 import BookingCard from "@/components/BookingCard";
-import { CATEGORY_EMOJI } from "@/components/PlaceCard";
+import { CATEGORY_ICON } from "@/components/PlaceCard";
+import Icon, { type IconName } from "@/components/Icon";
 
-const MODE_ICON: Record<TransportMode, string> = { transit: "🚆", walking: "🚶", driving: "🚗" };
+const MODE_ICON: Record<TransportMode, IconName> = { transit: "train", walking: "walk", driving: "car" };
+
+function formatTravel(minutes: number): string {
+  if (minutes < 60) return `~${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m === 0 ? `~${h} h` : `~${h} h ${m} min`;
+}
+
+const control =
+  "inline-flex items-center min-h-9 sm:min-h-0 text-xs px-2.5 sm:px-3 py-1.5 rounded-lg border font-medium transition-colors";
 
 /**
  * One stop on a day's timeline: when you arrive, what it is, and the controls to move or
@@ -56,7 +67,8 @@ export default function ItineraryPlaceRow({
           className="ml-[3.25rem] sm:ml-[4.25rem] my-1 inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-600 transition-colors"
         >
           <span aria-hidden className="h-4 border-l-2 border-dotted border-gray-300" />
-          <span aria-hidden>{MODE_ICON[travel.mode]}</span>~{travel.minutes} min
+          <Icon name={MODE_ICON[travel.mode]} className="w-3.5 h-3.5" />
+          {formatTravel(travel.minutes)}
         </a>
       )}
 
@@ -65,7 +77,7 @@ export default function ItineraryPlaceRow({
           {time !== undefined && (
             <span className="shrink-0 w-10 sm:w-11 text-sm font-semibold tabular-nums text-gray-900">{time}</span>
           )}
-          <span className="relative shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center text-xl">
+          <span className="relative shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-gray-100 text-gray-400 flex items-center justify-center">
             {showImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -76,7 +88,7 @@ export default function ItineraryPlaceRow({
                 onError={() => setImgError(true)}
               />
             ) : (
-              <span aria-hidden>{CATEGORY_EMOJI[place.category] ?? "📍"}</span>
+              <Icon name={CATEGORY_ICON[place.category] ?? "pin"} className="w-5 h-5" />
             )}
           </span>
           <div className="min-w-0">
@@ -84,13 +96,15 @@ export default function ItineraryPlaceRow({
               <p className="font-medium text-gray-900">{place.name}</p>
               {booking.status !== "none" && <BookingBadge status={booking.status} />}
               {pinned && (
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
-                  📌 Fixed date
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-50 text-gray-700 border border-gray-300">
+                  <Icon name="lock" className="w-3 h-3" />
+                  Fixed date
                 </span>
               )}
               {place.customTime && (
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                  ⏰ {place.customTime}
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                  <Icon name="clock" className="w-3 h-3" />
+                  {place.customTime}
                 </span>
               )}
               {place.isCustom && (
@@ -110,7 +124,7 @@ export default function ItineraryPlaceRow({
             href={directionsUrl(null, target)}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs px-2.5 sm:px-3 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:border-red-300 hover:text-red-600 transition-colors font-medium"
+            className={`${control} border-gray-300 text-gray-700 hover:border-gray-400 hover:text-gray-900`}
           >
             Directions
           </a>
@@ -118,10 +132,10 @@ export default function ItineraryPlaceRow({
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
-            className={`text-xs px-2.5 sm:px-3 py-1.5 rounded-full border font-medium transition-colors ${
+            className={`${control} ${
               open
                 ? "border-red-300 bg-red-50 text-red-700"
-                : "border-gray-300 text-gray-700 hover:border-red-300 hover:text-red-600"
+                : "border-gray-300 text-gray-700 hover:border-gray-400 hover:text-gray-900"
             }`}
           >
             Details
@@ -131,11 +145,11 @@ export default function ItineraryPlaceRow({
             onChange={(e) => onMove(place.id, Number(e.target.value))}
             aria-label={`Move ${place.name} to another day`}
             title="Move to another day"
-            className="border border-gray-300 rounded-full pl-2.5 pr-1 py-1.5 text-xs text-gray-700 bg-white hover:border-red-300 focus:outline-none focus:ring-2 focus:ring-red-300"
+            className="min-h-9 sm:min-h-0 border border-gray-300 rounded-lg pl-2.5 pr-1 py-1.5 text-xs text-gray-700 bg-white hover:border-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
           >
             {Array.from({ length: dayCount }, (_, i) => (
               <option key={i} value={i}>
-                Day {i + 1}
+                {i === dayIndex ? `Day ${i + 1}` : `Move to day ${i + 1}`}
               </option>
             ))}
           </select>
@@ -144,9 +158,9 @@ export default function ItineraryPlaceRow({
             onClick={() => onRemove(place.id)}
             aria-label={`Remove ${place.name}`}
             title="Remove from trip"
-            className="absolute top-2 right-0 sm:static w-8 h-8 rounded-full text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="absolute top-2 right-0 sm:static w-9 h-9 sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
           >
-            ✕
+            <Icon name="x" />
           </button>
         </div>
       </div>

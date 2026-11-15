@@ -195,7 +195,7 @@ describe("resolveBooking — notices", () => {
 
   it("says booking is open now once the window has arrived", () => {
     const b = resolveBooking(byId("tokyo-teamlab"), VISIT, TODAY);
-    expect(b.notices).toContain("Booking is open now — reserve your slot.");
+    expect(b.notices).toContain("Booking is open now. Reserve your slot.");
   });
 
   it("warns about selling out and about door sales being unavailable", () => {
@@ -220,7 +220,7 @@ describe("resolveBooking — notices", () => {
     // Visiting in two days: the 45-day Ghibli lead time is long gone.
     const b = resolveBooking(byId("tokyo-ghibli"), new Date(2026, 6, 27), TODAY);
     expect(b.notices).toContain(
-      "The recommended booking window has already passed — book as soon as you can."
+      "The recommended booking window has already passed. Book as soon as you can."
     );
   });
 
@@ -283,8 +283,8 @@ describe("tripChecklist", () => {
 
 describe("STATUS_DISPLAY", () => {
   it("maps each status to its traffic-light marker", () => {
-    expect(STATUS_DISPLAY.none.dot).toBe("🟢");
-    expect(STATUS_DISPLAY.recommended.dot).toBe("🟡");
-    expect(STATUS_DISPLAY.required.dot).toBe("🔴");
+    expect(STATUS_DISPLAY.none.dot).toBe("bg-green-500");
+    expect(STATUS_DISPLAY.recommended.dot).toBe("bg-amber-500");
+    expect(STATUS_DISPLAY.required.dot).toBe("bg-red-500");
   });
 });

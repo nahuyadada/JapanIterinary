@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Trip to Japan — Plan Your Itinerary",
+  title: "Trip to Japan: plan your itinerary",
   description:
     "Discover Japan's temples, cities, and nature, then build a day-by-day trip plan across the country.",
 };

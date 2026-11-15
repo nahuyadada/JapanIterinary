@@ -24,6 +24,8 @@ import { bookingLinksForArea, recommendStays } from "@/lib/lodging";
 import type { TripPayload } from "@/lib/tripPayload";
 import TripChecklist from "@/components/TripChecklist";
 import { thumbUrl } from "@/lib/image";
+import Icon, { type IconName } from "@/components/Icon";
+import { CATEGORY_ICON } from "@/components/PlaceCard";
 
 /** A place's photo, falling back to a plain tile when there is no image or it fails to load. */
 function PlaceThumb({ place, className }: { place: Place; className: string }) {
@@ -31,9 +33,11 @@ function PlaceThumb({ place, className }: { place: Place; className: string }) {
   if (!place.imageUrl || error) {
     return (
       <div
-        className={`${className} bg-gradient-to-br from-red-100 to-pink-100 dark:from-neutral-800 dark:to-neutral-900`}
+        className={`${className} flex items-center justify-center bg-gray-100 dark:bg-neutral-800 text-gray-400`}
         aria-hidden
-      />
+      >
+        <Icon name={CATEGORY_ICON[place.category] ?? "pin"} className="w-5 h-5" />
+      </div>
     );
   }
   return (
@@ -63,9 +67,7 @@ function OvernightRow({ lodging }: { lodging: StayLodging }) {
 
   return (
     <div className="flex items-center gap-2.5 rounded-xl border border-dashed border-gray-300 dark:border-neutral-600 bg-gray-50 dark:bg-neutral-800/50 px-3 py-2">
-      <span aria-hidden className="text-base">
-        🛏️
-      </span>
+      <Icon name="bed" className="w-4 h-4 text-gray-500 dark:text-gray-400" />
       <span className="min-w-0 flex-1 text-sm">
         <span className="text-gray-500 dark:text-gray-400">Overnight · </span>
         <span className="font-medium text-gray-900 dark:text-gray-100 break-words">
@@ -99,10 +101,39 @@ function fmtKm(km: number | null): string | null {
 const primaryButton =
   "w-full px-5 py-3.5 rounded-full bg-red-500 text-white font-semibold text-center " +
   "hover:bg-red-600 active:bg-red-700 transition-colors";
+const headerButton =
+  "inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg border transition-colors";
 const quietButton =
-  "px-4 py-2 rounded-full border border-gray-300 dark:border-neutral-600 text-sm " +
+  "inline-flex items-center justify-center px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 text-sm " +
   "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 " +
   "transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
+
+type OverviewItem =
+  | { kind: "day"; day: GuideDay }
+  | { kind: "free"; first: GuideDay; last: GuideDay };
+
+/** Collapses runs of consecutive empty days (no stops, no overnight row) into one item. */
+function overviewItems(days: GuideDay[]): OverviewItem[] {
+  const items: OverviewItem[] = [];
+  for (const day of days) {
+    const empty = day.legs.length === 0 && !day.lodging;
+    const prev = items[items.length - 1];
+    if (empty && prev?.kind === "free" && prev.last.dayIndex === day.dayIndex - 1) {
+      prev.last = day;
+    } else if (empty) {
+      items.push({ kind: "free", first: day, last: day });
+    } else {
+      items.push({ kind: "day", day });
+    }
+  }
+  return items;
+}
+
+const TABS: { key: "guide" | "lodging" | "checklist"; label: string; icon: IconName }[] = [
+  { key: "guide", label: "Daily guide", icon: "map" },
+  { key: "lodging", label: "Where to stay", icon: "bed" },
+  { key: "checklist", label: "Things to book", icon: "clipboard" },
+];
 
 export default function TripGuide({
   code,
@@ -250,22 +281,31 @@ export default function TripGuide({
             {fmtDate(guideDays[0].date)} → {fmtDate(guideDays[guideDays.length - 1].date)}
           </p>
           {hydrated && position.phase === "before" && (
-            <p className="text-sm text-red-600 dark:text-red-400">
+            <p className="mt-1 justify-self-start inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-700 dark:text-gray-300">
+              <Icon name="calendar" className="w-3.5 h-3.5 text-gray-500" />
               {position.daysUntilStart === 1
                 ? "Your trip starts tomorrow."
                 : `Your trip starts in ${position.daysUntilStart} days.`}
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleCustomize}
+            className={`${headerButton} border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-neutral-800`}
+          >
+            <Icon name="pencil" />
+            Edit itinerary
+          </button>
           <button
             type="button"
             onClick={handleSharePlan}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-full bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors"
+            className={`${headerButton} border-red-500 bg-red-500 text-white hover:bg-red-600`}
           >
             {copied ? (
               <>
-                <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
                 <span>Link copied!</span>
@@ -282,60 +322,33 @@ export default function TripGuide({
         </div>
       </header>
 
-      {/* Action banner to edit/customize the shared itinerary */}
-      <div className="flex flex-wrap items-center gap-2.5 rounded-2xl bg-gradient-to-r from-red-50 to-pink-50 dark:from-neutral-900 dark:to-neutral-900 border border-red-200/80 dark:border-neutral-700 p-3.5">
-        <div className="flex-1 min-w-[12rem]">
-          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Want to customize this trip?</p>
-          <p className="text-xs text-gray-600 dark:text-gray-300">Edit places, change dates, or choose different hotels in the planner.</p>
-        </div>
-        <button
-          type="button"
-          onClick={handleCustomize}
-          className="px-4 py-2 rounded-full bg-red-500 hover:bg-red-600 text-white font-semibold text-xs transition-colors shrink-0 shadow-sm"
-        >
-          Customize & edit itinerary ✏️
-        </button>
-      </div>
-
-      {/* Navigation tabs */}
-      <div className="flex border-b border-gray-200 dark:border-neutral-800 text-sm font-medium">
-        <button
-          type="button"
-          onClick={() => setActiveTab("guide")}
-          className={`px-4 py-2.5 border-b-2 transition-colors ${
-            activeTab === "guide"
-              ? "border-red-500 text-red-600 dark:text-red-400 font-semibold"
-              : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
-          }`}
-        >
-          🗺️ Daily Guide
-        </button>
-        {stayRecommendations.length > 0 && (
+      <div
+        role="tablist"
+        aria-label="Trip sections"
+        className="flex overflow-x-auto whitespace-nowrap border-b border-gray-200 dark:border-neutral-800 text-sm font-medium -mx-4 px-4 sm:mx-0 sm:px-0"
+      >
+        {TABS.filter(
+          (t) =>
+            t.key === "guide" ||
+            (t.key === "lodging" && stayRecommendations.length > 0) ||
+            (t.key === "checklist" && days)
+        ).map((t) => (
           <button
+            key={t.key}
             type="button"
-            onClick={() => setActiveTab("lodging")}
-            className={`px-4 py-2.5 border-b-2 transition-colors ${
-              activeTab === "lodging"
+            role="tab"
+            aria-selected={activeTab === t.key}
+            onClick={() => setActiveTab(t.key)}
+            className={`shrink-0 inline-flex items-center gap-1.5 min-h-11 px-4 border-b-2 -mb-px transition-colors ${
+              activeTab === t.key
                 ? "border-red-500 text-red-600 dark:text-red-400 font-semibold"
-                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                : "border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400"
             }`}
           >
-            🏨 Where to Stay
+            <Icon name={t.icon} />
+            {t.label}
           </button>
-        )}
-        {days && (
-          <button
-            type="button"
-            onClick={() => setActiveTab("checklist")}
-            className={`px-4 py-2.5 border-b-2 transition-colors ${
-              activeTab === "checklist"
-                ? "border-red-500 text-red-600 dark:text-red-400 font-semibold"
-                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
-            }`}
-          >
-            📋 Things to Book
-          </button>
-        )}
+        ))}
       </div>
 
       {activeTab === "lodging" && (
@@ -367,22 +380,19 @@ export default function TripGuide({
                 </header>
 
                 {userHotel && (
-                  <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 p-3 text-sm grid gap-0.5">
-                    <p>
-                      <span className="font-medium text-red-800 dark:text-red-300">
-                        Booked Hotel:{" "}
-                      </span>
-                      <span className="text-red-700 dark:text-red-200">{userHotel.name}</span>
+                  <div className="rounded-lg bg-gray-50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 p-3 text-sm grid gap-0.5">
+                    <p className="flex items-center gap-1.5">
+                      <Icon name="bed" className="w-4 h-4 text-gray-500" />
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Booked hotel: </span>
+                      <span className="text-gray-900 dark:text-gray-100">{userHotel.name}</span>
                     </p>
                     {userHotel.address && (
-                      <p className="text-xs text-red-700/80 dark:text-red-200/70">
-                        {userHotel.address}
-                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">{userHotel.address}</p>
                     )}
-                    <p className="text-[11px] text-red-600/80 dark:text-red-300/70">
-                      {userHotel.source === "geocoded" && "📍 Matched on the map"}
-                      {userHotel.source === "pinned" && "🎯 Pin placed by hand"}
-                      {!userHotel.source && "✏️ Name only — looked up when you open directions"}
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                      {userHotel.source === "geocoded" && "Matched on the map"}
+                      {userHotel.source === "pinned" && "Pin placed by hand"}
+                      {!userHotel.source && "Name only. Looked up when you open directions."}
                     </p>
                   </div>
                 )}
@@ -397,7 +407,7 @@ export default function TripGuide({
                             <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
                               {area.name}
                               {i === 0 && (
-                                <span className="ml-2 text-[11px] font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">
+                                <span className="ml-2 align-middle text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-neutral-700">
                                   Top pick
                                 </span>
                               )}
@@ -412,7 +422,7 @@ export default function TripGuide({
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs px-3 py-1 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+                                className="text-xs px-3 py-1.5 rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
                               >
                                 {link.label} ↗
                               </a>
@@ -441,43 +451,57 @@ export default function TripGuide({
       {!progress.started ? (
         <>
           <ol className="grid gap-3">
-            {guideDays.map((d) => (
-              <li
-                key={d.dayIndex}
-                className="rounded-2xl border border-gray-200 dark:border-neutral-700 p-4"
-              >
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  Day {d.dayIndex + 1} · {fmtDate(d.date)}
-                </p>
-                {d.origin && (
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                    Starting from {d.origin.name}
+            {overviewItems(guideDays).map((item) =>
+              item.kind === "free" ? (
+                <li
+                  key={item.first.dayIndex}
+                  className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-neutral-700 px-4 py-2.5 text-sm"
+                >
+                  <span className="font-medium text-gray-600 dark:text-gray-300">
+                    {item.first === item.last
+                      ? `Day ${item.first.dayIndex + 1} · ${fmtDate(item.first.date)}`
+                      : `Days ${item.first.dayIndex + 1}–${item.last.dayIndex + 1} · ${fmtDate(item.first.date)} – ${fmtDate(item.last.date)}`}
+                  </span>
+                  <span className="ml-auto shrink-0 text-xs text-gray-400 dark:text-gray-500">
+                    {item.first === item.last ? "Free day" : "Free days"}
+                  </span>
+                </li>
+              ) : (
+                <li
+                  key={item.day.dayIndex}
+                  className="rounded-xl border border-gray-200 dark:border-neutral-700 p-4"
+                >
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    Day {item.day.dayIndex + 1} · {fmtDate(item.day.date)}
                   </p>
-                )}
-                {d.legs.length === 0 ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                    Nothing planned — a free day.
-                  </p>
-                ) : (
-                  <ul className="mt-2 grid gap-2">
-                    {d.legs.map((leg) => (
-                      <li key={leg.index} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <PlaceThumb place={leg.place} className="w-10 h-10 rounded-lg shrink-0" />
-                        <span className="min-w-0">
-                          {leg.index + 1}. {leg.place.name}
-                          <span className="text-gray-400 dark:text-gray-500"> · {leg.place.city}</span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {d.lodging && (
-                  <div className="mt-2">
-                    <OvernightRow lodging={d.lodging} />
-                  </div>
-                )}
-              </li>
-            ))}
+                  {item.day.origin && item.day.legs.length > 0 && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                      Starting from {item.day.origin.name}
+                    </p>
+                  )}
+                  {item.day.legs.length === 0 ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Free day.</p>
+                  ) : (
+                    <ul className="mt-2 grid gap-2">
+                      {item.day.legs.map((leg) => (
+                        <li key={leg.index} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                          <PlaceThumb place={leg.place} className="w-10 h-10 rounded-lg shrink-0" />
+                          <span className="min-w-0">
+                            {leg.index + 1}. {leg.place.name}
+                            <span className="text-gray-400 dark:text-gray-500"> · {leg.place.city}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {item.day.lodging && (
+                    <div className="mt-2">
+                      <OvernightRow lodging={item.day.lodging} />
+                    </div>
+                  )}
+                </li>
+              )
+            )}
           </ol>
           <button type="button" onClick={() => setProgress(startTrip)} className={primaryButton}>
             Start trip
@@ -496,7 +520,7 @@ export default function TripGuide({
               className={quietButton}
               aria-label="Previous day"
             >
-              ←
+              <Icon name="chevronLeft" className="w-5 h-5" />
             </button>
             <div className="text-center">
               <p className="font-semibold text-gray-900 dark:text-gray-100">
@@ -511,7 +535,7 @@ export default function TripGuide({
               className={quietButton}
               aria-label="Next day"
             >
-              →
+              <Icon name="chevronRight" className="w-5 h-5" />
             </button>
           </div>
 
@@ -533,7 +557,7 @@ export default function TripGuide({
           )}
 
           {current ? (
-            <section className="grid gap-3 rounded-2xl border-2 border-red-200 dark:border-red-900 bg-red-50/60 dark:bg-red-950/20 p-4 overflow-hidden">
+            <section className="grid gap-3 rounded-xl border-2 border-red-200 dark:border-red-900 bg-red-50/60 dark:bg-red-950/20 p-4 overflow-hidden">
               <PlaceThumb
                 place={current.place}
                 className="-mx-4 -mt-4 w-[calc(100%+2rem)] h-40 sm:h-48"
@@ -576,15 +600,15 @@ export default function TripGuide({
                 className="w-full px-5 py-3 rounded-full border-2 border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 font-semibold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
               >
                 {current.index + 1 === day.legs.length
-                  ? "Done — finish the day"
-                  : "Done — next stop"}
+                  ? "Done, finish the day"
+                  : "Done, next stop"}
               </button>
             </section>
           ) : (
-            <section className="rounded-2xl border border-green-200 dark:border-green-900 bg-green-50/60 dark:bg-green-950/20 p-4 grid gap-1">
+            <section className="rounded-xl border border-green-200 dark:border-green-900 bg-green-50/60 dark:bg-green-950/20 p-4 grid gap-1">
               <p className="font-semibold text-green-800 dark:text-green-300">
                 {day.legs.length === 0
-                  ? "Nothing planned for today — enjoy the free day."
+                  ? "Nothing planned for today. Enjoy the free day."
                   : "Day complete. Nice work."}
               </p>
               {dayIndex < guideDays.length - 1 && (
@@ -623,7 +647,7 @@ export default function TripGuide({
                           : "border border-gray-300 dark:border-neutral-600 text-gray-500 dark:text-gray-400"
                       }`}
                     >
-                      {isDone ? "✓" : leg.index + 1}
+                      {isDone ? <Icon name="check" className="w-3.5 h-3.5" /> : leg.index + 1}
                     </span>
                     <div className="min-w-0">
                       <p

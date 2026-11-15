@@ -16,13 +16,13 @@ export default function Home() {
       <Hero />
       <WhyJapan />
       <PopularDestinations />
-      <section id="plan" className="py-20 bg-gradient-to-br from-pink-50 to-white">
+      <section id="plan" className="py-20 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4">
           <div className="max-w-2xl mb-10">
             <h2 className="text-4xl md:text-5xl mb-6 text-gray-900">Plan Your Trip</h2>
             <p className="text-lg text-gray-600">
-              Choose the places you want to see, pick your travel dates, and we&apos;ll build a
-              smart, route-aware day-by-day itinerary across Japan.
+              Choose the places you want to see and your travel dates. We&apos;ll group them by
+              region and order each day by route.
             </p>
           </div>
           <Wizard />

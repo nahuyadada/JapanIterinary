@@ -3,11 +3,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import { TILE_ATTRIBUTION, TILE_URL } from "@/lib/mapTiles";
 import L from "leaflet";
+import Icon from "@/components/Icon";
 import "leaflet/dist/leaflet.css";
 
 const pinIcon = L.divIcon({
   className: "",
-  html: `<div style="background:#ef4444;color:#fff;border-radius:9999px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:18px;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.4);cursor:grab">📍</div>`,
+  html: `<div style="background:#ef4444;color:#fff;border-radius:9999px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.4);cursor:grab"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div>`,
   iconSize: [34, 34],
   iconAnchor: [17, 34],
 });
@@ -85,7 +86,8 @@ export default function CustomLocationMapPicker({
     <div className="grid gap-1.5">
       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <span className="font-medium flex items-center gap-1 text-gray-700 dark:text-gray-300">
-          <span>🎯</span> Drag pin or click map to set exact location
+          <Icon name="crosshair" className="w-3.5 h-3.5" />
+          Drag the pin or click the map to set the exact location
         </span>
         <span className="font-mono text-[11px] bg-gray-100 dark:bg-neutral-800 px-2 py-0.5 rounded border border-gray-200 dark:border-neutral-700">
           {lat.toFixed(4)}, {lng.toFixed(4)}

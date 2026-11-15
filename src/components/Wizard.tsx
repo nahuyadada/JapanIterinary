@@ -24,6 +24,7 @@ import FixedDatesPicker from "@/components/FixedDatesPicker";
 import ItineraryDay from "@/components/ItineraryDay";
 import CityPlan from "@/components/CityPlan";
 import TripChecklist from "@/components/TripChecklist";
+import Icon from "@/components/Icon";
 
 const ItineraryMap = dynamic(() => import("@/components/ItineraryMap"), { ssr: false });
 
@@ -58,7 +59,15 @@ const STEPS: { key: Step; label: string }[] = [
 const REGION_PREVIEW = 6;
 
 const selectClasses =
-  "border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400";
+  "border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus:border-red-400";
+const fieldClasses =
+  "h-11 w-full border border-gray-300 rounded-lg px-3 text-sm text-gray-900 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus:border-red-400";
+function fmtRangeDate(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+}
+const fieldLabel = "flex flex-col text-sm font-medium text-gray-700 gap-1";
+const cardClasses = "grid gap-4 rounded-xl border border-gray-200 p-4 sm:p-5";
 
 /** What a successful share returns, or what went wrong. */
 type ShareState =
@@ -447,7 +456,7 @@ export default function Wizard() {
   return (
     <div
       ref={rootRef}
-      className="bg-white rounded-2xl shadow-lg border border-red-100 p-5 sm:p-8 grid gap-6"
+      className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 sm:p-8 grid gap-6"
     >
       <ol className="flex flex-wrap gap-2">
         {STEPS.map((s, i) => {
@@ -479,7 +488,7 @@ export default function Wizard() {
                       : "bg-white border border-gray-300 text-gray-500"
                   }`}
                 >
-                  {state === "done" ? "✓" : i + 1}
+                  {state === "done" ? <Icon name="check" className="w-3.5 h-3.5" /> : i + 1}
                 </span>
                 {s.label}
               </button>
@@ -548,7 +557,7 @@ export default function Wizard() {
               </section>
             );
           })}
-          <div className="sticky bottom-0 z-30 -mx-5 sm:-mx-8 px-5 sm:px-8 bg-white/95 backdrop-blur border-t border-gray-200 py-3 grid gap-3 rounded-b-2xl">
+          <div className="sticky bottom-0 z-30 -mx-5 sm:-mx-8 px-5 sm:px-8 bg-white/95 backdrop-blur border-t border-gray-200 py-3 grid gap-3 rounded-b-xl">
             {trayOpen && selectedPlaces.length > 0 && (
               <ul className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                 {selectedPlaces.map((p) => (
@@ -577,9 +586,7 @@ export default function Wizard() {
                 >
                   <span className="font-semibold">{selectedIds.length}</span> place
                   {selectedIds.length === 1 ? "" : "s"} selected
-                  <span className="text-gray-400" aria-hidden>
-                    {trayOpen ? "▼" : "▲"}
-                  </span>
+                  <Icon name={trayOpen ? "chevronDown" : "chevronUp"} className="w-4 h-4 text-gray-400" />
                 </button>
               )}
               <button
@@ -596,78 +603,95 @@ export default function Wizard() {
       )}
 
       {step === "dates" && (
-        <div className="grid gap-6">
+        <div className="grid gap-5">
           <p className="text-gray-600">
             When are you travelling? We&apos;ll spread your {selectedIds.length} selected place
             {selectedIds.length === 1 ? "" : "s"} across the trip.
           </p>
-          <DateRangePicker start={start} end={end} onStart={setStart} onEnd={setEnd} />
-          {datesValid &&
-            (overbookedDays > 0 ? (
-              <p className="text-sm rounded-xl border border-amber-200 bg-amber-50 text-amber-800 px-4 py-3">
-                ⚠️ {overbookedDays} of {days.length} day{days.length === 1 ? "" : "s"} would be
-                overbooked with your {selectedPlaces.length} places. Add a few days or drop some
-                places for a calmer trip.
-              </p>
-            ) : (
-              <p className="text-sm rounded-xl border border-green-200 bg-green-50 text-green-800 px-4 py-3">
-                ✓ Your {selectedPlaces.length} place{selectedPlaces.length === 1 ? "" : "s"} fit
-                comfortably
-                {emptyDays > 0
-                  ? ` — with ${emptyDays} free day${emptyDays === 1 ? "" : "s"} to spare.`
-                  : "."}
-              </p>
-            ))}
-          <label className="flex flex-col text-sm text-gray-600 gap-1 max-w-[10rem]">
-            Travelers (adults)
-            <input
-              type="number"
-              min={1}
-              max={8}
-              value={adults}
-              onChange={(e) => setAdults(Math.min(8, Math.max(1, Number(e.target.value) || 1)))}
-              className={selectClasses}
-            />
-          </label>
-          {availableCities.length > 0 && (
-            <div className="flex flex-wrap gap-4">
-              <label className="flex flex-col text-sm text-gray-600 gap-1">
-                Starting city
-                <select value={startCity} onChange={(e) => setStartCity(e.target.value)} className={selectClasses}>
-                  <option value="">No preference</option>
-                  {availableCities.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+          <DateRangePicker start={start} end={end} onStart={setStart} onEnd={setEnd}>
+            {datesValid &&
+              (overbookedDays > 0 ? (
+                <p className="flex gap-2 text-sm rounded-lg border border-amber-200 bg-amber-50 text-amber-800 px-3.5 py-2.5">
+                  <Icon name="warning" className="w-4 h-4 mt-0.5" />
+                  <span>
+                    {overbookedDays} of {days.length} day{days.length === 1 ? "" : "s"} would be
+                    overbooked with your {selectedPlaces.length} places. Add a few days or drop some
+                    places for a calmer trip.
+                  </span>
+                </p>
+              ) : (
+                <p className="flex gap-2 text-sm rounded-lg border border-green-200 bg-green-50 text-green-800 px-3.5 py-2.5">
+                  <Icon name="check" className="w-4 h-4 mt-0.5" />
+                  <span>
+                    Your {selectedPlaces.length} place{selectedPlaces.length === 1 ? "" : "s"} fit
+                    comfortably
+                    {emptyDays > 0
+                      ? `, with ${emptyDays} free day${emptyDays === 1 ? "" : "s"} to spare.`
+                      : "."}
+                  </span>
+                </p>
+              ))}
+          </DateRangePicker>
+
+          <div className={cardClasses}>
+            <h3 className="text-sm font-semibold text-gray-900">Travelers &amp; route</h3>
+            <div className="grid sm:grid-cols-3 gap-4">
+              <label className={fieldLabel}>
+                Travelers (adults)
+                <input
+                  type="number"
+                  min={1}
+                  max={8}
+                  value={adults}
+                  onChange={(e) => setAdults(Math.min(8, Math.max(1, Number(e.target.value) || 1)))}
+                  className={fieldClasses}
+                />
               </label>
-              <label className="flex flex-col text-sm text-gray-600 gap-1">
-                Ending city
-                <select value={endCity} onChange={(e) => setEndCity(e.target.value)} className={selectClasses}>
-                  <option value="">No preference</option>
-                  {availableCities.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {availableCities.length > 0 && (
+                <>
+                  <label className={fieldLabel}>
+                    Starting city
+                    <select value={startCity} onChange={(e) => setStartCity(e.target.value)} className={fieldClasses}>
+                      <option value="">No preference</option>
+                      {availableCities.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className={fieldLabel}>
+                    Ending city
+                    <select value={endCity} onChange={(e) => setEndCity(e.target.value)} className={fieldClasses}>
+                      <option value="">No preference</option>
+                      {availableCities.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </>
+              )}
             </div>
-          )}
+          </div>
+
           {multiDayPlaces.length > 0 && (
-            <div className="grid gap-3 rounded-xl bg-red-50 border border-red-100 p-4">
-              <p className="text-sm font-medium text-gray-800">
-                Some places are worth more than a day — choose how long to spend:
-              </p>
-              <div className="flex flex-wrap gap-4">
+            <div className={cardClasses}>
+              <div className="grid gap-1">
+                <h3 className="text-sm font-semibold text-gray-900">Multi-day places</h3>
+                <p className="text-sm text-gray-600">
+                  Some places are worth more than a day. Choose how long to spend at each.
+                </p>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {multiDayPlaces.map((p) => (
-                  <label key={p.id} className="flex flex-col text-sm text-gray-600 gap-1">
+                  <label key={p.id} className={fieldLabel}>
                     {p.name}
                     <select
                       value={dayAllocations[p.id] ?? 1}
                       onChange={(e) => setDays(p.id, Number(e.target.value))}
-                      className={selectClasses}
+                      className={fieldClasses}
                     >
                       {Array.from({ length: p.maxDays ?? 1 }, (_, i) => i + 1).map((n) => (
                         <option key={n} value={n}>
@@ -680,6 +704,7 @@ export default function Wizard() {
               </div>
             </div>
           )}
+
           <FixedDatesPicker
             places={selectedPlaces}
             start={start}
@@ -687,35 +712,47 @@ export default function Wizard() {
             fixedDates={fixedDates}
             onChange={setFixedDate}
           />
-          <div className="flex items-center justify-between">
+
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
             <button
               type="button"
               onClick={() => setStep("select")}
-              className="px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+              className="px-4 py-2.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
             >
               Back
             </button>
-            <button
-              type="button"
-              disabled={!datesValid}
-              onClick={() => setStep("itinerary")}
-              className="px-6 py-2.5 rounded-full bg-red-500 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-600 transition-colors"
-            >
-              Build itinerary
-            </button>
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {!datesValid && (
+                <p className="text-sm text-gray-500">Choose a start and end date to continue.</p>
+              )}
+              <button
+                type="button"
+                disabled={!datesValid}
+                onClick={() => setStep("itinerary")}
+                className="px-6 py-2.5 rounded-full bg-red-500 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-600 transition-colors"
+              >
+                Build itinerary
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {step === "itinerary" && (
         <div className="grid gap-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-gray-600">
-              {tripDays(new Date(start), new Date(end))}-day trip with {selectedPlaces.length} places
-            </p>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div>
+              <p className="font-semibold text-gray-900">
+                {tripDays(new Date(start), new Date(end))}-day trip · {selectedPlaces.length} place
+                {selectedPlaces.length === 1 ? "" : "s"}
+              </p>
+              <p className="text-sm text-gray-500">
+                {fmtRangeDate(start)} → {fmtRangeDate(end)}
+              </p>
+            </div>
             <div className="flex flex-wrap items-center gap-2">
               <label className="flex items-center gap-2 text-sm text-gray-600">
-                Preferred transport
+                Transport
                 <select
                   value={transportMode}
                   onChange={(e) => setTransportMode(e.target.value as TransportMode)}
@@ -729,16 +766,10 @@ export default function Wizard() {
               <button
                 type="button"
                 onClick={() => setStep("dates")}
-                className="px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={startOver}
-                className="px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                Start over
+                <Icon name="calendar" />
+                Edit dates
               </button>
               <button
                 type="button"
@@ -748,13 +779,20 @@ export default function Wizard() {
               >
                 {share.status === "saving" ? "Creating link…" : "Share trip"}
               </button>
+              <button
+                type="button"
+                onClick={startOver}
+                className="px-2 py-2.5 text-sm text-gray-500 hover:text-gray-700 hover:underline"
+              >
+                Start over
+              </button>
             </div>
           </div>
 
           {share.status === "shared" && (
             <div className="grid gap-2 rounded-xl border border-green-200 bg-green-50 p-4">
               <p className="text-sm font-medium text-green-800">
-                Your trip is ready to share {share.code && share.code !== "LINK" ? `— code ${share.code}` : ""}
+                Your trip is ready to share{share.code && share.code !== "LINK" ? ` (code ${share.code})` : "."}
               </p>
               <p className="text-sm text-green-700">
                 Open this on your phone for a step-by-step guide while you travel.
@@ -764,7 +802,7 @@ export default function Wizard() {
                   href={share.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm px-4 py-2 rounded-full bg-white border border-green-300 text-green-800 hover:bg-green-100 transition-colors break-all"
+                  className="text-sm px-4 py-2 rounded-lg bg-white border border-green-300 text-green-800 hover:bg-green-100 transition-colors break-all"
                 >
                   Open trip guide ↗
                 </a>
@@ -857,9 +895,16 @@ export default function Wizard() {
                       .getElementById(`day-${d.dayIndex + 1}`)
                       ?.scrollIntoView({ behavior: "smooth", block: "start" })
                   }
-                  className="shrink-0 text-xs px-3 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:border-red-300 hover:text-red-600 transition-colors"
+                  title={d.places.length === 0 ? "Free day" : undefined}
+                  className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                    d.places.length === 0
+                      ? "border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600"
+                      : "border-gray-300 text-gray-700 hover:border-red-300 hover:text-red-600"
+                  }`}
                 >
-                  <span className="font-semibold">Day {d.dayIndex + 1}</span>{" "}
+                  <span className={d.places.length === 0 ? "font-medium" : "font-semibold"}>
+                    Day {d.dayIndex + 1}
+                  </span>{" "}
                   <span className="text-gray-400">
                     {d.date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                   </span>
@@ -877,7 +922,7 @@ export default function Wizard() {
           <TripChecklist days={days} />
 
           <p className="text-xs text-gray-500 -mb-2">
-            Times and travel are estimates — tap a hop or Directions for live routes.
+            Times and travel are estimates. Tap a hop or Directions for live routes.
           </p>
 
           {cityBlocks.map(({ rec, stayDays }) => (

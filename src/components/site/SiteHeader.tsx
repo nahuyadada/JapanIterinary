@@ -9,11 +9,11 @@ const NAV = [
 
 export default function SiteHeader() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-red-100">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
         <a href="#home" className="flex items-center gap-3">
           <span className="w-10 h-10 bg-white rounded-full border-2 border-gray-200 flex items-center justify-center">
-            <span className="w-6 h-6 rounded-full bg-gradient-to-br from-red-400 to-red-600" />
+            <span className="w-6 h-6 rounded-full bg-red-500" />
           </span>
           <span className="text-xl font-medium text-gray-900">Trip to Japan</span>
         </a>

@@ -22,7 +22,7 @@ const numberIcon = (n: number, color: string) =>
 const lodgingIcon = (color: string) =>
   L.divIcon({
     className: "",
-    html: `<div style="background:#fff;color:${color};border-radius:8px 8px 8px 0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:15px;border:2px solid ${color};box-shadow:0 1px 4px rgba(0,0,0,.4);transform:rotate(-45deg)"><span style="transform:rotate(45deg)">🛏️</span></div>`,
+    html: `<div style="background:#fff;color:${color};border-radius:8px 8px 8px 0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:2px solid ${color};box-shadow:0 1px 4px rgba(0,0,0,.4);transform:rotate(-45deg)"><svg style="transform:rotate(45deg)" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6v13M3 15h18M21 19v-6a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="12" r="1.5"/></svg></div>`,
     iconSize: [26, 26],
     iconAnchor: [13, 26],
   });

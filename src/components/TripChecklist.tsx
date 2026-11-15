@@ -7,6 +7,7 @@ import {
   tripChecklist,
   type BookingPriority,
 } from "@/lib/reservations";
+import Icon from "@/components/Icon";
 
 const PRIORITY: Record<BookingPriority, { label: string; cls: string }> = {
   high: { label: "Book first", cls: "bg-red-50 text-red-700 border-red-200" },
@@ -33,29 +34,31 @@ export default function TripChecklist({ days }: { days: Day[] }) {
 
   if (items.length === 0) {
     return (
-      <p className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-        ✓ Nothing to book ahead — every place on this trip takes walk-ins.
+      <p className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+        <Icon name="check" />
+        Nothing to book ahead. Every place on this trip takes walk-ins.
       </p>
     );
   }
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+    <section className="rounded-xl border border-gray-200 bg-white overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className="w-full flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
       >
-        <span className="text-xl" aria-hidden>
-          🎟️
-        </span>
+        <Icon name="ticket" className="w-5 h-5 text-gray-500" />
         <span className="font-semibold text-gray-900">Book before you go</span>
         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-500 text-white">
           {items.length} to book
         </span>
         {noneNeeded > 0 && <span className="text-xs text-gray-500">{noneNeeded} walk-in</span>}
-        <span className="ml-auto text-sm font-medium text-red-600">{open ? "Hide" : "Show"}</span>
+        <span className="ml-auto inline-flex items-center gap-1 text-sm font-medium text-gray-600">
+          {open ? "Hide" : "Show"}
+          <Icon name="chevronDown" className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        </span>
       </button>
 
       {open && (

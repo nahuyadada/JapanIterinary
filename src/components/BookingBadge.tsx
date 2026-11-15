@@ -10,7 +10,7 @@ const STATUS_CLASSES: Record<BookingStatus, string> = {
 };
 
 /**
- * The traffic-light booking-status pill. The emoji is decorative — the label carries
+ * The traffic-light booking-status pill. The dot is decorative — the label carries
  * the meaning, so the dot is hidden from screen readers.
  */
 export default function BookingBadge({
@@ -25,7 +25,7 @@ export default function BookingBadge({
     <span
       className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap ${STATUS_CLASSES[status]} ${className}`}
     >
-      <span aria-hidden="true">{dot}</span>
+      <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${dot}`} />
       {label}
     </span>
   );
