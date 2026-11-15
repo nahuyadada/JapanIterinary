@@ -23,6 +23,7 @@ import type { StayLodging } from "@/lib/tripPayload";
 import { bookingLinksForArea, recommendStays } from "@/lib/lodging";
 import type { TripPayload } from "@/lib/tripPayload";
 import TripChecklist from "@/components/TripChecklist";
+import TripSimulation from "@/components/TripSimulation";
 import { thumbUrl } from "@/lib/image";
 import Icon, { type IconName } from "@/components/Icon";
 import { CATEGORY_ICON } from "@/components/PlaceCard";
@@ -201,6 +202,7 @@ export default function TripGuide({
 
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"guide" | "lodging" | "checklist">("guide");
+  const [simulating, setSimulating] = useState(false);
 
   const stayRecommendations = useMemo(
     () => (days ? recommendStays(days, 3, payload?.homeBase) : []),
@@ -326,7 +328,7 @@ export default function TripGuide({
       <div
         role="tablist"
         aria-label="Trip sections"
-        className="flex overflow-x-auto whitespace-nowrap border-b border-gray-200 dark:border-neutral-800 text-sm font-medium -mx-4 px-4 sm:mx-0 sm:px-0"
+        className="flex overflow-x-auto overflow-y-hidden whitespace-nowrap border-b border-gray-200 dark:border-neutral-800 text-sm font-medium -mx-4 px-4 sm:mx-0 sm:px-0"
       >
         {TABS.filter(
           (t) =>
@@ -340,7 +342,7 @@ export default function TripGuide({
             role="tab"
             aria-selected={activeTab === t.key}
             onClick={() => setActiveTab(t.key)}
-            className={`shrink-0 inline-flex items-center gap-1.5 min-h-11 px-4 border-b-2 -mb-px transition-colors ${
+            className={`shrink-0 inline-flex items-center gap-1.5 min-h-11 px-4 border-b-2 transition-colors ${
               activeTab === t.key
                 ? "border-red-500 text-red-600 dark:text-red-400 font-semibold"
                 : "border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400"
@@ -444,10 +446,27 @@ export default function TripGuide({
         <TripChecklist days={days} />
       )}
 
-      {activeTab === "guide" && (
+      {activeTab === "guide" && simulating && days && (
+        <TripSimulation
+          days={days}
+          guideDays={guideDays}
+          mode={payload?.transportMode ?? "transit"}
+          onExit={() => setSimulating(false)}
+        />
+      )}
+
+      {activeTab === "guide" && !(simulating && days) && (
         <>
-
-
+      {days && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 dark:border-neutral-700 px-4 py-3">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            See how each day runs, hour by hour, before you go.
+          </p>
+          <button type="button" onClick={() => setSimulating(true)} className={quietButton}>
+            Simulate trip
+          </button>
+        </div>
+      )}
 
       {!progress.started ? (
         <>
