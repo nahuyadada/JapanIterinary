@@ -232,7 +232,9 @@ export function SiteFooter() {
         </div>
         <div>
           <h4 className="mb-3 text-white/90">Contact</h4>
-          <p className="text-white/70 text-sm">info@triptojapan.com</p>
+          <a href="mailto:andreyjapan@gmail.com" className="text-white/70 text-sm hover:text-white">
+            andreyjapan@gmail.com
+          </a>
         </div>
         <div>
           <h4 className="mb-3 text-white/90">Explore</h4>
