@@ -50,9 +50,25 @@ function nightsBetween(checkIn: Date, checkOut: Date): number {
  * that share a region. Days with no places are absorbed into the current run
  * rather than breaking it. checkOut is the day after the run's last day.
  */
-export function groupStays(days: Day[]): Stay[] {
+export function groupStays(days: Day[], homeBase?: Region): Stay[] {
   const withPlaces = days.filter((d) => d.places.length > 0);
   if (withPlaces.length === 0) return [];
+
+  // One base for the whole trip: every day, whatever region it visits, sleeps there.
+  if (homeBase) {
+    const checkIn = new Date(days[0].date);
+    const checkOut = new Date(days[days.length - 1].date.getTime() + MS_PER_DAY);
+    return [
+      {
+        region: homeBase,
+        dayIndexes: days.map((d) => d.dayIndex),
+        nights: nightsBetween(checkIn, checkOut),
+        checkIn,
+        checkOut,
+        places: days.flatMap((d) => d.places),
+      },
+    ];
+  }
 
   type Run = { region: Region; days: Day[] };
   const runs: Run[] = [];
@@ -125,8 +141,8 @@ export function recommendForStay(stay: Stay, limit = 3): LodgingArea[] {
     .slice(0, limit);
 }
 
-export function recommendStays(days: Day[], limit = 3): StayRecommendation[] {
-  return groupStays(days).map((stay) => ({
+export function recommendStays(days: Day[], limit = 3, homeBase?: Region): StayRecommendation[] {
+  return groupStays(days, homeBase).map((stay) => ({
     stay,
     areas: recommendForStay(stay, limit),
   }));

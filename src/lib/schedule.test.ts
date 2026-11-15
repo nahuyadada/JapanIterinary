@@ -18,6 +18,15 @@ const day = (dayIndex: number, places: Place[]): Day => ({
 });
 
 describe("estimateTravelMinutes", () => {
+  it("uses rail speeds for intercity hops instead of city pace", () => {
+    // Tokyo to Nikko is about 115 km in a straight line and a little over two hours by train.
+    const nikko = estimateTravelMinutes(115, "transit");
+    expect(nikko).toBeGreaterThan(100);
+    expect(nikko).toBeLessThan(200);
+    // Osaka to Kyoto, about 40 km.
+    expect(estimateTravelMinutes(40, "transit")).toBeLessThan(90);
+  });
+
   it("is at least 5 minutes and rounded to 5", () => {
     const m = estimateTravelMinutes(0.1, "walking");
     expect(m).toBe(5);

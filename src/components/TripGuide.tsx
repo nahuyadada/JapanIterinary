@@ -203,7 +203,7 @@ export default function TripGuide({
   const [activeTab, setActiveTab] = useState<"guide" | "lodging" | "checklist">("guide");
 
   const stayRecommendations = useMemo(
-    () => (days ? recommendStays(days, payload?.adults ?? 2) : []),
+    () => (days ? recommendStays(days, 3, payload?.homeBase) : []),
     [days, payload]
   );
 
@@ -223,6 +223,7 @@ export default function TripGuide({
           adults: payload.adults,
           transportMode: payload.transportMode,
           stayOrigins: payload.stayOrigins,
+          homeBase: payload.homeBase ?? "",
         };
         localStorage.setItem("japan-itinerary-v1", JSON.stringify(data));
       } catch {

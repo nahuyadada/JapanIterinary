@@ -200,6 +200,21 @@ describe("recommendStays", () => {
     expect(recs[0].stay.region).toBe("Osaka");
     expect(recs[0].areas.length).toBeGreaterThan(0);
   });
+
+  it("keeps the whole trip in one stay when a home base is given", () => {
+    const days = [
+      day(0, "2026-07-25", [place("k1", "Kyoto", 34.99, 135.76)]),
+      day(1, "2026-07-26", [place("o1", "Osaka", 34.67, 135.5)]),
+      day(2, "2026-07-27", [place("n1", "Nara", 34.68, 135.84)]),
+    ];
+    const recs = recommendStays(days, 3, "Osaka");
+    expect(recs).toHaveLength(1);
+    expect(recs[0].stay.region).toBe("Osaka");
+    expect(recs[0].stay.dayIndexes).toEqual([0, 1, 2]);
+    expect(recs[0].stay.nights).toBe(3);
+    expect(recs[0].stay.places).toHaveLength(3);
+    expect(recs[0].areas.every((a) => a.region === "Osaka")).toBe(true);
+  });
 });
 
 describe("bookingLinksForArea", () => {

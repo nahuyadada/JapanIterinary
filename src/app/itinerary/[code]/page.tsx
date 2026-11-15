@@ -59,7 +59,7 @@ export default async function SharedItineraryPage({
   // Rebuilt with the same functions the wizard uses, so a shared link picks up later
   // routing improvements instead of showing a frozen schedule.
   const days = payloadToItinerary(payload);
-  const bases = dayBases(recommendStays(days, 3), payload.stayOrigins);
+  const bases = dayBases(recommendStays(days, 3, payload.homeBase), payload.stayOrigins);
   const guideDays = buildGuideDays(days, bases, payload.transportMode);
 
   return (

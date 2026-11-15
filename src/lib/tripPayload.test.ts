@@ -627,3 +627,18 @@ describe("fixed dates", () => {
     expect(decodePayload(encodePayload(original))).toEqual(original);
   });
 });
+
+describe("home base", () => {
+  it("survives the compact format and forces the earlier positional fields out", () => {
+    const original = payload({ homeBase: "Osaka" });
+    const decoded = decodePayload(encodePayload(original));
+    expect(decoded?.homeBase).toBe("Osaka");
+    expect(decoded?.selectedIds).toEqual(original.selectedIds);
+  });
+
+  it("is dropped when it is not a known region", () => {
+    const parsed = parsePayload({ ...payload(), homeBase: "Atlantis" });
+    expect(parsed).not.toBeNull();
+    expect(parsed?.homeBase).toBeUndefined();
+  });
+});

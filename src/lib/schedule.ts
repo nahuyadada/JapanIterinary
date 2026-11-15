@@ -27,17 +27,41 @@ export type ScheduleEntry =
 
 // Rough effective speeds (km/h) and fixed overhead (min) per mode. These produce an
 // ESTIMATE only — real routing and departure times come from the Google Maps links.
-const TRAVEL: Record<TransportMode, { speed: number; overhead: number }> = {
-  walking: { speed: 4.8, overhead: 0 },
-  transit: { speed: 18, overhead: 8 },
-  driving: { speed: 26, overhead: 4 },
+//
+// Speed rises with distance: the first stretch is city pace (subway and walking, or city
+// streets), the next is a regional express or expressway, and the rest is shinkansen. One
+// flat city speed made a day trip like Tokyo to Nikko come out at over eight hours.
+const TRAVEL: Record<TransportMode, { overhead: number; tiers: { upToKm: number; speed: number }[] }> = {
+  walking: { overhead: 0, tiers: [{ upToKm: Infinity, speed: 4.8 }] },
+  transit: {
+    overhead: 8,
+    tiers: [
+      { upToKm: 10, speed: 18 },
+      { upToKm: 150, speed: 70 },
+      { upToKm: Infinity, speed: 200 },
+    ],
+  },
+  driving: {
+    overhead: 4,
+    tiers: [
+      { upToKm: 10, speed: 26 },
+      { upToKm: Infinity, speed: 65 },
+    ],
+  },
 };
 
 /** Estimated travel minutes for a straight-line distance, rounded to 5 minutes. */
 export function estimateTravelMinutes(km: number, mode: TransportMode): number {
   const roadKm = km * 1.3; // straight-line -> approximate road/rail distance
-  const { speed, overhead } = TRAVEL[mode];
-  const minutes = (roadKm / speed) * 60 + overhead;
+  const { overhead, tiers } = TRAVEL[mode];
+  let minutes = overhead;
+  let covered = 0;
+  for (const tier of tiers) {
+    const stretch = Math.min(roadKm, tier.upToKm) - covered;
+    if (stretch <= 0) break;
+    minutes += (stretch / tier.speed) * 60;
+    covered += stretch;
+  }
   return Math.max(5, Math.round(minutes / 5) * 5);
 }
 

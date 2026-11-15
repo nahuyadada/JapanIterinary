@@ -6,6 +6,7 @@ import type { Region, Category, Place } from "@/data/places";
 
 import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
 import { recommendStays, toISODate } from "@/lib/lodging";
+import { LODGING_AREAS } from "@/data/lodging";
 import { suggestForItinerary } from "@/lib/suggestions";
 import { dayEstimate } from "@/lib/duration";
 import { stayKey } from "@/lib/guide";
@@ -47,7 +48,12 @@ type PersistedState = {
   /** The traveler's accommodation per stay, keyed by stayKey(region, firstDayIndex). */
   stayOrigins: Record<string, StayLodging>;
   customPlaces?: Place[];
+  /** Sleep in one region all trip and day-trip to the rest; "" means move hotels as you go. */
+  homeBase?: Region | "";
 };
+
+/** Regions we have lodging areas for, so a base always comes with somewhere to stay. */
+const BASE_REGIONS = REGIONS.filter((r) => LODGING_AREAS.some((a) => a.region === r));
 
 const STEPS: { key: Step; label: string }[] = [
   { key: "select", label: "Choose places" },
@@ -91,6 +97,7 @@ export default function Wizard() {
   const [transportMode, setTransportMode] = useState<TransportMode>("transit");
   const [stayOrigins, setStayOrigins] = useState<Record<string, StayLodging>>({});
   const [customPlaces, setCustomPlaces] = useState<Place[]>([]);
+  const [homeBase, setHomeBase] = useState<Region | "">("");
   const [share, setShare] = useState<ShareState>({ status: "idle" });
   const [copied, setCopied] = useState(false);
   const [regionFilter, setRegionFilter] = useState<Region | "all">("all");
@@ -134,6 +141,8 @@ export default function Wizard() {
           setStayOrigins(parseStayLodgings(s.stayOrigins));
         }
         if (Array.isArray(s.customPlaces)) setCustomPlaces(s.customPlaces);
+        const savedBase = BASE_REGIONS.find((r) => r === s.homeBase);
+        if (savedBase) setHomeBase(savedBase);
       }
     } catch {
       // ignore malformed storage
@@ -159,19 +168,20 @@ export default function Wizard() {
       transportMode,
       stayOrigins,
       customPlaces,
+      homeBase,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch {
       // ignore quota/availability errors
     }
-  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, fixedDates, adults, transportMode, stayOrigins, customPlaces]);
+  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, fixedDates, adults, transportMode, stayOrigins, customPlaces, homeBase]);
 
   // A share link is a snapshot.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setShare({ status: "idle" });
-  }, [selectedIds, start, end, startCity, endCity, manualMoves, dayAllocations, fixedDates, adults, transportMode, stayOrigins, customPlaces]);
+  }, [selectedIds, start, end, startCity, endCity, manualMoves, dayAllocations, fixedDates, adults, transportMode, stayOrigins, customPlaces, homeBase]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const allPlacesMap = useMemo(() => {
@@ -233,7 +243,10 @@ export default function Wizard() {
     return cleaned;
   }, [datesValid, selectedPlaces, start, end, startCity, endCity, manualMoves, dayAllocations, fixedDates]);
 
-  const stayRecommendations = useMemo(() => recommendStays(days, 3), [days]);
+  const stayRecommendations = useMemo(
+    () => recommendStays(days, 3, homeBase || undefined),
+    [days, homeBase]
+  );
 
   const suggestionByStay = useMemo(() => {
     const groups = suggestForItinerary(days, { limit: 5 });
@@ -336,6 +349,7 @@ export default function Wizard() {
       transportMode,
       stayOrigins,
       customPlaces,
+      homeBase: homeBase || undefined,
     });
 
 
@@ -392,6 +406,7 @@ export default function Wizard() {
     setAdults(2);
     setTransportMode("transit");
     setStayOrigins({});
+    setHomeBase("");
     setShare({ status: "idle" });
     setRegionFilter("all");
     setCategoryFilter("all");
@@ -674,6 +689,26 @@ export default function Wizard() {
                 </>
               )}
             </div>
+            <label className={fieldLabel}>
+              Where you&apos;ll sleep
+              <select
+                value={homeBase}
+                onChange={(e) => setHomeBase(e.target.value as Region | "")}
+                className={`${fieldClasses} sm:max-w-sm`}
+              >
+                <option value="">Move hotels as I travel</option>
+                {BASE_REGIONS.map((r) => (
+                  <option key={r} value={r}>
+                    One base in {r}
+                  </option>
+                ))}
+              </select>
+              <span className="text-xs font-normal text-gray-500">
+                {homeBase
+                  ? `You keep one hotel in ${homeBase} for the whole trip and commute to everything else. Each day's travel times start from there.`
+                  : "We suggest a new area to stay each time the trip moves to another region."}
+              </span>
+            </label>
           </div>
 
           {multiDayPlaces.length > 0 && (
