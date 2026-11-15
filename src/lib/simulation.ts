@@ -33,13 +33,14 @@ export type SimStep = {
 export function buildSimulation(
   days: Day[],
   origins: Map<number, NavPoint>,
-  mode: TransportMode
+  mode: TransportMode,
+  fixedTimes: Record<string, string> = {}
 ): SimStep[] {
   const steps: SimStep[] = [];
 
   for (const day of days) {
     const origin = origins.get(day.dayIndex) ?? null;
-    const schedule = buildDaySchedule(day, origin, mode);
+    const schedule = buildDaySchedule(day, origin, mode, { fixedTimes });
     const at = { dayIndex: day.dayIndex, date: day.date };
 
     const first = schedule.find((entry) => entry.kind !== "wake");

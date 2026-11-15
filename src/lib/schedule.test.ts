@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { estimateTravelMinutes, formatClock, buildDaySchedule } from "@/lib/schedule";
+import { applyTicketTimes, estimateTravelMinutes, formatClock, buildDaySchedule } from "@/lib/schedule";
 import { PLACES } from "@/data/places";
 import type { Day } from "@/lib/itinerary";
 import type { Place } from "@/data/places";
@@ -86,5 +86,44 @@ describe("buildDaySchedule", () => {
     expect(schedule[1].kind).toBe("visit");
     // one travel leg between the two places
     expect(schedule.filter((e) => e.kind === "travel")).toHaveLength(1);
+  });
+});
+
+describe("ticket times", () => {
+  const HOTEL: NavPoint = { name: "Hotel", lat: 35.7101, lng: 139.8107 };
+  const visits = (entries: ReturnType<typeof buildDaySchedule>) =>
+    entries.filter((e) => e.kind === "visit");
+
+  it("starts the day in time for a ticketed first stop", () => {
+    const d = day(0, [byId("tokyo-teamlab")]);
+    const entries = buildDaySchedule(d, HOTEL, "transit", { fixedTimes: { "tokyo-teamlab": "14:30" } });
+    const [visit] = visits(entries);
+    expect(formatClock(visit.time)).toBe("14:30");
+    expect(visit.kind === "visit" && visit.late).toBeUndefined();
+    const travel = entries.find((e) => e.kind === "travel");
+    expect(travel && travel.time + (travel.kind === "travel" ? travel.minutes : 0)).toBe(visit.time);
+  });
+
+  it("waits for the slot when early and reports the delay when late", () => {
+    const d = day(0, [byId("tokyo-sensoji"), byId("tokyo-teamlab")]);
+    const early = visits(buildDaySchedule(d, HOTEL, "transit", { fixedTimes: { "tokyo-teamlab": "18:00" } }));
+    expect(formatClock(early[1].time)).toBe("18:00");
+
+    const late = visits(buildDaySchedule(d, HOTEL, "transit", { fixedTimes: { "tokyo-teamlab": "09:30" } }));
+    expect(late[1].kind === "visit" && late[1].late).toBeGreaterThan(0);
+  });
+
+  it("moves a ticketed place ahead of stops that would make it late", () => {
+    const days = [day(0, [byId("tokyo-sensoji"), byId("tokyo-meiji"), byId("tokyo-teamlab")])];
+    const morning = applyTicketTimes(days, { "tokyo-teamlab": "09:00" }, "transit");
+    expect(morning[0].places[0].id).toBe("tokyo-teamlab");
+
+    const evening = applyTicketTimes(days, { "tokyo-teamlab": "19:00" }, "transit");
+    expect(evening[0].places.map((p) => p.id)).toEqual(["tokyo-sensoji", "tokyo-meiji", "tokyo-teamlab"]);
+  });
+
+  it("leaves days alone when nothing has a ticket time", () => {
+    const days = [day(0, [byId("tokyo-sensoji"), byId("tokyo-meiji")])];
+    expect(applyTicketTimes(days, {}, "transit")).toBe(days);
   });
 });

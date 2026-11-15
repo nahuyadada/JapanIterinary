@@ -1,6 +1,7 @@
 import { PLACES, REGIONS, type Place, type Region } from "@/data/places";
 import { buildItinerary, type Day } from "@/lib/itinerary";
 import type { TransportMode } from "@/lib/navigation";
+import { applyTicketTimes } from "@/lib/schedule";
 
 /**
  * The serializable form of a trip — the inputs the wizard collected, not the rendered
@@ -53,7 +54,11 @@ export type TripPayload = {
   fixedDates?: Record<string, string>;
   /** Sleep in this one region for the whole trip and day-trip everywhere else. */
   homeBase?: Region;
+  /** placeId -> "HH:MM" entry time on a ticket the traveler holds for a pinned place. */
+  fixedTimes?: Record<string, string>;
 };
+
+const CLOCK_TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const TRANSPORT_MODES: TransportMode[] = ["transit", "walking", "driving"];
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -79,6 +84,15 @@ function dateMap(v: unknown, selected: Set<string>): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [key, value] of Object.entries(v)) {
     if (selected.has(key) && typeof value === "string" && ISO_DATE.test(value)) out[key] = value;
+  }
+  return out;
+}
+
+function timeMap(v: unknown, selected: Set<string>): Record<string, string> {
+  if (!isRecord(v)) return {};
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(v)) {
+    if (selected.has(key) && typeof value === "string" && CLOCK_TIME.test(value)) out[key] = value;
   }
   return out;
 }
@@ -194,6 +208,7 @@ export function buildPayload(input: {
   customPlaces?: Place[];
   fixedDates?: Record<string, string>;
   homeBase?: Region;
+  fixedTimes?: Record<string, string>;
 }): TripPayload {
   return {
     v: 1,
@@ -210,6 +225,7 @@ export function buildPayload(input: {
     ...(input.customPlaces && input.customPlaces.length > 0 ? { customPlaces: input.customPlaces } : {}),
     ...(input.fixedDates && Object.keys(input.fixedDates).length > 0 ? { fixedDates: input.fixedDates } : {}),
     ...(input.homeBase ? { homeBase: input.homeBase } : {}),
+    ...(input.fixedTimes && Object.keys(input.fixedTimes).length > 0 ? { fixedTimes: input.fixedTimes } : {}),
   };
 }
 
@@ -247,6 +263,7 @@ export function parsePayload(raw: unknown): TripPayload | null {
       : 2;
   const fixedDates = dateMap(raw.fixedDates, new Set(selectedIds));
   const homeBase = REGIONS.find((r) => r === raw.homeBase);
+  const fixedTimes = timeMap(raw.fixedTimes, new Set(selectedIds));
 
   return {
     v: 1,
@@ -263,6 +280,7 @@ export function parsePayload(raw: unknown): TripPayload | null {
     ...(customPlaces ? { customPlaces } : {}),
     ...(Object.keys(fixedDates).length > 0 ? { fixedDates } : {}),
     ...(homeBase ? { homeBase } : {}),
+    ...(Object.keys(fixedTimes).length > 0 ? { fixedTimes } : {}),
   };
 }
 
@@ -291,7 +309,8 @@ export function payloadToItinerary(payload: TripPayload): Day[] {
   const moves = Object.entries(payload.manualMoves).filter(([id]) =>
     places.some((p) => p.id === id)
   );
-  if (moves.length === 0) return base;
+  const fixedTimes = payload.fixedTimes ?? {};
+  if (moves.length === 0) return applyTicketTimes(base, fixedTimes, payload.transportMode);
 
   const maxIndex = base.length - 1;
   const moved = new Set(moves.map(([id]) => id));
@@ -301,7 +320,7 @@ export function payloadToItinerary(payload: TripPayload): Day[] {
     if (!place) continue;
     cleaned[Math.min(Math.max(rawTarget, 0), maxIndex)].places.push(place);
   }
-  return cleaned;
+  return applyTicketTimes(cleaned, fixedTimes, payload.transportMode);
 }
 
 const PLACE_INDEX_MAP = new Map(PLACES.map((p, i) => [p.id, i]));
@@ -420,7 +439,8 @@ export function encodePayload(payload: TripPayload): string {
   const hasMoves = Object.keys(payload.manualMoves).length > 0;
   const hasAllocs = Object.keys(payload.dayAllocations).length > 0;
   const hasStays = Object.keys(payload.stayOrigins).length > 0;
-  const hasBase = Boolean(payload.homeBase);
+  const times = Object.entries(payload.fixedTimes ?? {});
+  const hasBase = Boolean(payload.homeBase) || times.length > 0;
   const hasFixed = Object.keys(payload.fixedDates ?? {}).length > 0 || hasBase;
 
   // Fields are positional, so a later field being present forces every earlier one out.
@@ -449,7 +469,11 @@ export function encodePayload(payload: TripPayload): string {
       .join(",");
     parts.push(fixed);
   }
-  if (payload.homeBase) parts.push(String(REGIONS.indexOf(payload.homeBase)));
+  if (hasBase) parts.push(payload.homeBase ? String(REGIONS.indexOf(payload.homeBase)) : "");
+  if (times.length > 0) {
+    // "HH:MM" is written without its colon, which is this format's field separator.
+    parts.push(times.map(([id, time]) => `${resolvePlaceToken(id)}:${time.replace(":", "")}`).join(","));
+  }
 
   return parts.join("~");
 }
@@ -463,7 +487,7 @@ export function decodePayload(raw: string): TripPayload | null {
     try {
       const parts = raw.split("~");
       if (parts.length >= 5) {
-        const [start, end, adultsStr, modeStr, placesStr, citiesStr, movesStr, allocsStr, staysStr, fixedStr, baseStr] = parts;
+        const [start, end, adultsStr, modeStr, placesStr, citiesStr, movesStr, allocsStr, staysStr, fixedStr, baseStr, timesStr] = parts;
         const selectedIds = placesStr ? placesStr.split(",").map(resolvePlaceId) : [];
         
         let startCity: string | undefined;
@@ -514,6 +538,16 @@ export function decodePayload(raw: string): TripPayload | null {
           }
         }
 
+        const fixedTimes: Record<string, string> = {};
+        if (timesStr) {
+          for (const item of timesStr.split(",")) {
+            const [pToken, hhmm] = item.split(":");
+            if (pToken && hhmm?.length === 4) {
+              fixedTimes[resolvePlaceId(pToken)] = `${hhmm.slice(0, 2)}:${hhmm.slice(2)}`;
+            }
+          }
+        }
+
         return parsePayload({
           v: 1,
           selectedIds,
@@ -528,6 +562,7 @@ export function decodePayload(raw: string): TripPayload | null {
           stayOrigins,
           fixedDates,
           homeBase: baseStr ? REGIONS[Number(baseStr)] : undefined,
+          fixedTimes,
         });
       }
     } catch {

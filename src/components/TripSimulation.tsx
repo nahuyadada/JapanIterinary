@@ -56,11 +56,14 @@ export default function TripSimulation({
   days,
   guideDays,
   mode,
+  fixedTimes,
   onExit,
 }: {
   days: Day[];
   guideDays: GuideDay[];
   mode: TransportMode;
+  /** placeId -> "HH:MM" ticket entry times, so the rehearsal keeps those appointments. */
+  fixedTimes?: Record<string, string>;
   onExit: () => void;
 }) {
   const steps = useMemo(() => {
@@ -68,8 +71,8 @@ export default function TripSimulation({
     for (const d of guideDays) {
       if (d.origin && hasCoords(d.origin)) origins.set(d.dayIndex, d.origin);
     }
-    return buildSimulation(days, origins, mode);
-  }, [days, guideDays, mode]);
+    return buildSimulation(days, origins, mode, fixedTimes);
+  }, [days, guideDays, mode, fixedTimes]);
 
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -359,7 +362,7 @@ export default function TripSimulation({
       </ol>
 
       <p className="text-xs text-gray-500 dark:text-gray-400">
-        The map shows this day only. Times are estimates for a day that starts at 9:00, and train
+        The map shows this day only. Times are estimates for a day that starts at 9:00 unless a ticket sets it, and train
         legs are drawn as straight lines between the nearest stations, not the real line or
         timetable. Running the simulation does not change your saved trip progress.
       </p>

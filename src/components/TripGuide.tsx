@@ -226,6 +226,7 @@ export default function TripGuide({
           transportMode: payload.transportMode,
           stayOrigins: payload.stayOrigins,
           homeBase: payload.homeBase ?? "",
+          fixedTimes: payload.fixedTimes ?? {},
         };
         localStorage.setItem("japan-itinerary-v1", JSON.stringify(data));
       } catch {
@@ -451,6 +452,7 @@ export default function TripGuide({
           days={days}
           guideDays={guideDays}
           mode={payload?.transportMode ?? "transit"}
+          fixedTimes={payload?.fixedTimes}
           onExit={() => setSimulating(false)}
         />
       )}

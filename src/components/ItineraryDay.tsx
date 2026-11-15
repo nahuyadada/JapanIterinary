@@ -43,12 +43,13 @@ export default function ItineraryDay({
   const est = dayEstimate(day);
 
   // placeId -> its arrival time and the travel leg immediately before it.
-  const timing = new Map<string, { time: string; travel?: Extract<ScheduleEntry, { kind: "travel" }> }>();
+  const timing = new Map<string, { time: string; late?: number; travel?: Extract<ScheduleEntry, { kind: "travel" }> }>();
   schedule.forEach((entry, i) => {
     if (entry.kind !== "visit") return;
     const prev = schedule[i - 1];
     timing.set(entry.place.id, {
       time: formatClock(entry.time),
+      late: entry.late,
       travel: prev?.kind === "travel" ? prev : undefined,
     });
   });
@@ -111,6 +112,7 @@ export default function ItineraryDay({
               onMove={onMove}
               pinned={Boolean(fixedDates?.[place.id])}
                 ticketing={ticketing}
+              late={t?.late}
               time={schedule.length > 0 ? (t?.time ?? "") : undefined}
               travel={t?.travel && { minutes: t.travel.minutes, mode: t.travel.mode, url: t.travel.url }}
             />

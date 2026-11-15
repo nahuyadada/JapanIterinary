@@ -30,7 +30,10 @@ export type Ticketing = {
   days: Day[];
   /** placeId -> local ISO dates the traveler found sold out. */
   soldOut: Record<string, string[]>;
+  /** placeId -> "HH:MM" entry time on a ticket for a locked place. */
+  times: Record<string, string>;
   onLock: (placeId: string, date: string | null) => void;
+  onTime: (placeId: string, time: string | null) => void;
   onSoldOut: (placeId: string, date: string, soldOut: boolean) => void;
 };
 
@@ -59,6 +62,7 @@ export default function ItineraryPlaceRow({
   time,
   travel,
   ticketing,
+  late,
 }: {
   place: Place;
   visitDate: Date;
@@ -73,7 +77,10 @@ export default function ItineraryPlaceRow({
   /** The estimated hop that gets you here. */
   travel?: { minutes: number; mode: TransportMode; url: string };
   ticketing?: Ticketing;
+  /** Estimated minutes past the ticket's entry time that the traveler arrives. */
+  late?: number;
 }) {
+  const ticketTime = pinned ? ticketing?.times[place.id] : undefined;
   const [open, setOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
   const booking = resolveBooking(place, visitDate);
@@ -122,7 +129,7 @@ export default function ItineraryPlaceRow({
               {pinned && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-50 text-gray-700 border border-gray-300">
                   <Icon name="lock" className="w-3 h-3" />
-                  Fixed date
+                  {ticketTime ? `Ticket for ${ticketTime}` : "Fixed date"}
                 </span>
               )}
               {place.customTime && (
@@ -140,6 +147,13 @@ export default function ItineraryPlaceRow({
             <p className="text-xs text-gray-500 truncate">
               {formatRange(durationRangeFor(place))} · {place.city}
             </p>
+            {late !== undefined && ticketTime && (
+              <p className="mt-0.5 flex items-center gap-1 text-xs text-amber-700">
+                <Icon name="warning" className="w-3.5 h-3.5 shrink-0" />
+                About {formatTravel(late).replace("~", "")} late for your {ticketTime} ticket. Move an
+                earlier stop to another day.
+              </p>
+            )}
           </div>
         </div>
 
@@ -240,6 +254,26 @@ function TicketActions({
         <button type="button" onClick={() => ticketing.onLock(place.id, null)} className={actionButton}>
           Unlock
         </button>
+        <div className="basis-full flex flex-wrap items-center gap-2 border-t border-gray-100 pt-2.5">
+          <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+            Entry time on your ticket
+            <input
+              type="time"
+              value={ticketing.times[place.id] ?? ""}
+              onChange={(e) => ticketing.onTime(place.id, e.target.value || null)}
+              className="h-9 border border-gray-300 rounded-lg px-2 text-sm text-gray-900 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+            />
+          </label>
+          {ticketing.times[place.id] ? (
+            <button type="button" onClick={() => ticketing.onTime(place.id, null)} className={actionButton}>
+              Clear time
+            </button>
+          ) : (
+            <span className="text-xs text-gray-500">
+              Optional. The day&apos;s stops are arranged so you arrive for this slot.
+            </span>
+          )}
+        </div>
       </div>
     );
   }

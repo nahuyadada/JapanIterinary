@@ -642,3 +642,17 @@ describe("home base", () => {
     expect(parsed?.homeBase).toBeUndefined();
   });
 });
+
+describe("ticket times", () => {
+  it("survive the compact format without a home base", () => {
+    const original = payload({ fixedTimes: { [SENSOJI]: "14:30" } });
+    const decoded = decodePayload(encodePayload(original));
+    expect(decoded?.fixedTimes).toEqual({ [SENSOJI]: "14:30" });
+    expect(decoded?.homeBase).toBeUndefined();
+  });
+
+  it("are dropped when malformed or for a place that is not selected", () => {
+    const parsed = parsePayload({ ...payload(), fixedTimes: { [SENSOJI]: "25:00", "not-a-place": "10:00" } });
+    expect(parsed?.fixedTimes).toBeUndefined();
+  });
+});

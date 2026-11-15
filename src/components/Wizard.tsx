@@ -5,6 +5,7 @@ import { PLACES, REGIONS, CATEGORY_LABELS } from "@/data/places";
 import type { Region, Category, Place } from "@/data/places";
 
 import { buildItinerary, tripDays, type Day } from "@/lib/itinerary";
+import { applyTicketTimes } from "@/lib/schedule";
 import { recommendStays, toISODate } from "@/lib/lodging";
 import { LODGING_AREAS } from "@/data/lodging";
 import { suggestForItinerary } from "@/lib/suggestions";
@@ -52,6 +53,8 @@ type PersistedState = {
   homeBase?: Region | "";
   /** placeId -> local ISO dates the traveler found sold out, so they are not suggested again. */
   soldOut?: Record<string, string[]>;
+  /** placeId -> "HH:MM" entry time on a ticket for a locked place. */
+  fixedTimes?: Record<string, string>;
 };
 
 /** Regions we have lodging areas for, so a base always comes with somewhere to stay. */
@@ -101,6 +104,7 @@ export default function Wizard() {
   const [customPlaces, setCustomPlaces] = useState<Place[]>([]);
   const [homeBase, setHomeBase] = useState<Region | "">("");
   const [soldOut, setSoldOut] = useState<Record<string, string[]>>({});
+  const [fixedTimes, setFixedTimes] = useState<Record<string, string>>({});
   const [share, setShare] = useState<ShareState>({ status: "idle" });
   const [copied, setCopied] = useState(false);
   const [regionFilter, setRegionFilter] = useState<Region | "all">("all");
@@ -146,6 +150,13 @@ export default function Wizard() {
         if (Array.isArray(s.customPlaces)) setCustomPlaces(s.customPlaces);
         const savedBase = BASE_REGIONS.find((r) => r === s.homeBase);
         if (savedBase) setHomeBase(savedBase);
+        if (s.fixedTimes && typeof s.fixedTimes === "object") {
+          setFixedTimes(
+            Object.fromEntries(
+              Object.entries(s.fixedTimes).filter(([, v]) => typeof v === "string" && /^\d{2}:\d{2}$/.test(v))
+            )
+          );
+        }
         if (s.soldOut && typeof s.soldOut === "object") {
           setSoldOut(
             Object.fromEntries(
@@ -182,19 +193,20 @@ export default function Wizard() {
       customPlaces,
       homeBase,
       soldOut,
+      fixedTimes,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch {
       // ignore quota/availability errors
     }
-  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, fixedDates, adults, transportMode, stayOrigins, customPlaces, homeBase, soldOut]);
+  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, fixedDates, adults, transportMode, stayOrigins, customPlaces, homeBase, soldOut, fixedTimes]);
 
   // A share link is a snapshot.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setShare({ status: "idle" });
-  }, [selectedIds, start, end, startCity, endCity, manualMoves, dayAllocations, fixedDates, adults, transportMode, stayOrigins, customPlaces, homeBase]);
+  }, [selectedIds, start, end, startCity, endCity, manualMoves, dayAllocations, fixedDates, adults, transportMode, stayOrigins, customPlaces, homeBase, fixedTimes]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const allPlacesMap = useMemo(() => {
@@ -237,7 +249,7 @@ export default function Wizard() {
       dayAllocations,
       fixedDates,
     });
-    if (Object.keys(manualMoves).length === 0) return base;
+    if (Object.keys(manualMoves).length === 0) return applyTicketTimes(base, fixedTimes, transportMode);
 
     // Apply manual moves: pull moved places out of their computed day, then append
     // to the target day (clamped to a valid index).
@@ -253,8 +265,8 @@ export default function Wizard() {
       const target = Math.min(Math.max(rawTarget, 0), maxIndex);
       cleaned[target].places.push(place);
     }
-    return cleaned;
-  }, [datesValid, selectedPlaces, start, end, startCity, endCity, manualMoves, dayAllocations, fixedDates]);
+    return applyTicketTimes(cleaned, fixedTimes, transportMode);
+  }, [datesValid, selectedPlaces, start, end, startCity, endCity, manualMoves, dayAllocations, fixedDates, fixedTimes, transportMode]);
 
   const stayRecommendations = useMemo(
     () => recommendStays(days, 3, homeBase || undefined),
@@ -298,6 +310,7 @@ export default function Wizard() {
       return next;
     });
     setFixedDate(id, null);
+    setTicketTime(id, null);
   }
 
   function movePlace(id: string, toDayIndex: number) {
@@ -337,7 +350,39 @@ export default function Wizard() {
     });
   }
 
-  const ticketing = { days, soldOut, onLock: setFixedDate, onSoldOut: markSoldOut };
+  function setTicketTime(id: string, time: string | null) {
+    setFixedTimes((prev) => {
+      if (time) return { ...prev, [id]: time };
+      if (!(id in prev)) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
+  /**
+   * Lock a place to a date, or unlock it. Unlocking keeps the place on the day it is on:
+   * without the manual move it would jump back to wherever the planner first put it.
+   */
+  function lockPlace(id: string, date: string | null) {
+    if (!date) {
+      const current = days.find((d) => d.places.some((p) => p.id === id));
+      if (current && fixedDates[id]) {
+        setManualMoves((prev) => ({ ...prev, [id]: current.dayIndex }));
+      }
+      setTicketTime(id, null);
+    }
+    setFixedDate(id, date);
+  }
+
+  const ticketing = {
+    days,
+    soldOut,
+    times: fixedTimes,
+    onLock: lockPlace,
+    onSoldOut: markSoldOut,
+    onTime: setTicketTime,
+  };
 
   function setDays(id: string, count: number) {
     setDayAllocations((prev) => ({ ...prev, [id]: count }));
@@ -372,6 +417,7 @@ export default function Wizard() {
       stayOrigins,
       customPlaces,
       homeBase: homeBase || undefined,
+      fixedTimes,
     });
 
 
@@ -430,6 +476,7 @@ export default function Wizard() {
     setStayOrigins({});
     setHomeBase("");
     setSoldOut({});
+    setFixedTimes({});
     setShare({ status: "idle" });
     setRegionFilter("all");
     setCategoryFilter("all");
@@ -768,7 +815,7 @@ export default function Wizard() {
             start={start}
             end={end}
             fixedDates={fixedDates}
-            onChange={setFixedDate}
+            onChange={lockPlace}
           />
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">

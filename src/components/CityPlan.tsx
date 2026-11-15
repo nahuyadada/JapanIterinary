@@ -165,7 +165,7 @@ export default function CityPlan({
           onMove={onMove}
           fixedDates={fixedDates}
           ticketing={ticketing}
-          schedule={buildDaySchedule(day, origin, mode)}
+          schedule={buildDaySchedule(day, origin, mode, { fixedTimes: ticketing?.times })}
         />
       ))}
 
