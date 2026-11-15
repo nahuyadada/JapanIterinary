@@ -2,7 +2,7 @@
 import type { Day } from "@/lib/itinerary";
 import { formatHours, dayEstimate } from "@/lib/duration";
 import { formatClock, type ScheduleEntry } from "@/lib/schedule";
-import ItineraryPlaceRow from "@/components/ItineraryPlaceRow";
+import ItineraryPlaceRow, { type Ticketing } from "@/components/ItineraryPlaceRow";
 
 const DAY_COLORS = ["#e11d48", "#2563eb", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#65a30d"];
 
@@ -24,6 +24,7 @@ export default function ItineraryDay({
   onMove,
   fixedDates,
   schedule = [],
+  ticketing,
 }: {
   day: Day;
   dayCount: number;
@@ -31,6 +32,7 @@ export default function ItineraryDay({
   onMove: (placeId: string, toDayIndex: number) => void;
   fixedDates?: Record<string, string>;
   schedule?: ScheduleEntry[];
+  ticketing?: Ticketing;
 }) {
   const color = DAY_COLORS[day.dayIndex % DAY_COLORS.length];
   const dateLabel = day.date.toLocaleDateString(undefined, {
@@ -108,6 +110,7 @@ export default function ItineraryDay({
               onRemove={onRemove}
               onMove={onMove}
               pinned={Boolean(fixedDates?.[place.id])}
+                ticketing={ticketing}
               time={schedule.length > 0 ? (t?.time ?? "") : undefined}
               travel={t?.travel && { minutes: t.travel.minutes, mode: t.travel.mode, url: t.travel.url }}
             />

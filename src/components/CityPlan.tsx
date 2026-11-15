@@ -6,6 +6,7 @@ import { buildDaySchedule } from "@/lib/schedule";
 import type { NavPoint, TransportMode } from "@/lib/navigation";
 import type { StaySuggestion } from "@/lib/suggestions";
 import ItineraryDay from "@/components/ItineraryDay";
+import type { Ticketing } from "@/components/ItineraryPlaceRow";
 import AddAttraction from "@/components/AddAttraction";
 import StayLodgingPicker from "@/components/StayLodgingPicker";
 import Icon from "@/components/Icon";
@@ -31,6 +32,7 @@ export default function CityPlan({
   onAdd,
   onAddCustom,
   fixedDates,
+  ticketing,
 }: {
   rec: StayRecommendation;
   days: Day[];
@@ -47,6 +49,7 @@ export default function CityPlan({
   onAddCustom?: (place: Place) => void;
   /** placeId → locked date, so pinned places can be marked. */
   fixedDates?: Record<string, string>;
+  ticketing?: Ticketing;
 }) {
   const [showAllAreas, setShowAllAreas] = useState(false);
   const { stay, areas } = rec;
@@ -161,6 +164,7 @@ export default function CityPlan({
           onRemove={onRemove}
           onMove={onMove}
           fixedDates={fixedDates}
+          ticketing={ticketing}
           schedule={buildDaySchedule(day, origin, mode)}
         />
       ))}

@@ -5,6 +5,9 @@ import { durationRangeFor, formatRange } from "@/lib/duration";
 import { resolveBooking } from "@/lib/reservations";
 import { directionsUrl, type TransportMode } from "@/lib/navigation";
 import { thumbUrl } from "@/lib/image";
+import { suggestAlternativeDays } from "@/lib/alternatives";
+import { toISODate } from "@/lib/lodging";
+import type { Day } from "@/lib/itinerary";
 import BookingBadge from "@/components/BookingBadge";
 import BookingCard from "@/components/BookingCard";
 import { CATEGORY_ICON } from "@/components/PlaceCard";
@@ -22,6 +25,25 @@ function formatTravel(minutes: number): string {
 const control =
   "inline-flex items-center min-h-9 sm:min-h-0 text-xs px-2.5 sm:px-3 py-1.5 rounded-lg border font-medium transition-colors";
 
+/** What a row needs to lock a ticketed place to its day, or move it when tickets are gone. */
+export type Ticketing = {
+  days: Day[];
+  /** placeId -> local ISO dates the traveler found sold out. */
+  soldOut: Record<string, string[]>;
+  onLock: (placeId: string, date: string | null) => void;
+  onSoldOut: (placeId: string, date: string, soldOut: boolean) => void;
+};
+
+const FIT_NOTE = {
+  same: (region: string) => `You're already in ${region} that day`,
+  free: () => "Nothing else planned that day",
+  other: (region: string) => `You're in ${region} that day`,
+} as const;
+
+function fmtDay(d: Date): string {
+  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+}
+
 /**
  * One stop on a day's timeline: when you arrive, what it is, and the controls to move or
  * drop it. Booking details stay behind "Details" so the day reads as a plan, not a form.
@@ -36,6 +58,7 @@ export default function ItineraryPlaceRow({
   pinned = false,
   time,
   travel,
+  ticketing,
 }: {
   place: Place;
   visitDate: Date;
@@ -49,6 +72,7 @@ export default function ItineraryPlaceRow({
   time?: string;
   /** The estimated hop that gets you here. */
   travel?: { minutes: number; mode: TransportMode; url: string };
+  ticketing?: Ticketing;
 }) {
   const [open, setOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -168,8 +192,127 @@ export default function ItineraryPlaceRow({
       {open && (
         <div className="pb-3 sm:ml-[4.25rem]">
           <BookingCard booking={booking} />
+          {ticketing && booking.status !== "none" && (
+            <TicketActions
+              place={place}
+              visitDate={visitDate}
+              dayIndex={dayIndex}
+              pinned={pinned}
+              ticketing={ticketing}
+              onMove={onMove}
+            />
+          )}
         </div>
       )}
     </li>
+  );
+}
+
+const actionButton =
+  "text-xs px-3 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 transition-colors";
+
+function TicketActions({
+  place,
+  visitDate,
+  dayIndex,
+  pinned,
+  ticketing,
+  onMove,
+}: {
+  place: Place;
+  visitDate: Date;
+  dayIndex: number;
+  pinned: boolean;
+  ticketing: Ticketing;
+  onMove: (placeId: string, toDayIndex: number) => void;
+}) {
+  const iso = toISODate(visitDate);
+  const soldOutDates = ticketing.soldOut[place.id] ?? [];
+  const soldOutToday = soldOutDates.includes(iso);
+
+  if (pinned) {
+    return (
+      <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white p-3">
+        <p className="flex-1 basis-56 text-xs text-gray-700">
+          <span className="font-semibold text-gray-900">Ticket locked to {fmtDay(visitDate)}.</span> The
+          rest of the trip is planned around it.
+        </p>
+        <button type="button" onClick={() => ticketing.onLock(place.id, null)} className={actionButton}>
+          Unlock
+        </button>
+      </div>
+    );
+  }
+
+  const options = soldOutToday ? suggestAlternativeDays(place, ticketing.days, dayIndex, soldOutDates) : [];
+
+  return (
+    <div className="mt-2 grid gap-2.5 rounded-lg border border-gray-200 bg-white p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="flex-1 basis-56 text-xs text-gray-600">
+          {soldOutToday
+            ? `Marked sold out for ${fmtDay(visitDate)}.`
+            : `Tell us how booking went for ${fmtDay(visitDate)}.`}
+        </p>
+        {soldOutToday ? (
+          <button type="button" onClick={() => ticketing.onSoldOut(place.id, iso, false)} className={actionButton}>
+            Undo
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => ticketing.onLock(place.id, iso)}
+              className="text-xs px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
+            >
+              I have my ticket, lock this day
+            </button>
+            <button type="button" onClick={() => ticketing.onSoldOut(place.id, iso, true)} className={actionButton}>
+              Sold out on this day
+            </button>
+          </>
+        )}
+      </div>
+
+      {soldOutToday &&
+        (options.length === 0 ? (
+          <p className="text-xs text-gray-600">
+            No other day of the trip is left to try. Add a day or remove this place.
+          </p>
+        ) : (
+          <div className="grid gap-1.5">
+            <p className="text-xs font-semibold text-gray-900">Try another day</p>
+            <ul className="grid gap-1.5">
+              {options.map((o) => (
+                <li
+                  key={o.dayIndex}
+                  className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 px-3 py-2"
+                >
+                  <div className="min-w-0 flex-1 basis-48 text-xs">
+                    <p className="font-medium text-gray-900">
+                      Day {o.dayIndex + 1} · {fmtDay(o.date)}
+                    </p>
+                    <p className={o.verdict === "packed" || o.fit === "other" ? "text-amber-700" : "text-gray-500"}>
+                      {FIT_NOTE[o.fit](o.region ?? place.region)}
+                      {o.verdict === "packed"
+                        ? ", and it would be overbooked"
+                        : o.verdict === "full"
+                        ? ", making it a full day"
+                        : ""}
+                      .
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => onMove(place.id, o.dayIndex)} className={actionButton}>
+                    Move here
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <p className="text-[11px] text-gray-500">
+              Check the booking site for that date first, then lock the day once you have the ticket.
+            </p>
+          </div>
+        ))}
+    </div>
   );
 }

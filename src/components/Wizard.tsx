@@ -50,6 +50,8 @@ type PersistedState = {
   customPlaces?: Place[];
   /** Sleep in one region all trip and day-trip to the rest; "" means move hotels as you go. */
   homeBase?: Region | "";
+  /** placeId -> local ISO dates the traveler found sold out, so they are not suggested again. */
+  soldOut?: Record<string, string[]>;
 };
 
 /** Regions we have lodging areas for, so a base always comes with somewhere to stay. */
@@ -98,6 +100,7 @@ export default function Wizard() {
   const [stayOrigins, setStayOrigins] = useState<Record<string, StayLodging>>({});
   const [customPlaces, setCustomPlaces] = useState<Place[]>([]);
   const [homeBase, setHomeBase] = useState<Region | "">("");
+  const [soldOut, setSoldOut] = useState<Record<string, string[]>>({});
   const [share, setShare] = useState<ShareState>({ status: "idle" });
   const [copied, setCopied] = useState(false);
   const [regionFilter, setRegionFilter] = useState<Region | "all">("all");
@@ -143,6 +146,15 @@ export default function Wizard() {
         if (Array.isArray(s.customPlaces)) setCustomPlaces(s.customPlaces);
         const savedBase = BASE_REGIONS.find((r) => r === s.homeBase);
         if (savedBase) setHomeBase(savedBase);
+        if (s.soldOut && typeof s.soldOut === "object") {
+          setSoldOut(
+            Object.fromEntries(
+              Object.entries(s.soldOut).filter(
+                ([, v]) => Array.isArray(v) && v.every((d) => typeof d === "string")
+              )
+            )
+          );
+        }
       }
     } catch {
       // ignore malformed storage
@@ -169,13 +181,14 @@ export default function Wizard() {
       stayOrigins,
       customPlaces,
       homeBase,
+      soldOut,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch {
       // ignore quota/availability errors
     }
-  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, fixedDates, adults, transportMode, stayOrigins, customPlaces, homeBase]);
+  }, [hydrated, step, selectedIds, start, end, manualMoves, startCity, endCity, dayAllocations, fixedDates, adults, transportMode, stayOrigins, customPlaces, homeBase, soldOut]);
 
   // A share link is a snapshot.
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -317,6 +330,15 @@ export default function Wizard() {
     }
   }
 
+  function markSoldOut(id: string, date: string, isSoldOut: boolean) {
+    setSoldOut((prev) => {
+      const dates = (prev[id] ?? []).filter((d) => d !== date);
+      return { ...prev, [id]: isSoldOut ? [...dates, date] : dates };
+    });
+  }
+
+  const ticketing = { days, soldOut, onLock: setFixedDate, onSoldOut: markSoldOut };
+
   function setDays(id: string, count: number) {
     setDayAllocations((prev) => ({ ...prev, [id]: count }));
   }
@@ -407,6 +429,7 @@ export default function Wizard() {
     setTransportMode("transit");
     setStayOrigins({});
     setHomeBase("");
+    setSoldOut({});
     setShare({ status: "idle" });
     setRegionFilter("all");
     setCategoryFilter("all");
@@ -978,6 +1001,7 @@ export default function Wizard() {
               onAdd={togglePlace}
               onAddCustom={handleAddCustomPlace}
               fixedDates={fixedDates}
+              ticketing={ticketing}
             />
 
           ))}
@@ -992,6 +1016,7 @@ export default function Wizard() {
                   onRemove={removePlace}
                   onMove={movePlace}
                   fixedDates={fixedDates}
+                  ticketing={ticketing}
                 />
               ))}
             </div>
